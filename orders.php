@@ -308,55 +308,115 @@ if ($autoEditOrderNumber !== '') {
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- Header Control Bar -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<?php
+$totalOrdersCount = count($orders);
+$inLabOrdersCount = count(array_filter($orders, fn($o) => $o['service_type'] === 'IN_LAB'));
+$onSiteOrdersCount = count(array_filter($orders, fn($o) => $o['service_type'] === 'ON_SITE'));
+$completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === 'COMPLETED'));
+?>
+
+<!-- 1. Header Control Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
     <div>
-        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Surat Perintah Kerja (SPK)</h1>
-        <p class="text-xs text-slate-500 mt-0.5">
-            Penerimaan permintaan kalibrasi pelanggan, pendaftaran spesifikasi instrumen, dan penugasan teknisi.
+        <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60">
+                SALES & FRONT OFFICE
+            </span>
+            <span class="text-xs text-slate-400">·</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Registrasi Pelanggan & SPK</span>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Surat Perintah Kerja (SPK)</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
+            Penerimaan permintaan kalibrasi pelanggan, pendaftaran spesifikasi instrumen, penentuan ruang lingkup acuan, dan penugasan teknisi lab.
         </p>
     </div>
-    <div>
+
+    <div class="flex items-center gap-2 shrink-0">
         <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-            <button onclick="openModal('create-order-modal')" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 shadow-subtle transition-colors">
+            <button onclick="openModal('create-order-modal')" class="btn-brand-primary">
                 <i class="ph-bold ph-plus text-xs"></i>
                 <span>+ Buat SPK Baru</span>
             </button>
         <?php else: ?>
-            <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 font-medium text-xs inline-flex items-center gap-1.5 border border-slate-200">
-                <i class="ph-bold ph-lock-key text-slate-400"></i>
+            <span class="badge-status neutral">
+                <i class="ph-bold ph-lock-key"></i>
                 <span>Mode Tinjau (Divisi Sales)</span>
             </span>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- Orders Table Card -->
-<div class="bg-white rounded-xl border border-slate-200/80 shadow-subtle overflow-hidden">
+<!-- 2. Operational KPI Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="kpi-widget accent-primary">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Total SPK Terbit</span>
+            <i class="ph-bold ph-clipboard-text text-base text-slate-400"></i>
+        </div>
+        <div class="kpi-value text-slate-900 dark:text-slate-100"><?= $totalOrdersCount ?></div>
+        <div class="kpi-subtext">Semua berkas pemesanan</div>
+    </div>
+
+    <div class="kpi-widget accent-info">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Layanan In-Lab</span>
+            <i class="ph-bold ph-flask text-base text-sky-500"></i>
+        </div>
+        <div class="kpi-value text-sky-700 dark:text-sky-400"><?= $inLabOrdersCount ?></div>
+        <div class="kpi-subtext">Dikerjakan di Lab Kalpindo</div>
+    </div>
+
+    <div class="kpi-widget accent-warning">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Layanan On-Site</span>
+            <i class="ph-bold ph-buildings text-base text-amber-500"></i>
+        </div>
+        <div class="kpi-value text-amber-700 dark:text-amber-400"><?= $onSiteOrdersCount ?></div>
+        <div class="kpi-subtext">Kalibrasi di lokasi klien</div>
+    </div>
+
+    <div class="kpi-widget accent-success">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">SPK Selesai (Completed)</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        </div>
+        <div class="kpi-value text-emerald-700 dark:text-emerald-400"><?= $completedOrdersCount ?></div>
+        <div class="kpi-subtext">Sertifikat terbit resmi</div>
+    </div>
+</div>
+
+<!-- 3. Orders Table Container -->
+<div class="ent-card overflow-hidden">
     
-    <!-- Table Controls / Header -->
-    <div class="p-3.5 sm:p-4 border-b border-slate-200/80 bg-slate-50/50 flex items-center justify-between">
-        <h2 class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Daftar Berkas SPK Aktif</h2>
-        <span class="text-xs text-slate-500 font-medium"><?= count($orders) ?> berkas terdaftar</span>
+    <!-- Table Header -->
+    <div class="ent-card-header">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-slate-900 dark:bg-slate-100"></span>
+            <h2 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Daftar Berkas SPK Aktif</h2>
+        </div>
+        <span class="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium">Total: <?= count($orders) ?> berkas</span>
     </div>
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs min-w-[1180px]">
-            <thead class="bg-slate-50/75 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider whitespace-nowrap">
+        <table class="ent-table min-w-[1150px]">
+            <thead>
                 <tr>
-                    <th class="py-3 px-4 w-[180px]">No. Order & Tanggal</th>
-                    <th class="py-3 px-4 w-[230px]">Pelanggan & Kontak</th>
-                    <th class="py-3 px-3 w-[110px]">Layanan</th>
-                    <th class="py-3 px-4 w-[220px]">Instrumen / Alat</th>
-                    <th class="py-3 px-3 w-[140px]">Ruang Lingkup</th>
-                    <th class="py-3 px-4 w-[140px]">Status</th>
-                    <th class="py-3 px-4 text-right w-[160px]">Aksi</th>
+                    <th class="w-[180px]">No. Order & Tanggal</th>
+                    <th class="w-[240px]">Pelanggan & Kontak</th>
+                    <th class="w-[110px]">Layanan</th>
+                    <th class="w-[230px]">Instrumen / Alat</th>
+                    <th class="w-[140px]">Ruang Lingkup</th>
+                    <th class="w-[140px]">Status Order</th>
+                    <th class="text-right w-[150px]">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody>
                 <?php if (empty($orders)): ?>
                     <tr>
-                        <td colspan="7" class="py-10 text-center text-slate-400 text-xs">Belum ada order kalibrasi yang terdaftar.</td>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <i class="ph-bold ph-folder-open text-3xl mb-2 inline-block text-slate-300 dark:text-slate-600"></i>
+                            <p class="text-xs font-medium text-slate-600 dark:text-slate-400">Belum ada order kalibrasi yang terdaftar.</p>
+                        </td>
                     </tr>
                 <?php endif; ?>
 
@@ -385,103 +445,117 @@ require_once __DIR__ . '/includes/header.php';
                         'certificate_number' => $o['certificate_number'] ?? '',
                         'is_certified' => ($o['instrument_status'] === 'CERTIFIED' || !empty($o['certificate_number']))
                     ];
+                    $menuIdOrder = "action-menu-order-" . $o['id'];
                 ?>
-                    <tr class="hover:bg-slate-50/60 transition-colors">
+                    <tr>
                         
                         <!-- No. Order & Tanggal -->
-                        <td class="py-3.5 px-4 whitespace-nowrap align-middle">
-                            <span class="font-mono text-xs font-semibold text-slate-900 tracking-tight">
+                        <td class="whitespace-nowrap">
+                            <div class="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                                 <?= htmlspecialchars($o['order_number']) ?>
-                            </span>
-                            <p class="text-[11px] text-slate-400 font-medium mt-0.5 whitespace-nowrap flex items-center gap-1">
-                                <i class="ph-bold ph-calendar-blank text-slate-400 text-xs"></i>
+                            </div>
+                            <div class="cell-meta text-slate-400 mt-1 flex items-center gap-1">
+                                <i class="ph-bold ph-calendar-blank text-xs"></i>
                                 <span><?= formatIndonesianDate($o['order_date']) ?></span>
-                            </p>
+                            </div>
                         </td>
 
                         <!-- Pelanggan & Kontak -->
-                        <td class="py-3.5 px-4 align-middle">
-                            <p class="font-semibold text-slate-900 text-xs truncate max-w-[210px]" title="<?= htmlspecialchars($o['customer_name']) ?>">
+                        <td>
+                            <div class="cell-primary truncate max-w-[220px]" title="<?= htmlspecialchars($o['customer_name']) ?>">
                                 <?= htmlspecialchars($o['customer_name']) ?>
-                            </p>
-                            <p class="text-[11px] text-slate-500 mt-0.5 truncate max-w-[210px]" title="<?= htmlspecialchars($o['customer_address']) ?>">
+                            </div>
+                            <div class="cell-secondary truncate max-w-[220px]" title="<?= htmlspecialchars($o['customer_address']) ?>">
                                 <?= htmlspecialchars($o['customer_address'] ?: '-') ?>
-                            </p>
-                            <p class="text-[10px] text-slate-400 font-mono mt-0.5">
+                            </div>
+                            <div class="cell-meta">
                                 <?= htmlspecialchars($o['customer_contact'] ?: '-') ?>
-                            </p>
+                            </div>
                         </td>
 
                         <!-- Layanan -->
-                        <td class="py-3.5 px-3 whitespace-nowrap align-middle">
+                        <td class="whitespace-nowrap">
                             <?= renderLocationBadge($o['service_type']) ?>
                         </td>
 
                         <!-- Daftar Alat -->
-                        <td class="py-3.5 px-4 align-middle">
+                        <td>
                             <?php 
                                 $instNames = explode('||', (string)$o['instrument_names']);
                                 $kanList = explode('||', (string)($o['is_kan_list'] ?? ''));
                                 foreach (array_filter($instNames) as $idx => $name): 
                                     $isItemKan = ($kanList[$idx] ?? '1') === '1';
                             ?>
-                                <div class="text-xs text-slate-800 font-medium flex items-center gap-1.5 py-0.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
-                                    <span class="truncate max-w-[150px]" title="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></span>
-                                    <span class="text-[10px] <?= $isItemKan ? 'text-slate-400' : 'text-amber-700 font-semibold' ?>">
-                                        (<?= $isItemKan ? 'KAN' : 'Non-KAN' ?>)
-                                    </span>
+                                <div class="text-xs font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5 py-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C81E26] shrink-0"></span>
+                                    <span class="truncate max-w-[160px]" title="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></span>
+                                    <?= renderAccreditationBadge($isItemKan) ?>
                                 </div>
                             <?php endforeach; ?>
                         </td>
 
                         <!-- Ruang Lingkup -->
-                        <td class="py-3.5 px-3 whitespace-nowrap align-middle">
+                        <td class="whitespace-nowrap">
                             <?php 
                                 $scCodes = array_unique(array_filter(explode('||', (string)$o['scope_codes'])));
                                 foreach ($scCodes as $sc):
                                     $scInfo = $scopes[$sc] ?? ['name' => $sc];
                             ?>
-                                <span class="font-mono text-xs text-slate-800 font-medium block">
+                                <span class="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 block">
                                     [<?= htmlspecialchars($sc) ?>] <?= htmlspecialchars(explode(' ', $scInfo['name'])[0]) ?>
                                 </span>
                             <?php endforeach; ?>
                         </td>
 
                         <!-- Status Order -->
-                        <td class="py-3.5 px-4 whitespace-nowrap align-middle">
+                        <td class="whitespace-nowrap">
                             <?= renderStatusBadge($o['status']) ?>
                         </td>
 
                         <!-- Aksi -->
-                        <td class="py-3.5 px-4 text-right whitespace-nowrap align-middle">
+                        <td class="text-right whitespace-nowrap">
                             <div class="inline-flex items-center justify-end gap-1.5">
                                 <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
                                     <button type="button" 
                                             onclick='openEditOrderModal(<?= json_encode($editData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>)'
-                                            class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 inline-flex items-center gap-1 transition-colors shadow-subtle"
+                                            class="btn-surface text-xs"
                                             title="Edit SPK & Data Instrumen">
-                                        <i class="ph-bold ph-pencil-simple text-slate-400"></i>
-                                        <span>Edit</span>
+                                        <i class="ph-bold ph-pencil-simple text-slate-500"></i>
+                                        <span>Edit SPK</span>
                                     </button>
-                                    <?php if ($o['status'] !== 'COMPLETED' && ($o['instrument_status'] ?? '') !== 'CERTIFIED'): ?>
-                                        <form action="orders.php" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus SPK <?= htmlspecialchars($o['order_number']) ?>?');">
-                                            <input type="hidden" name="action" value="delete_order">
-                                            <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
-                                            <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Hapus SPK">
-                                                <i class="ph-bold ph-trash text-sm"></i>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                <?php endif; ?>
 
-                                <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                                    <a href="worksheet.php?order_id=<?= $o['id'] ?>" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white inline-flex items-center gap-1 transition-colors shadow-subtle">
-                                        <span>Worksheet</span>
-                                    </a>
+                                    <!-- Dropdown Contextual Menu -->
+                                    <div class="action-menu-container">
+                                        <button type="button" onclick="toggleActionMenu('<?= $menuIdOrder ?>', event)" class="btn-icon" title="Opsi SPK" aria-label="Opsi">
+                                            <i class="ph-bold ph-dots-three-vertical text-sm"></i>
+                                        </button>
+                                        <div id="<?= $menuIdOrder ?>" class="action-menu-dropdown">
+                                            <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="action-menu-item">
+                                                <i class="ph-bold ph-chart-line text-slate-500"></i>
+                                                <span>Lacak Alur Kerja</span>
+                                            </a>
+                                            <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                                                <a href="worksheet.php?order_id=<?= $o['id'] ?>" class="action-menu-item">
+                                                    <i class="ph-bold ph-wrench text-slate-500"></i>
+                                                    <span>Buka Worksheet</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($o['status'] !== 'COMPLETED' && ($o['instrument_status'] ?? '') !== 'CERTIFIED'): ?>
+                                                <div class="action-menu-divider"></div>
+                                                <form action="orders.php" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus SPK <?= htmlspecialchars($o['order_number']) ?>?');">
+                                                    <input type="hidden" name="action" value="delete_order">
+                                                    <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
+                                                    <button type="submit" class="action-menu-item danger">
+                                                        <i class="ph-bold ph-trash"></i>
+                                                        <span>Hapus SPK</span>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 <?php else: ?>
-                                    <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 inline-flex items-center gap-1 transition-colors shadow-subtle">
-                                        <span>Alur &rarr;</span>
+                                    <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="btn-surface text-xs">
+                                        <span>Lacak Alur &rarr;</span>
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -494,7 +568,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- Table Footer Summary -->
-    <div class="p-3.5 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+    <div class="ent-card-footer flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <span>Menampilkan <strong><?= count($orders) ?></strong> berkas SPK kalibrasi</span>
         <span class="font-mono text-[11px] text-slate-400">Sistem Kalibrasi Terintegrasi ISO/IEC 17025:2017</span>
     </div>

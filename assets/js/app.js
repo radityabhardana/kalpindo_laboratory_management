@@ -277,4 +277,31 @@ function initTheme() {
 initTheme();
 document.addEventListener('DOMContentLoaded', initTheme);
 
+/**
+ * Contextual Action Menu (••• Dropdown) Controls
+ */
+function toggleActionMenu(id, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    // Close other open menus
+    document.querySelectorAll('.action-menu-dropdown.show').forEach(menu => {
+        if (menu.id !== id) {
+            menu.classList.remove('show');
+        }
+    });
 
+    const targetMenu = document.getElementById(id);
+    if (targetMenu) {
+        targetMenu.classList.toggle('show');
+    }
+}
+
+// Close action menus when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.action-menu-container')) {
+        document.querySelectorAll('.action-menu-dropdown.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});

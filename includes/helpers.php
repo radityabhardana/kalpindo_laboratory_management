@@ -185,39 +185,39 @@ function formatIndonesianDate(?string $dateStr): string {
 }
 
 /**
- * Render Badge Status Alur Kerja (Sesuai Standar Enterprise)
+ * Render Badge Status Alur Kerja (Sesuai Standar Enterprise SaaS)
  */
 function renderStatusBadge(string $status): string {
     switch ($status) {
         case 'PENDING':
         case 'ASSIGNED':
-            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
-                Menunggu Kalibrasi
+            return '<span class="badge-status warning">
+                <span class="badge-dot"></span>
+                <span>Menunggu Kalibrasi</span>
             </span>';
         case 'IN_PROGRESS':
         case 'CALIBRATING':
-            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-sky-700 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0"></span>
-                Sedang Dikalibrasi
+            return '<span class="badge-status info">
+                <span class="badge-dot"></span>
+                <span>Sedang Dikalibrasi</span>
             </span>';
         case 'WORKSHEET_DONE':
         case 'DATA_SUBMITTED':
-            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
-                Siap No. Sertifikat
+            return '<span class="badge-status purple">
+                <span class="badge-dot"></span>
+                <span>Siap No. Sertifikat</span>
             </span>';
         case 'COMPLETED':
         case 'CERTIFIED':
         case 'ISSUED':
-            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                Sertifikat Terbit
+            return '<span class="badge-status success">
+                <span class="badge-dot"></span>
+                <span>Sertifikat Terbit</span>
             </span>';
         default:
-            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
-                ' . htmlspecialchars($status) . '
+            return '<span class="badge-status neutral">
+                <span class="badge-dot"></span>
+                <span>' . htmlspecialchars($status) . '</span>
             </span>';
     }
 }
@@ -227,16 +227,32 @@ function renderStatusBadge(string $status): string {
  */
 function renderLocationBadge(string $serviceType): string {
     if ($serviceType === 'ON_SITE') {
-        return '<span class="inline-flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap">
-            <i class="ph-bold ph-buildings text-slate-400 text-[11px]"></i>
+        return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200/80 whitespace-nowrap dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40">
+            <i class="ph-bold ph-buildings text-[12px] text-amber-600"></i>
             <span>On-Site</span>
         </span>';
     }
-    return '<span class="inline-flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap">
-        <i class="ph-bold ph-flask text-slate-400 text-[11px]"></i>
+    return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+        <i class="ph-bold ph-flask text-[12px] text-slate-500"></i>
         <span>In-Lab</span>
     </span>';
 }
+
+/**
+ * Render Badge Akreditasi KAN vs Non-KAN
+ */
+function renderAccreditationBadge(bool $isKan): string {
+    if ($isKan) {
+        return '<span class="pill-kan" title="Terakreditasi KAN ISO/IEC 17025">
+            <i class="ph-bold ph-shield-check text-[10px]"></i>
+            <span>KAN LK-088</span>
+        </span>';
+    }
+    return '<span class="pill-non-kan" title="Standar Tertelusur (Non-KAN)">
+        <span>Non-KAN (N)</span>
+    </span>';
+}
+
 
 function setFlash(string $type, string $message): void {
     $_SESSION['flash'] = [

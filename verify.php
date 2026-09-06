@@ -106,11 +106,11 @@ if ($cert) {
     </script>
     <link rel="stylesheet" href="assets/css/custom.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between py-12 px-4 antialiased">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between py-12 px-4 antialiased">
 
     <!-- Theme Toggle Button -->
     <div class="fixed top-4 right-4 z-50">
-        <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-subtle hover:shadow transition-all" title="Ganti Mode Tema (Terang / Gelap)">
+        <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-subtle hover:shadow transition-all" title="Ganti Mode Tema (Terang / Gelap)">
             <i class="ph-bold ph-moon text-base theme-icon-moon"></i>
             <i class="ph-bold ph-sun text-base theme-icon-sun"></i>
         </button>
@@ -123,50 +123,50 @@ if ($cert) {
             <a href="index.php" class="inline-block mb-3">
                 <img src="assets/img/logo.png" alt="Logo Kalpindo" class="h-10 mx-auto object-contain">
             </a>
-            <h2 class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Verifikasi Keabsahan Sertifikat Kalibrasi</h2>
-            <p class="text-[11px] text-slate-400 mt-0.5">Basis Data Resmi Laboratorium PT. Kalibrasi Pengujian Indonesia</p>
+            <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Verifikasi Keabsahan Sertifikat Kalibrasi</h2>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Basis Data Resmi Laboratorium PT. Kalibrasi Pengujian Indonesia</p>
         </div>
 
         <?php if (!$cert): ?>
             <!-- Sertifikat Tidak Ditemukan -->
-            <div class="bg-white rounded-xl p-8 text-center border border-slate-200/80 shadow-subtle">
-                <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100">
+            <div class="ent-card p-8 text-center">
+                <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 border border-rose-200/80 dark:border-rose-900/50">
                     <i class="ph-bold ph-warning-circle text-2xl"></i>
                 </div>
-                <h3 class="text-base font-bold text-slate-900 mb-1">Sertifikat Tidak Ditemukan</h3>
-                <p class="text-xs text-slate-500 max-w-sm mx-auto mb-6">
-                    Nomor sertifikat <span class="font-mono text-slate-900 font-semibold"><?= htmlspecialchars($certNumber ?: '-') ?></span> tidak terdaftar dalam database resmi laboratorium PT Kalpindo.
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Sertifikat Tidak Ditemukan</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6">
+                    Nomor sertifikat <span class="font-mono text-slate-900 dark:text-white font-semibold"><?= htmlspecialchars($certNumber ?: '-') ?></span> tidak terdaftar dalam basis data resmi laboratorium PT Kalpindo.
                 </p>
-                <a href="index.php" class="px-4 py-2 rounded-lg bg-slate-900 text-white font-medium text-xs hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5 shadow-subtle">
+                <a href="index.php" class="btn-brand-primary text-xs inline-flex items-center gap-1.5">
                     <i class="ph-bold ph-arrow-left"></i>
                     <span>Kembali ke Beranda</span>
                 </a>
             </div>
         <?php else: ?>
             <!-- Sertifikat Terverifikasi Sah -->
-            <div class="bg-white rounded-xl border border-slate-200/80 shadow-subtle overflow-hidden">
+            <div class="ent-card overflow-hidden">
                 
                 <!-- Status Top Bar -->
-                <div class="p-6 border-b border-slate-100 text-center bg-slate-50/40">
-                    <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 border border-emerald-200/80">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800 text-center bg-slate-50/50 dark:bg-slate-900/50">
+                    <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 border border-emerald-200/80 dark:border-emerald-800">
                         <i class="ph-bold ph-check-circle text-2xl"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-900 tracking-tight">Dokumen Sertifikat Terverifikasi</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Dokumen Sertifikat Terverifikasi</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         <?= $isKan ? 'Laboratorium Terakreditasi KAN No. LK-088-IDN (ISO/IEC 17025)' : 'Laboratorium Kalibrasi Tertelusur Satuan Internasional (SI)' ?>
                     </p>
                 </div>
 
                 <!-- Revision Notice if Applicable -->
                 <?php if ($wasRevised || $cert['revision_number'] !== '00'): ?>
-                    <div class="bg-slate-50 px-5 py-3.5 border-b border-slate-200/80 flex items-start gap-2.5 text-xs text-slate-700">
-                        <i class="ph-bold ph-info text-base text-slate-600 shrink-0 mt-0.5"></i>
+                    <div class="bg-amber-50/70 dark:bg-amber-950/30 px-5 py-3.5 border-b border-amber-200/60 dark:border-amber-900/40 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200">
+                        <i class="ph-bold ph-info text-base text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
                         <div>
-                            <p class="font-semibold text-slate-900">Catatan Amandemen / Revisi Resmi</p>
-                            <p class="text-[11px] text-slate-500 mt-0.5">
-                                Sertifikat ini telah diperbarui menjadi Nomor: <span class="font-mono font-semibold text-slate-900"><?= htmlspecialchars($cert['certificate_number']) ?></span>.
+                            <p class="font-bold text-amber-900 dark:text-amber-200">Catatan Amandemen / Revisi Resmi</p>
+                            <p class="text-[11px] text-amber-800/90 dark:text-amber-300 mt-0.5">
+                                Sertifikat ini telah diperbarui menjadi Nomor: <span class="font-mono font-bold text-slate-900 dark:text-white"><?= htmlspecialchars($cert['certificate_number']) ?></span>.
                                 <?php if (!empty($cert['revision_notes'])): ?>
-                                    <br><span class="text-slate-600 font-medium">Alasan: <?= htmlspecialchars($cert['revision_notes']) ?></span>
+                                    <br><span class="font-semibold">Alasan: <?= htmlspecialchars($cert['revision_notes']) ?></span>
                                 <?php endif; ?>
                             </p>
                         </div>
@@ -175,62 +175,62 @@ if ($cert) {
 
                 <!-- Details Grid -->
                 <div class="p-6 space-y-3.5 text-xs">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Nomor Sertifikat</span>
-                        <span class="font-mono font-semibold text-slate-900 tracking-tight text-xs"><?= htmlspecialchars($cert['certificate_number']) ?></span>
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Nomor Sertifikat</span>
+                        <span class="font-mono font-bold text-slate-900 dark:text-white tracking-tight text-xs"><?= htmlspecialchars($cert['certificate_number']) ?></span>
                     </div>
 
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Status Akreditasi</span>
-                        <span class="font-medium text-slate-800">
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Status Akreditasi</span>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">
                             <?= $isKan ? 'Akreditasi KAN (ISO/IEC 17025)' : 'Non-KAN (Tertelusur Satuan SI)' ?>
                         </span>
                     </div>
 
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Nama Instrumen / Alat</span>
-                        <span class="font-semibold text-slate-900 text-right"><?= htmlspecialchars($cert['instrument_name']) ?></span>
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Nama Instrumen / Alat</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-right"><?= htmlspecialchars($cert['instrument_name']) ?></span>
                     </div>
 
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Merk & Tipe</span>
-                        <span class="font-medium text-slate-800"><?= htmlspecialchars($cert['brand'] ?: '-') ?> <?= htmlspecialchars($cert['model_type'] ?: '') ?></span>
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Merk & Tipe</span>
+                        <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($cert['brand'] ?: '-') ?> <?= htmlspecialchars($cert['model_type'] ?: '') ?></span>
                     </div>
 
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Nomor Seri (SN)</span>
-                        <span class="font-mono font-medium text-slate-900"><?= htmlspecialchars($cert['serial_number']) ?></span>
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Nomor Seri (SN)</span>
+                        <span class="font-mono font-medium text-slate-900 dark:text-white"><?= htmlspecialchars($cert['serial_number']) ?></span>
                     </div>
 
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Pelanggan / Pemilik</span>
-                        <span class="font-semibold text-slate-900 text-right"><?= htmlspecialchars($cert['customer_name']) ?></span>
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Pelanggan / Pemilik</span>
+                        <span class="font-semibold text-slate-900 dark:text-white text-right"><?= htmlspecialchars($cert['customer_name']) ?></span>
                     </div>
 
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Ruang Lingkup</span>
-                        <span class="font-medium text-slate-800">[<?= htmlspecialchars($cert['scope_code']) ?>] <?= htmlspecialchars($scopes[$cert['scope_code']]['name'] ?? $cert['scope_code']) ?></span>
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Ruang Lingkup</span>
+                        <span class="font-medium text-slate-800 dark:text-slate-200">[<?= htmlspecialchars($cert['scope_code']) ?>] <?= htmlspecialchars($scopes[$cert['scope_code']]['name'] ?? $cert['scope_code']) ?></span>
                     </div>
 
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                        <span class="text-slate-500">Tanggal Penerbitan</span>
-                        <span class="font-medium text-slate-800"><?= formatIndonesianDate($cert['issue_date']) ?></span>
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-slate-500 dark:text-slate-400">Tanggal Penerbitan</span>
+                        <span class="font-medium text-slate-800 dark:text-slate-200"><?= formatIndonesianDate($cert['issue_date']) ?></span>
                     </div>
 
                     <div class="flex justify-between items-center">
-                        <span class="text-slate-500">Masa Kalibrasi Ulang</span>
-                        <span class="font-semibold text-slate-900"><?= formatIndonesianDate($cert['valid_until']) ?></span>
+                        <span class="text-slate-500 dark:text-slate-400">Masa Kalibrasi Ulang</span>
+                        <span class="font-bold text-slate-900 dark:text-white"><?= formatIndonesianDate($cert['valid_until']) ?></span>
                     </div>
                 </div>
 
                 <!-- Action Footer -->
-                <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="w-full sm:w-auto bg-[#C81E26] hover:bg-[#B2151D] text-white px-4 py-2 rounded-lg font-semibold text-xs shadow-subtle inline-flex items-center justify-center gap-1.5 transition-colors">
+                <div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="btn-brand-primary text-xs w-full sm:w-auto inline-flex items-center justify-center gap-1.5">
                         <i class="ph-bold ph-printer text-sm"></i>
                         <span>Buka Lembar Sertifikat Resmi (A4)</span>
                     </a>
 
-                    <a href="index.php" class="text-xs text-slate-500 hover:text-slate-900 font-medium transition-colors">
+                    <a href="index.php" class="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium transition-colors">
                         Masuk Sistem &rarr;
                     </a>
                 </div>
@@ -238,7 +238,7 @@ if ($cert) {
             </div>
         <?php endif; ?>
 
-        <div class="text-center mt-8 text-[11px] text-slate-400">
+        <div class="text-center mt-8 text-[11px] text-slate-400 dark:text-slate-500">
             &copy; 2026 PT. Kalibrasi Pengujian Indonesia • Laboratorium Kalibrasi ISO/IEC 17025:2017
         </div>
     </div>

@@ -223,89 +223,185 @@ $totalNonKanCount = (int)$db->query("SELECT COUNT(*) FROM certificates WHERE is_
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- Header Control Bar -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<!-- 1. PAGE HEADER (Strong Context & Clear Primary Intent) -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
     <div>
-        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Administrasi & Penerbitan Sertifikat</h1>
-        <p class="text-xs text-slate-500 mt-0.5">
-            Verifikasi data mentah teknisi, pembentukan nomor sertifikat standar ISO/IEC 17025, dan pengarsipan resmi.
+        <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60">
+                MODUL PENERBITAN
+            </span>
+            <span class="text-xs text-slate-400">·</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">ISO/IEC 17025 (LK-088-IDN)</span>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Administrasi & Penerbitan Sertifikat</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
+            Kelola verifikasi data mentah teknisi, pembentukan nomor sertifikat standar ISO/IEC 17025, penandatanganan manajer teknis, dan pengarsipan resmi.
         </p>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+        <a href="#incoming-queue-section" class="btn-surface text-xs">
+            <i class="ph-bold ph-tray text-amber-500"></i>
+            <span>Antrean Berkas (<?= count($incomingQueue) ?>)</span>
+        </a>
+        <a href="certificates.php" class="btn-surface text-xs">
+            <i class="ph-bold ph-arrows-clockwise text-slate-400"></i>
+            <span>Refresh Data</span>
+        </a>
     </div>
 </div>
 
-<!-- SECTION 1: Antrean Berkas Masuk dari Teknisi (Menunggu Penomoran) -->
-<div class="bg-white rounded-xl border border-slate-200/80 shadow-subtle overflow-hidden mb-6">
-    <div class="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-slate-900"></span>
-            <h2 class="text-xs font-semibold text-slate-800 uppercase tracking-wider">Antrean Berkas Masuk Teknisi</h2>
+<!-- 2. OPERATIONAL SUMMARY (4 Structured KPI Cards) -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+    
+    <!-- KPI 1: Total Issued -->
+    <div class="kpi-widget accent-success">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Sertifikat Terbit</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
         </div>
-        <span class="text-xs text-slate-500 font-medium"><?= count($incomingQueue) ?> berkas menunggu nomor</span>
+        <div class="kpi-value text-emerald-700 dark:text-emerald-400"><?= $totalIssuedCount ?></div>
+        <div class="kpi-subtext">
+            <i class="ph-bold ph-check-circle text-emerald-600"></i>
+            <span>Dokumen sah & terarsip</span>
+        </div>
+    </div>
+
+    <!-- KPI 2: Waiting Queue -->
+    <div class="kpi-widget <?= count($incomingQueue) > 0 ? 'accent-primary' : 'accent-warning' ?>">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Menunggu Nomor</span>
+            <span class="w-2 h-2 rounded-full <?= count($incomingQueue) > 0 ? 'bg-[#C81E26] animate-pulse' : 'bg-slate-300' ?>"></span>
+        </div>
+        <div class="kpi-value <?= count($incomingQueue) > 0 ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-700 dark:text-slate-200' ?>">
+            <?= count($incomingQueue) ?>
+        </div>
+        <div class="kpi-subtext">
+            <i class="ph-bold ph-hourglass text-amber-600"></i>
+            <span>Dari lembar kerja teknisi</span>
+        </div>
+    </div>
+
+    <!-- KPI 3: KAN Accredited -->
+    <div class="kpi-widget accent-primary">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Akreditasi KAN</span>
+            <span class="pill-kan text-[9px]">ISO 17025</span>
+        </div>
+        <div class="kpi-value text-slate-900 dark:text-slate-100"><?= $totalKanCount ?></div>
+        <div class="kpi-subtext">
+            <i class="ph-bold ph-shield-check text-red-600"></i>
+            <span>Sertifikat formal KAN</span>
+        </div>
+    </div>
+
+    <!-- KPI 4: Non-KAN / Traceable -->
+    <div class="kpi-widget accent-info">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Non-KAN (N)</span>
+            <span class="pill-non-kan text-[9px]">Tertelusur</span>
+        </div>
+        <div class="kpi-value text-slate-900 dark:text-slate-100"><?= $totalNonKanCount ?></div>
+        <div class="kpi-subtext">
+            <i class="ph-bold ph-scales text-sky-600"></i>
+            <span>Standar tertelusur nasional</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- 3. WORKFLOW QUEUE (Antrean Berkas Masuk Teknisi) -->
+<div id="incoming-queue-section" class="ent-card mb-7 scroll-mt-20">
+    <div class="ent-card-header">
+        <div class="flex items-center gap-2.5">
+            <div class="w-2.5 h-2.5 rounded-full <?= count($incomingQueue) > 0 ? 'bg-[#C81E26] animate-pulse' : 'bg-slate-400' ?>"></div>
+            <div>
+                <h2 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                    Antrean Berkas Masuk Teknisi
+                </h2>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Lembar kerja selesai uji yang menunggu penetapan nomor sertifikat resmi.</p>
+            </div>
+        </div>
+        <span class="badge-status <?= count($incomingQueue) > 0 ? 'warning' : 'neutral' ?>">
+            <span class="badge-dot"></span>
+            <span><?= count($incomingQueue) ?> Berkas Menunggu</span>
+        </span>
     </div>
 
     <?php if (empty($incomingQueue)): ?>
-        <div class="p-8 text-center text-slate-400 text-xs">
-            Semua lembar kerja teknisi telah selesai diverifikasi dan diterbitkan nomor sertifikatnya.
+        <div class="p-8 text-center">
+            <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center mx-auto mb-3 border border-emerald-200 dark:border-emerald-800">
+                <i class="ph-bold ph-check text-xl"></i>
+            </div>
+            <h4 class="text-xs font-bold text-slate-900 dark:text-slate-100">Semua Berkas Teknisi Selesai Diterbitkan</h4>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+                Tidak ada antrean lembar kerja teknisi saat ini. Berkas baru akan muncul otomatis ketika teknisi menyerahkan data pengukuran.
+            </p>
         </div>
     <?php else: ?>
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs min-w-[960px]">
-                <thead class="bg-slate-50/75 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider whitespace-nowrap">
+            <table class="ent-table min-w-[1000px]">
+                <thead>
                     <tr>
-                        <th class="py-3 px-4">Alat & Pelanggan</th>
-                        <th class="py-3 px-3">Ruang Lingkup</th>
-                        <th class="py-3 px-3">Teknisi & Masuk</th>
-                        <th class="py-3 px-3">Suhu & RH</th>
-                        <th class="py-3 px-4">Standar Acuan</th>
-                        <th class="py-3 px-4 text-right">Tindakan</th>
+                        <th class="w-[280px]">Alat & Pelanggan</th>
+                        <th class="w-[170px]">Ruang Lingkup & Akreditasi</th>
+                        <th class="w-[160px]">Teknisi & Waktu Masuk</th>
+                        <th class="w-[140px]">Kondisi Lingkungan</th>
+                        <th>Standar Acuan Kalibrator</th>
+                        <th class="text-right w-[200px]">Tindakan</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody>
                     <?php foreach ($incomingQueue as $item): ?>
                         <?php 
                             $sc = $scopes[$item['scope_code']] ?? ['name' => $item['scope_code']];
                             $isItemKan = ((int)($item['is_kan'] ?? 1) === 1);
                             $predicted = generateCertificateNumber($db, $item['scope_code'], date('Y-m-d'), '00', $isItemKan);
                         ?>
-                        <tr class="hover:bg-slate-50/60 transition-colors">
-                            <td class="py-3.5 px-4 align-middle">
-                                <p class="font-semibold text-slate-900 text-xs"><?= htmlspecialchars($item['name']) ?></p>
-                                <p class="text-[11px] text-slate-500 mt-0.5"><?= htmlspecialchars($item['brand'] ?: '-') ?> <?= htmlspecialchars($item['model_type'] ?: '') ?></p>
-                                <p class="font-mono text-[10px] text-slate-400 mt-0.5">SN: <?= htmlspecialchars($item['serial_number']) ?> • <?= htmlspecialchars($item['customer_name']) ?></p>
+                        <tr>
+                            <td>
+                                <div class="cell-primary"><?= htmlspecialchars($item['name']) ?></div>
+                                <div class="cell-secondary">
+                                    <?= htmlspecialchars($item['brand'] ?: '-') ?> · <?= htmlspecialchars($item['model_type'] ?: '-') ?>
+                                </div>
+                                <div class="cell-meta">
+                                    SN: <?= htmlspecialchars($item['serial_number']) ?> · <span class="text-slate-600 dark:text-slate-400 font-medium"><?= htmlspecialchars($item['customer_name']) ?></span>
+                                </div>
                             </td>
 
-                            <td class="py-3.5 px-3 align-middle whitespace-nowrap">
-                                <span class="font-mono text-xs text-slate-900 font-medium">
+                            <td class="whitespace-nowrap">
+                                <span class="font-mono text-xs font-semibold text-slate-900 dark:text-slate-100">
                                     [<?= htmlspecialchars($item['scope_code']) ?>] <?= htmlspecialchars(explode(' ', $sc['name'])[0]) ?>
                                 </span>
-                                <p class="text-[11px] <?= $isItemKan ? 'text-slate-500' : 'text-amber-700 font-semibold' ?> mt-0.5">
-                                    <?= $isItemKan ? 'Akreditasi KAN' : 'Non-KAN (Awalan N)' ?>
-                                </p>
+                                <div class="mt-1">
+                                    <?= renderAccreditationBadge($isItemKan) ?>
+                                </div>
                             </td>
 
-                            <td class="py-3.5 px-3 align-middle">
-                                <p class="font-medium text-slate-800 text-xs"><?= htmlspecialchars($item['technician_name'] ?: '-') ?></p>
-                                <p class="text-slate-400 font-mono text-[10px] mt-0.5"><?= htmlspecialchars($item['submitted_at']) ?></p>
+                            <td class="whitespace-nowrap">
+                                <div class="text-xs font-semibold text-slate-800 dark:text-slate-200"><?= htmlspecialchars($item['technician_name'] ?: '-') ?></div>
+                                <div class="cell-meta text-slate-400">
+                                    <i class="ph-bold ph-clock text-[10px]"></i> <?= htmlspecialchars($item['submitted_at']) ?>
+                                </div>
                             </td>
 
-                            <td class="py-3.5 px-3 align-middle font-mono text-slate-700 whitespace-nowrap">
-                                <span><?= $item['temperature'] ?> °C</span> • <span><?= $item['humidity'] ?> %RH</span>
+                            <td class="font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                <div><span class="text-slate-400">T:</span> <strong><?= $item['temperature'] ?></strong> °C</div>
+                                <div><span class="text-slate-400">RH:</span> <strong><?= $item['humidity'] ?></strong> %</div>
                             </td>
 
-                            <td class="py-3.5 px-4 align-middle text-slate-600 max-w-[220px] truncate" title="<?= htmlspecialchars($item['standard_calibrator']) ?>">
-                                <?= htmlspecialchars($item['standard_calibrator']) ?>
+                            <td class="text-slate-600 dark:text-slate-300 max-w-[220px] truncate" title="<?= htmlspecialchars($item['standard_calibrator']) ?>">
+                                <span class="font-medium"><?= htmlspecialchars($item['standard_calibrator']) ?></span>
                             </td>
 
-                            <td class="py-3.5 px-4 text-right whitespace-nowrap align-middle">
+                            <td class="text-right whitespace-nowrap">
                                 <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                                    <button onclick="openGenerateModal(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['name'])) ?>', '<?= htmlspecialchars(addslashes($item['customer_name'])) ?>', '<?= $item['scope_code'] ?>', <?= $isItemKan ? 1 : 0 ?>, '<?= $predicted['certificate_number'] ?>')" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-3 py-1.5 rounded-lg font-semibold text-xs shadow-subtle inline-flex items-center gap-1.5 transition-colors">
-                                        <i class="ph-bold ph-plus-circle"></i>
+                                    <button onclick="openGenerateModal(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['name'])) ?>', '<?= htmlspecialchars(addslashes($item['customer_name'])) ?>', '<?= $item['scope_code'] ?>', <?= $isItemKan ? 1 : 0 ?>, '<?= $predicted['certificate_number'] ?>')" class="btn-brand-primary">
+                                        <i class="ph-bold ph-certificate text-xs"></i>
                                         <span>Terbitkan (<?= $predicted['certificate_number'] ?>)</span>
                                     </button>
                                 <?php else: ?>
-                                    <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-500 font-medium text-xs border border-slate-200">
-                                        Mode Tinjau
-                                    </span>
+                                    <span class="badge-status neutral">Mode Tinjau</span>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -316,36 +412,42 @@ require_once __DIR__ . '/includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- SECTION 2: Daftar Sertifikat yang Telah Diterbitkan -->
-<div id="archive-section" class="bg-white rounded-xl border border-slate-200/80 shadow-subtle overflow-hidden scroll-mt-20">
-    <div class="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<!-- 4. CERTIFICATE DATABASE / ARCHIVE (Arsip Sertifikat Kalibrasi Resmi Terbit) -->
+<div id="archive-section" class="ent-card scroll-mt-20">
+    
+    <!-- Section Header -->
+    <div class="ent-card-header flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <h2 class="text-xs font-semibold text-slate-800 uppercase tracking-wider">Arsip Sertifikat Kalibrasi Resmi Terbit</h2>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <h2 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                    Arsip Sertifikat Kalibrasi Resmi Terbit
+                </h2>
             </div>
-            <p class="text-[11px] text-slate-500 mt-0.5">Database sertifikat terbit standar ISO/IEC 17025 siap cetak dan terintegrasi QR code.</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Database resmi sertifikat terbit standar ISO/IEC 17025 yang telah diverifikasi dan terintegrasi QR code validasi.
+            </p>
         </div>
-        <div class="text-xs text-slate-500 font-medium">
-            Total: <?= $totalIssuedCount ?> berkas (<?= $totalKanCount ?> KAN • <?= $totalNonKanCount ?> Non-KAN)
+        <div class="text-xs text-slate-600 dark:text-slate-400 font-medium font-mono bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200/80 dark:border-slate-700">
+            Total: <strong><?= $totalIssuedCount ?></strong> dokumen (<?= $totalKanCount ?> KAN · <?= $totalNonKanCount ?> Non-KAN)
         </div>
     </div>
 
-    <!-- Toolbar: Filter, Cari, & Sortir Arsip -->
-    <div class="p-3.5 border-b border-slate-100 bg-white">
+    <!-- Integrated Operational Filter Bar -->
+    <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40">
         <form action="certificates.php" method="GET" class="flex flex-wrap items-center justify-between gap-3 text-xs">
             <input type="hidden" name="section" value="archive">
             
             <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-                <!-- Search -->
-                <div class="relative flex-1 min-w-[200px]">
+                <!-- Search Input -->
+                <div class="relative flex-1 min-w-[220px]">
                     <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" name="search" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Cari No. Sertifikat, Alat, Pelanggan..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                    <input type="text" name="search" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Cari No. Sertifikat, Alat, Pelanggan, No. Seri..." class="ent-input pl-8">
                 </div>
 
                 <!-- Filter Ruang Lingkup -->
-                <select name="scope" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-slate-800 transition-colors">
-                    <option value="">Semua Lingkup</option>
+                <select name="scope" class="ent-select w-auto">
+                    <option value="">Semua Ruang Lingkup</option>
                     <?php foreach ($scopes as $code => $scInfo): ?>
                         <option value="<?= $code ?>" <?= $scopeFilter === $code ? 'selected' : '' ?>>
                             [<?= $code ?>] <?= htmlspecialchars($scInfo['name']) ?>
@@ -354,14 +456,14 @@ require_once __DIR__ . '/includes/header.php';
                 </select>
 
                 <!-- Filter Status Akreditasi -->
-                <select name="kan" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-slate-800 transition-colors">
+                <select name="kan" class="ent-select w-auto">
                     <option value="">Semua Akreditasi</option>
-                    <option value="1" <?= $kanFilter === '1' ? 'selected' : '' ?>>Akreditasi KAN</option>
+                    <option value="1" <?= $kanFilter === '1' ? 'selected' : '' ?>>Akreditasi KAN (ISO 17025)</option>
                     <option value="0" <?= $kanFilter === '0' ? 'selected' : '' ?>>Non-KAN (Awalan N)</option>
                 </select>
 
                 <!-- Sortir -->
-                <select name="sort" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-slate-800 transition-colors">
+                <select name="sort" class="ent-select w-auto">
                     <option value="newest" <?= $sortOption === 'newest' ? 'selected' : '' ?>>Terbaru</option>
                     <option value="oldest" <?= $sortOption === 'oldest' ? 'selected' : '' ?>>Terlama</option>
                     <option value="cert_no" <?= $sortOption === 'cert_no' ? 'selected' : '' ?>>No. Sertifikat (A-Z)</option>
@@ -369,13 +471,13 @@ require_once __DIR__ . '/includes/header.php';
                 </select>
             </div>
 
-            <div class="flex items-center gap-1.5">
-                <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5 shadow-subtle">
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="submit" class="btn-brand-primary">
                     <i class="ph-bold ph-faders"></i>
                     <span>Terapkan</span>
                 </button>
                 <?php if ($searchQuery !== '' || $scopeFilter !== '' || $kanFilter !== '' || $sortOption !== 'newest'): ?>
-                    <a href="certificates.php#archive-section" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+                    <a href="certificates.php#archive-section" class="btn-surface">
                         Reset
                     </a>
                 <?php endif; ?>
@@ -383,108 +485,153 @@ require_once __DIR__ . '/includes/header.php';
         </form>
     </div>
 
+    <!-- Structured Data Table (Scannable, Primary vs Secondary Hierarchy) -->
     <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs min-w-[1080px]">
-            <thead class="bg-slate-50/75 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider whitespace-nowrap">
+        <table class="ent-table min-w-[1100px]">
+            <thead>
                 <tr>
-                    <th class="py-3 px-4 w-[240px]">Nomor Sertifikat</th>
-                    <th class="py-3 px-4">Alat & No. Seri</th>
-                    <th class="py-3 px-4">Pelanggan</th>
-                    <th class="py-3 px-3">Tgl Terbit & Kedaluwarsa</th>
-                    <th class="py-3 px-3">Penandatangan</th>
-                    <th class="py-3 px-3">Revisi</th>
-                    <th class="py-3 px-4 text-right w-[180px]">Aksi</th>
+                    <th class="w-[240px]">Nomor Sertifikat</th>
+                    <th class="w-[250px]">Instrumen & Identifikasi</th>
+                    <th class="w-[220px]">Pelanggan & SPK</th>
+                    <th class="w-[180px]">Masa Berlaku</th>
+                    <th class="w-[160px]">Penandatangan</th>
+                    <th class="w-[100px]">Revisi</th>
+                    <th class="text-right w-[150px]">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody>
                 <?php if (empty($issuedCertificates)): ?>
                     <tr>
-                        <td colspan="7" class="py-10 text-center text-slate-400">
-                            <?= ($searchQuery !== '' || $scopeFilter !== '' || $kanFilter !== '') ? 'Tidak ada sertifikat yang cocok dengan filter pencarian.' : 'Belum ada arsip sertifikat yang diterbitkan.' ?>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <i class="ph-bold ph-folder-open text-3xl mb-2 inline-block text-slate-300 dark:text-slate-600"></i>
+                            <p class="text-xs font-medium text-slate-600 dark:text-slate-400">
+                                <?= ($searchQuery !== '' || $scopeFilter !== '' || $kanFilter !== '') ? 'Tidak ada arsip sertifikat yang sesuai dengan filter pencarian.' : 'Belum ada arsip sertifikat yang diterbitkan.' ?>
+                            </p>
                         </td>
                     </tr>
                 <?php endif; ?>
 
-                <?php foreach ($issuedCertificates as $cert): ?>
+                <?php foreach ($issuedCertificates as $idx => $cert): ?>
                     <?php 
                         $scope = $scopes[$cert['scope_code']] ?? ['name' => $cert['scope_code']];
                         $isJustIssued = ($newlyIssued && $cert['certificate_number'] === $newlyIssued);
                         $isCertKan = (isset($cert['is_kan']) && (int)$cert['is_kan'] === 1 && substr($cert['certificate_number'], 0, 1) !== 'N');
+                        $menuId = "action-menu-" . $cert['id'];
                     ?>
-                    <tr class="transition-colors <?= $isJustIssued ? 'bg-slate-50/90 border-l-3 border-l-slate-900' : 'hover:bg-slate-50/60' ?>">
-                        <td class="py-3.5 px-4 align-middle">
-                            <span class="font-mono text-xs font-semibold text-slate-900 tracking-tight">
+                    <tr class="<?= $isJustIssued ? 'row-highlight' : '' ?>">
+                        
+                        <!-- Col 1: Nomor Sertifikat (Primary Bold Mono) + Akreditasi Pill -->
+                        <td>
+                            <div class="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                                 <?= htmlspecialchars($cert['certificate_number']) ?>
-                            </span>
-                            <div class="text-[11px] text-slate-500 mt-0.5">
-                                <?= $isCertKan ? 'KAN LK-088-IDN' : 'Non-KAN (Tertelusur)' ?> • [<?= htmlspecialchars($cert['scope_code']) ?>]
+                            </div>
+                            <div class="mt-1 flex items-center gap-1.5">
+                                <?= renderAccreditationBadge($isCertKan) ?>
+                                <span class="font-mono text-[10px] text-slate-400">[<?= htmlspecialchars($cert['scope_code']) ?>]</span>
                             </div>
                         </td>
 
-                        <td class="py-3.5 px-4 align-middle">
-                            <p class="font-semibold text-slate-900 text-xs"><?= htmlspecialchars($cert['instrument_name']) ?></p>
-                            <p class="text-[11px] text-slate-500 mt-0.5"><?= htmlspecialchars($cert['brand'] ?: '-') ?> <?= htmlspecialchars($cert['model_type'] ?: '') ?></p>
-                            <p class="font-mono text-[10px] text-slate-400 mt-0.5">SN: <?= htmlspecialchars($cert['serial_number']) ?></p>
+                        <!-- Col 2: Alat & Spesifikasi (High Contrast Name, Subtle SN) -->
+                        <td>
+                            <div class="cell-primary"><?= htmlspecialchars($cert['instrument_name']) ?></div>
+                            <div class="cell-secondary"><?= htmlspecialchars($cert['brand'] ?: '-') ?> · <?= htmlspecialchars($cert['model_type'] ?: '-') ?></div>
+                            <div class="cell-meta">SN: <?= htmlspecialchars($cert['serial_number']) ?></div>
                         </td>
 
-                        <td class="py-3.5 px-4 align-middle">
-                            <p class="font-semibold text-slate-800 text-xs"><?= htmlspecialchars($cert['customer_name']) ?></p>
-                            <p class="font-mono text-[10px] text-slate-400 mt-0.5">SPK: <?= htmlspecialchars($cert['order_number']) ?></p>
+                        <!-- Col 3: Pelanggan & SPK -->
+                        <td>
+                            <div class="text-xs font-semibold text-slate-900 dark:text-slate-200"><?= htmlspecialchars($cert['customer_name']) ?></div>
+                            <div class="cell-meta font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                                SPK: <span class="text-slate-700 dark:text-slate-300"><?= htmlspecialchars($cert['order_number']) ?></span>
+                            </div>
                         </td>
 
-                        <td class="py-3.5 px-3 align-middle font-mono whitespace-nowrap">
-                            <p class="text-slate-800 text-xs"><?= formatIndonesianDate($cert['issue_date']) ?></p>
-                            <p class="text-slate-400 text-[10px] mt-0.5">Exp: <?= formatIndonesianDate($cert['valid_until']) ?></p>
+                        <!-- Col 4: Periode Berlaku (Issue & Valid Until) -->
+                        <td class="font-mono text-xs whitespace-nowrap">
+                            <div class="text-slate-800 dark:text-slate-200 font-semibold"><?= formatIndonesianDate($cert['issue_date']) ?></div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">
+                                Exp: <span class="text-slate-600 dark:text-slate-300"><?= formatIndonesianDate($cert['valid_until']) ?></span>
+                            </div>
                         </td>
 
-                        <td class="py-3.5 px-3 align-middle">
-                            <p class="font-medium text-slate-800 text-xs"><?= htmlspecialchars($cert['technical_manager']) ?></p>
-                            <span class="text-[10px] text-slate-400">Manajer Teknis</span>
+                        <!-- Col 5: Penandatangan -->
+                        <td>
+                            <div class="text-xs font-semibold text-slate-800 dark:text-slate-200"><?= htmlspecialchars($cert['technical_manager']) ?></div>
+                            <div class="text-[10px] text-slate-400">Manajer Teknis Lab</div>
                         </td>
 
-                        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
+                        <!-- Col 6: Revisi -->
+                        <td class="whitespace-nowrap">
                             <?php if ($cert['revision_number'] === '00'): ?>
-                                <span class="font-mono text-xs text-slate-600 font-medium">Rev-00</span>
+                                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                                    Rev-00
+                                </span>
                             <?php else: ?>
-                                <span class="font-mono text-xs text-slate-900 font-semibold">Rev-<?= htmlspecialchars($cert['revision_number']) ?></span>
+                                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                    Rev-<?= htmlspecialchars($cert['revision_number']) ?>
+                                </span>
                             <?php endif; ?>
                         </td>
 
-                        <td class="py-3.5 px-4 text-right whitespace-nowrap align-middle">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#C81E26] hover:bg-[#B2151D] text-white shadow-subtle inline-flex items-center gap-1.5 transition-colors whitespace-nowrap" title="Buka Dokumen Resmi & Cetak / Buat PDF">
+                        <!-- Col 7: ACTION BUTTONS ([Buat PDF] + [•••] Contextual Menu) -->
+                        <td class="text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5 justify-end">
+                                
+                                <!-- Primary Action: Buat PDF -->
+                                <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="btn-brand-primary" title="Buka dan Cetak Dokumen Resmi PDF">
                                     <i class="ph-bold ph-file-pdf text-xs"></i>
                                     <span>Buat PDF</span>
                                 </a>
 
-                                <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" title="Cek Halaman Verifikasi QR Code" class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                                    <i class="ph-bold ph-qr-code text-sm"></i>
-                                </a>
-
-                                <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                                    <button onclick="openRevisionModal(<?= $cert['id'] ?>, '<?= htmlspecialchars(addslashes($cert['certificate_number'])) ?>')" title="Ajukan Revisi Nomor Sertifikat" class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors">
-                                        <i class="ph-bold ph-pencil-simple text-sm"></i>
+                                <!-- Contextual Action Menu: [•••] -->
+                                <div class="action-menu-container">
+                                    <button type="button" onclick="toggleActionMenu('<?= $menuId ?>', event)" class="btn-icon" title="Menu Opsi Lainnya" aria-label="Menu Opsi">
+                                        <i class="ph-bold ph-dots-three-vertical text-sm"></i>
                                     </button>
-                                <?php endif; ?>
+                                    
+                                    <div id="<?= $menuId ?>" class="action-menu-dropdown">
+                                        <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="action-menu-item">
+                                            <i class="ph-bold ph-qr-code text-slate-500"></i>
+                                            <span>Verifikasi QR Code</span>
+                                        </a>
+
+                                        <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                                            <div class="action-menu-divider"></div>
+                                            <button type="button" onclick="openRevisionModal(<?= $cert['id'] ?>, '<?= htmlspecialchars(addslashes($cert['certificate_number'])) ?>')" class="action-menu-item">
+                                                <i class="ph-bold ph-pencil-simple text-slate-500"></i>
+                                                <span>Ajukan Revisi (-01)</span>
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
                             </div>
                         </td>
+
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
+
+    <!-- Table Footer Count -->
+    <div class="ent-card-footer flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <span>Menampilkan <strong><?= count($issuedCertificates) ?></strong> dari total <?= $totalIssuedCount ?> sertifikat kalibrasi</span>
+        <span class="font-mono text-[11px] text-slate-400">Sistem Informasi Laboratorium ISO/IEC 17025</span>
+    </div>
+
 </div>
 
 <!-- MODAL 1: Generator Nomor Sertifikat Otomatis -->
-<div id="generate-cert-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 w-full max-w-lg p-6 shadow-xl text-xs">
+<div id="generate-cert-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg p-6 shadow-2xl text-xs">
         
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-5">
             <div>
-                <h3 class="text-base font-bold text-slate-900 tracking-tight">Generator Nomor Sertifikat</h3>
-                <p class="text-slate-500 text-[11px] mt-0.5">Penerbitan nomor resmi kalibrasi standar ISO/IEC 17025.</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">Generator Nomor Sertifikat</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">Penerbitan nomor resmi kalibrasi standar ISO/IEC 17025.</p>
             </div>
-            <button onclick="closeModal('generate-cert-modal')" class="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors">
+            <button onclick="closeModal('generate-cert-modal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md transition-colors">
                 <i class="ph-bold ph-x text-base"></i>
             </button>
         </div>
@@ -493,26 +640,26 @@ require_once __DIR__ . '/includes/header.php';
             <input type="hidden" name="action" value="generate_certificate">
             <input type="hidden" id="modal-inst-id" name="instrument_id" value="">
 
-            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1 text-[11px]">
+            <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1.5 text-[11px]">
                 <div class="flex items-center justify-between">
-                    <span class="text-slate-500">Nama Alat:</span>
-                    <strong id="modal-inst-name" class="text-slate-900 font-semibold"></strong>
+                    <span class="text-slate-500 dark:text-slate-400">Nama Alat:</span>
+                    <strong id="modal-inst-name" class="text-slate-900 dark:text-slate-100 font-semibold"></strong>
                 </div>
                 <div class="flex items-center justify-between">
-                    <span class="text-slate-500">Pelanggan:</span>
-                    <span id="modal-customer-name" class="text-slate-700 font-medium"></span>
+                    <span class="text-slate-500 dark:text-slate-400">Pelanggan:</span>
+                    <span id="modal-customer-name" class="text-slate-700 dark:text-slate-300 font-medium"></span>
                 </div>
             </div>
 
             <!-- Preview Nomor -->
-            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-center transition-all">
-                <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+            <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-center transition-all">
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                     Preview Nomor Sertifikat
                 </span>
-                <div id="modal-cert-preview" class="font-mono text-xl font-bold text-slate-900 tracking-wider transition-opacity duration-150">
+                <div id="modal-cert-preview" class="font-mono text-2xl font-extrabold text-[#C81E26] dark:text-red-400 tracking-wider transition-opacity duration-150">
                     2605P0012-00
                 </div>
-                <p id="modal-cert-desc" class="text-[11px] text-slate-500 mt-1">
+                <p id="modal-cert-desc" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                     Format: Tahun (26) + Bulan + Scope + No. Urut + Revisi (-00)
                 </p>
             </div>
@@ -520,38 +667,39 @@ require_once __DIR__ . '/includes/header.php';
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Status Akreditasi <span class="text-rose-500">*</span></label>
-                        <select id="modal-is-kan" name="is_kan" onchange="refreshModalCertPreview()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-medium focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Status Akreditasi <span class="text-rose-500">*</span></label>
+                        <select id="modal-is-kan" name="is_kan" onchange="refreshModalCertPreview()" class="ent-select font-medium">
                             <option value="1">Akreditasi KAN (ISO/IEC 17025)</option>
                             <option value="0">Non-KAN (Awalan N)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Tanggal Terbit <span class="text-rose-500">*</span></label>
-                        <input type="date" id="modal-issue-date" name="issue_date" required value="<?= date('Y-m-d') ?>" onchange="refreshModalCertPreview()" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Tanggal Terbit <span class="text-rose-500">*</span></label>
+                        <input type="date" id="modal-issue-date" name="issue_date" required value="<?= date('Y-m-d') ?>" onchange="refreshModalCertPreview()" class="ent-input">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Masa Berlaku</label>
-                        <select name="valid_months" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Masa Berlaku</label>
+                        <select name="valid_months" class="ent-select">
                             <option value="12">12 Bulan (1 Tahun)</option>
                             <option value="6">6 Bulan</option>
                             <option value="24">24 Bulan</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Manajer Teknis</label>
-                        <input type="text" name="technical_manager" value="Ir. Hendra Wijaya, M.T." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Manajer Teknis</label>
+                        <input type="text" name="technical_manager" value="Ir. Hendra Wijaya, M.T." class="ent-input">
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
-                <button type="button" onclick="closeModal('generate-cert-modal')" class="px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors">Batal</button>
-                <button type="submit" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-4 py-2 rounded-lg font-semibold shadow-subtle transition-colors">
-                    Terbitkan Sertifikat Resmi &rarr;
+            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" onclick="closeModal('generate-cert-modal')" class="btn-surface">Batal</button>
+                <button type="submit" class="btn-brand-primary">
+                    <i class="ph-bold ph-certificate"></i>
+                    <span>Terbitkan Sertifikat Resmi</span>
                 </button>
             </div>
         </form>
@@ -560,15 +708,15 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- MODAL 2: Revisi Sertifikat -->
-<div id="revision-cert-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 w-full max-w-md p-6 shadow-xl text-xs">
+<div id="revision-cert-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-700 w-full max-w-md p-6 shadow-2xl text-xs">
         
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
             <div>
-                <h3 class="text-base font-bold text-slate-900 tracking-tight">Revisi / Amandemen Sertifikat</h3>
-                <p class="text-slate-500 text-[11px] mt-0.5">Sesuai klausul amandemen sertifikat ISO/IEC 17025.</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">Revisi / Amandemen Sertifikat</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">Sesuai klausul amandemen sertifikat ISO/IEC 17025.</p>
             </div>
-            <button onclick="closeModal('revision-cert-modal')" class="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors">
+            <button onclick="closeModal('revision-cert-modal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md transition-colors">
                 <i class="ph-bold ph-x text-base"></i>
             </button>
         </div>
@@ -577,19 +725,22 @@ require_once __DIR__ . '/includes/header.php';
             <input type="hidden" name="action" value="create_revision">
             <input type="hidden" id="rev-cert-id" name="certificate_id" value="">
 
-            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <span class="text-slate-500 text-[11px]">Sertifikat saat ini:</span>
-                <p id="rev-cert-num" class="font-mono text-sm font-bold text-slate-900 mt-0.5"></p>
+            <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <span class="text-slate-500 dark:text-slate-400 text-[11px]">Sertifikat saat ini:</span>
+                <p id="rev-cert-num" class="font-mono text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5"></p>
             </div>
 
             <div>
-                <label class="block font-medium text-slate-700 mb-1">Alasan / Catatan Revisi <span class="text-rose-500">*</span></label>
-                <textarea name="revision_notes" required rows="3" placeholder="Contoh: Perbaikan kesalahan penulisan nama atau alamat pelanggan." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors"></textarea>
+                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Alasan / Catatan Revisi <span class="text-rose-500">*</span></label>
+                <textarea name="revision_notes" required rows="3" placeholder="Contoh: Perbaikan kesalahan penulisan nama atau alamat pelanggan." class="ent-input"></textarea>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
-                <button type="button" onclick="closeModal('revision-cert-modal')" class="px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors">Batal</button>
-                <button type="submit" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-4 py-2 rounded-lg font-semibold shadow-subtle transition-colors">Terapkan Revisi</button>
+            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" onclick="closeModal('revision-cert-modal')" class="btn-surface">Batal</button>
+                <button type="submit" class="btn-brand-primary">
+                    <i class="ph-bold ph-pencil-simple"></i>
+                    <span>Terapkan Revisi</span>
+                </button>
             </div>
         </form>
 

@@ -74,18 +74,18 @@ $flash = getFlash();
     </script>
     <link rel="stylesheet" href="assets/css/custom.css">
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex items-center justify-center p-4">
 
     <!-- Theme Toggle Button -->
     <div class="fixed top-4 right-4 z-50">
-        <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-subtle hover:shadow transition-all" title="Ganti Mode Tema (Terang / Gelap)">
+        <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-subtle hover:shadow transition-all" title="Ganti Mode Tema (Terang / Gelap)">
             <i class="ph-bold ph-moon text-base theme-icon-moon"></i>
             <i class="ph-bold ph-sun text-base theme-icon-sun"></i>
         </button>
     </div>
 
     <!-- Centered Enterprise Login Card -->
-    <div class="w-full max-w-sm bg-white rounded-xl shadow-subtle border border-slate-200/80 overflow-hidden">
+    <div class="w-full max-w-sm ent-card overflow-hidden">
         
         <div class="p-6 sm:p-7">
             
@@ -94,14 +94,14 @@ $flash = getFlash();
                 <a href="index.php" class="inline-block mb-3">
                     <img src="assets/img/logo.png" alt="Logo PT Kalpindo" class="h-9 mx-auto object-contain">
                 </a>
-                <h1 class="text-base font-bold text-slate-900 tracking-tight">Masuk ke Sistem Alur Kerja</h1>
-                <p class="text-xs text-slate-500 mt-0.5">Sistem Manajemen & Sertifikasi Kalibrasi ISO/IEC 17025</p>
+                <h1 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">Masuk ke Sistem Alur Kerja</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sistem Manajemen & Sertifikasi Kalibrasi ISO/IEC 17025</p>
             </div>
 
             <!-- Flash & Error Alert -->
             <?php if ($error || $flash): ?>
-                <div class="mb-4 p-3 rounded-lg border flex items-start gap-2 text-xs <?= $error ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-emerald-50 border-emerald-200 text-emerald-800' ?>">
-                    <i class="ph-bold <?= $error ? 'ph-warning-circle text-rose-600' : 'ph-check-circle text-emerald-600' ?> text-sm shrink-0 mt-0.5"></i>
+                <div class="mb-4 p-3 rounded-lg border flex items-start gap-2 text-xs <?= $error ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300' : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300' ?>">
+                    <i class="ph-bold <?= $error ? 'ph-warning-circle text-rose-600 dark:text-rose-400' : 'ph-check-circle text-emerald-600 dark:text-emerald-400' ?> text-sm shrink-0 mt-0.5"></i>
                     <span class="font-medium"><?= htmlspecialchars($error ?: $flash['message']) ?></span>
                 </div>
             <?php endif; ?>
@@ -111,20 +111,20 @@ $flash = getFlash();
                 
                 <!-- Username Field -->
                 <div>
-                    <label for="username" class="block font-medium text-slate-700 mb-1">Username</label>
+                    <label for="username" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Username Akun</label>
                     <div class="relative">
                         <i class="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input id="username" name="username" type="text" required value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" placeholder="Masukkan username akun..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-2 text-slate-900 text-xs focus:outline-none focus:border-slate-800 transition-colors">
+                        <input id="username" name="username" type="text" required value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" placeholder="Masukkan username akun..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg pl-8 pr-3 py-2 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
                     </div>
                 </div>
 
                 <!-- Password Field -->
                 <div>
-                    <label for="password" class="block font-medium text-slate-700 mb-1">Kata Sandi</label>
+                    <label for="password" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kata Sandi</label>
                     <div class="relative">
                         <i class="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input id="password" name="password" type="password" required placeholder="Masukkan kata sandi..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-9 py-2 text-slate-900 text-xs focus:outline-none focus:border-slate-800 transition-colors">
-                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded transition-colors" title="Lihat/Sembunyikan sandi">
+                        <input id="password" name="password" type="password" required placeholder="Masukkan kata sandi..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg pl-8 pr-9 py-2 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded transition-colors" title="Lihat/Sembunyikan sandi">
                             <i id="password-toggle-icon" class="ph-bold ph-eye text-sm"></i>
                         </button>
                     </div>
@@ -132,7 +132,7 @@ $flash = getFlash();
 
                 <!-- Submit Button -->
                 <div class="pt-1">
-                    <button type="submit" id="submit-login-btn" class="w-full bg-[#C81E26] hover:bg-[#B2151D] text-white py-2 px-4 rounded-lg font-semibold text-xs transition-colors shadow-subtle flex items-center justify-center gap-1.5">
+                    <button type="submit" id="submit-login-btn" class="btn-brand-primary w-full py-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold">
                         <i class="ph-bold ph-sign-in text-xs"></i>
                         <span>Masuk Sistem</span>
                     </button>
@@ -143,9 +143,9 @@ $flash = getFlash();
         </div>
 
         <!-- Card Footer -->
-        <div class="bg-slate-50/80 px-6 py-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <div class="bg-slate-50/80 dark:bg-slate-900/60 px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
             <span>PT Kalpindo Kalibrasi</span>
-            <span class="text-slate-500 font-medium">KAN LK-088-IDN</span>
+            <span class="text-slate-600 dark:text-slate-400 font-semibold font-mono">KAN LK-088-IDN</span>
         </div>
 
     </div>

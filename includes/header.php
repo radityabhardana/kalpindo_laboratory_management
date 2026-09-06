@@ -33,8 +33,8 @@ $flash = getFlash();
 $pendingWorksheetCount = (int)$dbHeader->query("SELECT COUNT(*) FROM instruments WHERE status = 'ASSIGNED' OR status = 'IN_PROGRESS'")->fetchColumn();
 $pendingCertCount = (int)$dbHeader->query("SELECT COUNT(*) FROM instruments WHERE status = 'DATA_SUBMITTED'")->fetchColumn();
 
-// Strict Role-Based Operational Navigation Map
-$allMenuItems = [
+// Strict Role-Based Operational Navigation Map with Clear Sectioning
+$operationalItems = array_values(array_filter([
     [
         'name' => 'Dashboard',
         'url' => 'index.php',
@@ -43,19 +43,24 @@ $allMenuItems = [
         'roles' => ['SUPER_ADMIN', 'SALES', 'TECHNICIAN', 'CERT_ADMIN'],
     ],
     [
-        'name' => 'Sales Order',
+        'name' => 'Sales Order (SPK)',
         'url' => 'orders.php',
         'icon' => 'ph-clipboard-text',
         'badge' => null,
         'roles' => ['SUPER_ADMIN', 'SALES'],
     ],
+], function($item) {
+    return hasRole($item['roles']);
+}));
+
+$technicalItems = array_values(array_filter([
     [
         'name' => 'Worksheet Teknisi',
         'url' => 'worksheet.php',
         'icon' => 'ph-wrench',
         'badge' => $pendingWorksheetCount > 0 ? [
             'label' => (string)$pendingWorksheetCount,
-            'class' => 'bg-amber-100 text-amber-800 border border-amber-200'
+            'class' => 'bg-amber-100 text-amber-900 border border-amber-300 font-bold dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
         ] : null,
         'roles' => ['SUPER_ADMIN', 'TECHNICIAN'],
     ],
@@ -65,27 +70,34 @@ $allMenuItems = [
         'icon' => 'ph-certificate',
         'badge' => $pendingCertCount > 0 ? [
             'label' => (string)$pendingCertCount,
-            'class' => 'bg-[#C81E26] text-white animate-pulse'
+            'class' => 'bg-[#C81E26] text-white font-bold animate-pulse'
         ] : null,
         'roles' => ['SUPER_ADMIN', 'CERT_ADMIN'],
     ],
-];
-
-$accessibleMenuItems = array_values(array_filter($allMenuItems, function($item) {
+], function($item) {
     return hasRole($item['roles']);
 }));
 
-$navSections = [
-    [
-        'title' => 'MENU OPERASIONAL',
-        'items' => $accessibleMenuItems
-    ]
-];
+$navSections = [];
 
-// Add Administrator module for Master Admin
+if (!empty($operationalItems)) {
+    $navSections[] = [
+        'title' => 'OPERASIONAL INTI',
+        'items' => $operationalItems
+    ];
+}
+
+if (!empty($technicalItems)) {
+    $navSections[] = [
+        'title' => 'LABORATORIUM & PENERBITAN',
+        'items' => $technicalItems
+    ];
+}
+
+// Administrator module for Super Admin
 if (hasRole('SUPER_ADMIN')) {
     $navSections[] = [
-        'title' => 'ADMINISTRATOR',
+        'title' => 'ADMINISTRASI SISTEM',
         'items' => [
             [
                 'name' => 'Kelola Karyawan',
@@ -96,6 +108,7 @@ if (hasRole('SUPER_ADMIN')) {
         ]
     ];
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="id" class="h-full">
@@ -203,13 +216,13 @@ if (hasRole('SUPER_ADMIN')) {
                             <?php foreach ($sec['items'] as $item): 
                                 $isActive = ($currentPage === $item['url']);
                             ?>
-                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors <?= $isActive ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium' ?>">
-                                    <div class="flex items-center gap-2.5">
-                                        <i class="ph-bold <?= $item['icon'] ?> text-base <?= $isActive ? 'text-slate-900' : 'text-slate-400' ?>"></i>
-                                        <span><?= $item['name'] ?></span>
+                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all <?= $isActive ? 'bg-red-50 text-[#C81E26] font-semibold border-l-[3px] border-[#C81E26] dark:bg-red-950/40 dark:text-red-400 dark:border-red-500' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white' ?>">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <i class="ph-bold <?= $item['icon'] ?> text-base shrink-0 <?= $isActive ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
+                                        <span class="truncate"><?= $item['name'] ?></span>
                                     </div>
                                     <?php if ($item['badge']): ?>
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-200/70 text-slate-700">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono <?= $item['badge']['class'] ?>">
                                             <?= $item['badge']['label'] ?>
                                         </span>
                                     <?php endif; ?>
@@ -222,20 +235,20 @@ if (hasRole('SUPER_ADMIN')) {
         </div>
 
         <!-- Mobile Sidebar Footer (User Info) -->
-        <div class="p-4 border-t border-slate-200 bg-slate-50/60">
-            <div class="flex items-center justify-between">
+        <div class="p-3.5 border-t border-slate-200 bg-slate-50/70 dark:bg-slate-900/80 shrink-0">
+            <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-2xs">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-xl <?= $isMasterSetupAdmin ? 'bg-purple-700' : 'bg-slate-900' ?> text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                    <div class="w-8 h-8 rounded-lg <?= $isMasterSetupAdmin ? 'bg-purple-700' : 'bg-slate-900' ?> text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
                         <?= $isMasterSetupAdmin ? 'AD' : $userInitials ?>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-xs font-bold text-slate-900 truncate"><?= htmlspecialchars($currentUser['full_name']) ?></p>
-                        <p class="text-[10px] <?= $isMasterSetupAdmin ? 'text-purple-700 font-bold' : 'text-slate-500' ?> truncate">
+                        <p class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate leading-tight"><?= htmlspecialchars($currentUser['full_name']) ?></p>
+                        <p class="text-[10px] <?= $isMasterSetupAdmin ? 'text-purple-600 font-bold' : 'text-slate-500' ?> truncate mt-0.5">
                             <?= $isMasterSetupAdmin ? 'Master Setup Sistem' : htmlspecialchars($activeRoleInfo['name']) ?>
                         </p>
                     </div>
                 </div>
-                <a href="logout.php" title="Keluar / Logout" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0">
+                <a href="logout.php" title="Keluar / Logout" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0">
                     <i class="ph-bold ph-sign-out text-base"></i>
                 </a>
             </div>
@@ -246,24 +259,24 @@ if (hasRole('SUPER_ADMIN')) {
     <!-- ========================================================== -->
     <!-- 2. DESKTOP FIXED LEFT SIDEBAR                              -->
     <!-- ========================================================== -->
-    <aside class="no-print hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:w-64 xl:w-72 bg-white border-r border-slate-200 justify-between shadow-2xs">
+    <aside class="no-print hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:w-64 xl:w-72 bg-white dark:bg-[#0E1524] border-r border-slate-200 dark:border-slate-800 justify-between shadow-2xs">
         
         <!-- Desktop Sidebar Top -->
         <div class="flex flex-col flex-1 min-h-0">
             
             <!-- Header Brand -->
-            <div class="h-16 px-5 border-b border-slate-200 flex items-center shrink-0">
+            <div class="h-16 px-5 border-b border-slate-200 dark:border-slate-800 flex items-center shrink-0">
                 <a href="index.php" class="flex items-center">
                     <img src="assets/img/logo.png" alt="Logo PT Kalpindo Kalibrasi" class="h-8 object-contain">
                 </a>
             </div>
 
             <!-- Accreditation Status Ribbon -->
-            <div class="px-5 py-2 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between text-[10px] font-mono shrink-0">
-                <span class="text-slate-600 font-semibold flex items-center gap-1">
+            <div class="px-5 py-2 bg-slate-50/70 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-mono shrink-0">
+                <span class="text-slate-600 dark:text-slate-400 font-semibold flex items-center gap-1.5">
                     <i class="ph-bold ph-shield-check text-slate-500"></i> KAN LK-088-IDN
                 </span>
-                <span class="text-emerald-700 font-bold flex items-center gap-1">
+                <span class="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> ISO 17025
                 </span>
             </div>
@@ -272,20 +285,20 @@ if (hasRole('SUPER_ADMIN')) {
             <div class="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
                 <?php foreach ($navSections as $sec): ?>
                     <div>
-                        <span class="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-1.5 font-mono">
+                        <span class="px-3 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase block mb-2 font-mono">
                             <?= $sec['title'] ?>
                         </span>
-                        <div class="space-y-0.5">
+                        <div class="space-y-1">
                             <?php foreach ($sec['items'] as $item): 
                                 $isActive = ($currentPage === $item['url']);
                             ?>
-                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors <?= $isActive ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium' ?>">
+                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all <?= $isActive ? 'bg-red-50 text-[#C81E26] font-semibold border-l-[3px] border-[#C81E26] dark:bg-red-950/40 dark:text-red-400 dark:border-red-500 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white' ?>">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <i class="ph-bold <?= $item['icon'] ?> text-base shrink-0 <?= $isActive ? 'text-slate-900' : 'text-slate-400' ?>"></i>
+                                        <i class="ph-bold <?= $item['icon'] ?> text-base shrink-0 <?= $isActive ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
                                         <span class="truncate"><?= $item['name'] ?></span>
                                     </div>
                                     <?php if ($item['badge']): ?>
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium shrink-0 bg-slate-200/70 text-slate-700">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono <?= $item['badge']['class'] ?>">
                                             <?= $item['badge']['label'] ?>
                                         </span>
                                     <?php endif; ?>
@@ -299,20 +312,20 @@ if (hasRole('SUPER_ADMIN')) {
         </div>
 
         <!-- Desktop Sidebar User Profile Footer Card -->
-        <div class="p-3.5 border-t border-slate-200 bg-slate-50/70 shrink-0">
-            <div class="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
+        <div class="p-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 shrink-0">
+            <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-800/90 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-2xs">
                 <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-8 h-8 rounded-lg <?= $isMasterSetupAdmin ? 'bg-purple-700' : 'bg-slate-900' ?> text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
                         <?= $isMasterSetupAdmin ? 'AD' : $userInitials ?>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-xs font-bold text-slate-900 truncate leading-tight"><?= htmlspecialchars($currentUser['full_name']) ?></p>
-                        <p class="text-[10px] <?= $isMasterSetupAdmin ? 'text-purple-700 font-bold' : 'text-slate-500' ?> truncate mt-0.5">
+                        <p class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate leading-tight"><?= htmlspecialchars($currentUser['full_name']) ?></p>
+                        <p class="text-[10px] <?= $isMasterSetupAdmin ? 'text-purple-600 dark:text-purple-400 font-bold' : 'text-slate-500 dark:text-slate-400' ?> truncate mt-0.5">
                             <?= $isMasterSetupAdmin ? 'Master Setup Sistem' : htmlspecialchars($activeRoleInfo['name']) ?>
                         </p>
                     </div>
                 </div>
-                <a href="logout.php" title="Keluar / Logout Akun" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0" aria-label="Logout">
+                <a href="logout.php" title="Keluar / Logout Akun" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors shrink-0" aria-label="Logout">
                     <i class="ph-bold ph-sign-out text-base"></i>
                 </a>
             </div>
@@ -326,19 +339,19 @@ if (hasRole('SUPER_ADMIN')) {
     <div class="flex-1 lg:pl-64 xl:pl-72 flex flex-col min-h-screen min-w-0">
 
         <!-- Top Header Toolbar (Elevated & Functional) -->
-        <header class="no-print sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-2xs">
+        <header class="no-print sticky top-0 z-20 bg-white/95 dark:bg-[#0E1524]/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-2xs">
             
             <!-- Left: Mobile Toggle & Page Context Title -->
             <div class="flex items-center gap-3 min-w-0">
-                <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors" aria-label="Menu Utama">
+                <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-label="Menu Utama">
                     <i class="ph-bold ph-list text-xl"></i>
                 </button>
 
                 <div>
-                    <div class="flex items-center gap-1.5 text-xs text-slate-500">
-                        <span>Portal Karyawan</span>
-                        <i class="ph-bold ph-caret-right text-[10px] text-slate-400"></i>
-                        <span class="font-bold text-slate-900 truncate"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Dashboard Operasional' ?></span>
+                    <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <span>Laboratorium Kalibrasi</span>
+                        <i class="ph-bold ph-caret-right text-[10px] text-slate-400 dark:text-slate-500"></i>
+                        <span class="font-bold text-slate-900 dark:text-slate-100 truncate"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Dashboard Operasional' ?></span>
                     </div>
                 </div>
             </div>
@@ -346,36 +359,38 @@ if (hasRole('SUPER_ADMIN')) {
             <!-- Right: System Indicators & Quick Actions -->
             <div class="flex items-center gap-2.5 sm:gap-3">
                 
-                <!-- KAN Accreditation Subtle Indicator -->
-                <div class="hidden md:inline-flex items-center gap-1.5 text-xs text-slate-500 font-mono">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                    <span>LK-088-IDN</span>
+                <!-- Facility & KAN Accreditation Subtle Indicator -->
+                <div class="hidden md:inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-md border border-slate-200/60 dark:border-slate-700/60">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+                    <span class="text-slate-700 dark:text-slate-300 font-medium">Lab Kalibrasi</span>
+                    <span class="text-slate-300 dark:text-slate-600">·</span>
+                    <span class="text-slate-500 dark:text-slate-400">LK-088-IDN</span>
                 </div>
 
-                <span class="hidden md:inline text-slate-200">|</span>
+                <span class="hidden md:inline text-slate-200 dark:text-slate-700">|</span>
 
                 <!-- User Role Indicator -->
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap font-medium">
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 whitespace-nowrap font-medium">
                     <span class="hidden sm:inline"><?= htmlspecialchars($activeRoleInfo['name']) ?></span>
                     <span class="sm:hidden font-mono"><?= htmlspecialchars($activeRoleInfo['short']) ?></span>
                 </div>
 
-                <!-- Quick Action "+ Input Order" (Visible if authorized) -->
+                <!-- Quick Action "+ Input SPK" (Visible if authorized) -->
                 <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-                    <a href="orders.php?action=create" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 shadow-subtle">
+                    <a href="orders.php?action=create" class="bg-[#C81E26] hover:bg-[#A8141B] text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 shadow-subtle">
                         <i class="ph-bold ph-plus text-xs"></i>
-                        <span class="hidden sm:inline">Input SPK</span>
+                        <span class="hidden sm:inline">+ SPK Baru</span>
                     </a>
                 <?php endif; ?>
 
                 <!-- Dark / Light Mode Toggle Button -->
-                <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0" title="Mode Gelap / Terang" aria-label="Toggle dark mode">
+                <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0" title="Mode Gelap / Terang" aria-label="Toggle dark mode">
                     <i class="ph-bold ph-moon theme-icon-moon text-sm"></i>
                     <i class="ph-bold ph-sun theme-icon-sun text-sm text-amber-400"></i>
                 </button>
 
                 <!-- Direct Logout Icon Button -->
-                <a href="logout.php" title="Keluar / Logout Akun" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors shrink-0" aria-label="Logout">
+                <a href="logout.php" title="Keluar / Logout Akun" class="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0" aria-label="Logout">
                     <i class="ph-bold ph-sign-out text-base"></i>
                 </a>
 

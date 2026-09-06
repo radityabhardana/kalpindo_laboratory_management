@@ -220,38 +220,54 @@ if (empty($readings)) {
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- Header Control Bar -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<!-- 1. Header Control Bar -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
     <div>
-        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Lembar Kerja Kalibrasi (Worksheet)</h1>
-        <p class="text-xs text-slate-500 mt-0.5">
-            Pencatatan kondisi lingkungan uji, kalibrator acuan tertelusur, dan rekapitulasi data mentah teknisi.
+        <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60">
+                LABORATORIUM & PENGUJIAN
+            </span>
+            <span class="text-xs text-slate-400">·</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Input Data Mentah & Ketidakpastian</span>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Lembar Kerja Kalibrasi (Worksheet)</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
+            Pencatatan kondisi lingkungan uji lab/site, kalibrator acuan tertelusur, dan rekapitulasi data mentah teknisi sesuai standar ISO/IEC 17025.
         </p>
     </div>
-    <?php if ($isCertified): ?>
-        <div>
-            <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 font-medium text-xs inline-flex items-center gap-1.5 border border-slate-200">
-                <i class="ph-bold ph-lock-key text-slate-500"></i>
+    
+    <div class="flex items-center gap-2 shrink-0">
+        <?php if ($isCertified): ?>
+            <span class="badge-status success">
+                <i class="ph-bold ph-lock-key"></i>
                 <span>Terkunci (Sertifikat Terbit)</span>
             </span>
-        </div>
-    <?php endif; ?>
+        <?php else: ?>
+            <span class="badge-status info">
+                <span class="badge-dot"></span>
+                <span>Mode Input Teknisi</span>
+            </span>
+        <?php endif; ?>
+    </div>
 </div>
 
-<!-- Two-Column Workbench Layout -->
+<!-- 2. Two-Column Workbench Layout -->
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-    <!-- Left Column (4 of 12 = ~33%): Instrument List -->
+    <!-- Left Column (4 of 12 = ~33%): Instrument List / Queue -->
     <div class="lg:col-span-4 space-y-4">
-        <div class="bg-white rounded-xl border border-slate-200/80 shadow-subtle overflow-hidden">
-            <div class="p-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h2 class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Antrean Alat Teknisi</h2>
-                <span class="text-xs text-slate-500 font-medium"><?= count($instrumentList) ?> alat</span>
+        <div class="ent-card overflow-hidden">
+            <div class="ent-card-header">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                    <h2 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Antrean Alat Teknisi</h2>
+                </div>
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium"><?= count($instrumentList) ?> alat</span>
             </div>
 
-            <div class="divide-y divide-slate-100 max-h-[640px] overflow-y-auto">
+            <div class="divide-y divide-slate-100 dark:divide-slate-800 max-h-[660px] overflow-y-auto">
                 <?php if (empty($instrumentList)): ?>
-                    <div class="p-6 text-center text-slate-400 text-xs">Belum ada alat yang ditugaskan.</div>
+                    <div class="p-8 text-center text-slate-400 text-xs">Belum ada alat yang ditugaskan ke teknisi.</div>
                 <?php endif; ?>
 
                 <?php foreach ($instrumentList as $item): ?>
@@ -259,20 +275,21 @@ require_once __DIR__ . '/includes/header.php';
                         $isSelected = ($item['id'] === $selectedInstId);
                         $isItemKan = ((int)($item['is_kan'] ?? 1) === 1);
                     ?>
-                    <a href="worksheet.php?instrument_id=<?= $item['id'] ?>" class="block p-3.5 transition-colors text-left <?= $isSelected ? 'bg-slate-50/90 border-l-3 border-l-slate-900' : 'hover:bg-slate-50/50' ?>">
+                    <a href="worksheet.php?instrument_id=<?= $item['id'] ?>" class="block p-3.5 transition-all text-left <?= $isSelected ? 'bg-red-50/70 dark:bg-red-950/30 border-l-[3px] border-l-[#C81E26]' : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/50' ?>">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="font-mono text-xs font-semibold <?= $isSelected ? 'text-slate-900' : 'text-slate-700' ?>">
+                            <span class="font-mono text-xs font-bold <?= $isSelected ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-900 dark:text-slate-200' ?>">
                                 <?= htmlspecialchars($item['order_number']) ?>
                             </span>
-                            <span class="font-mono text-[11px] text-slate-500">
-                                [<?= htmlspecialchars($item['scope_code']) ?>] <?= $isItemKan ? 'KAN' : 'Non-KAN' ?>
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-mono text-[10px] text-slate-400">[<?= htmlspecialchars($item['scope_code']) ?>]</span>
+                                <?= renderAccreditationBadge($isItemKan) ?>
+                            </div>
                         </div>
                         
-                        <h4 class="font-medium text-xs text-slate-900 line-clamp-1"><?= htmlspecialchars($item['name']) ?></h4>
-                        <p class="text-[11px] text-slate-500 mt-0.5 truncate"><?= htmlspecialchars($item['customer_name']) ?></p>
+                        <h4 class="font-semibold text-xs text-slate-900 dark:text-slate-100 line-clamp-1"><?= htmlspecialchars($item['name']) ?></h4>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate"><?= htmlspecialchars($item['customer_name']) ?></p>
                         
-                        <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100/70 text-[11px]">
+                        <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                             <span class="font-mono text-[10px] text-slate-400">SN: <?= htmlspecialchars($item['serial_number']) ?></span>
                             <?= renderStatusBadge($item['status']) ?>
                         </div>
@@ -285,97 +302,95 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Right Column (8 of 12 = ~67%): Worksheet Digital Form -->
     <div class="lg:col-span-8">
         <?php if (!$currentInst): ?>
-            <div class="bg-white rounded-xl border border-slate-200/80 p-12 text-center text-slate-400 text-xs shadow-subtle">
-                <i class="ph-bold ph-tray text-3xl text-slate-300 mb-2 block"></i>
-                <p>Silakan pilih salah satu alat pada antrean di sebelah kiri untuk membuka lembar kerja kalibrasi.</p>
+            <div class="ent-card p-12 text-center text-slate-400 text-xs">
+                <i class="ph-bold ph-tray text-4xl text-slate-300 dark:text-slate-600 mb-2 block"></i>
+                <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Alat untuk Membuka Lembar Kerja</h4>
+                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Silakan klik salah satu alat dari daftar antrean di sebelah kiri untuk mengisi data pengukuran kalibrasi.</p>
             </div>
         <?php else: ?>
             
-            <form action="worksheet.php" method="POST" class="bg-white rounded-xl border border-slate-200/80 shadow-subtle p-5 sm:p-6 space-y-6 text-xs">
+            <form action="worksheet.php" method="POST" class="ent-card p-5 sm:p-6 space-y-6 text-xs">
                 <input type="hidden" name="action" value="save_worksheet">
                 <input type="hidden" name="instrument_id" value="<?= $currentInst['id'] ?>">
 
                 <!-- Audit Lock Notice Banner -->
                 <?php if ($isCertified): ?>
-                    <div class="bg-slate-50 border border-slate-200 text-slate-700 p-3.5 rounded-lg flex items-start gap-2.5">
-                        <i class="ph-bold ph-lock-key text-base text-slate-500 shrink-0 mt-0.5"></i>
+                    <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 p-3.5 rounded-lg flex items-start gap-2.5">
+                        <i class="ph-bold ph-lock-key text-base text-amber-600 shrink-0 mt-0.5"></i>
                         <div class="text-xs">
-                            <p class="font-semibold text-slate-900">Lembar Kerja Terkunci (Read-Only)</p>
-                            <p class="text-[11px] text-slate-500 mt-0.5">
-                                Sertifikat resmi telah diterbitkan dengan Nomor: <span class="font-mono font-semibold text-slate-800"><?= htmlspecialchars($currentInst['certificate_number'] ?? '-') ?></span>.
-                                Demi kepatuhan audit ISO/IEC 17025, data mentah tidak dapat dimodifikasi langsung.
+                            <p class="font-bold">Lembar Kerja Terkunci (Read-Only Audit)</p>
+                            <p class="text-[11px] mt-0.5">
+                                Sertifikat resmi telah diterbitkan dengan Nomor: <span class="font-mono font-bold"><?= htmlspecialchars($currentInst['certificate_number'] ?? '-') ?></span>.
+                                Sesuai klausul audit integritas data ISO/IEC 17025, data mentah tidak dapat diedit langsung.
                             </p>
                         </div>
                     </div>
                 <?php endif; ?>
 
                 <!-- Instrument Top Identity Bar -->
-                <div class="border-b border-slate-100 pb-4">
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-4">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <div class="flex items-center gap-2">
-                            <span class="font-mono text-xs font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                            <span class="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700">
                                 <?= htmlspecialchars($currentInst['order_number']) ?>
                             </span>
                             <?= renderLocationBadge($currentInst['service_type']) ?>
-                            <span class="text-xs text-slate-600 font-medium">
-                                Lingkup: <?= htmlspecialchars($scopes[$currentInst['scope_code']]['name'] ?? $currentInst['scope_code']) ?>
-                                (<?= ((int)($currentInst['is_kan'] ?? 1) === 1) ? 'KAN' : 'Non-KAN' ?>)
-                            </span>
+                            <?= renderAccreditationBadge((int)($currentInst['is_kan'] ?? 1) === 1) ?>
                         </div>
                         <?= renderStatusBadge($currentInst['status']) ?>
                     </div>
 
-                    <h2 class="text-base font-bold text-slate-900 tracking-tight mt-1"><?= htmlspecialchars($currentInst['name']) ?></h2>
-                    <p class="text-slate-500 text-xs mt-0.5">
-                        Pelanggan: <span class="font-semibold text-slate-700"><?= htmlspecialchars($currentInst['customer_name']) ?></span> • 
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight mt-1"><?= htmlspecialchars($currentInst['name']) ?></h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
+                        Pelanggan: <span class="font-semibold text-slate-700 dark:text-slate-300"><?= htmlspecialchars($currentInst['customer_name']) ?></span> · 
                         Alamat: <?= htmlspecialchars($currentInst['customer_address'] ?: '-') ?>
                     </p>
 
                     <!-- Compact Specs Strip -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 bg-slate-50 px-3.5 py-2.5 rounded-lg border border-slate-200 text-[11px]">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px]">
                         <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-medium">Merk / Tipe</span>
-                            <span class="font-medium text-slate-800"><?= htmlspecialchars($currentInst['brand'] ?: '-') ?> / <?= htmlspecialchars($currentInst['model_type'] ?: '-') ?></span>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Merk / Tipe</span>
+                            <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($currentInst['brand'] ?: '-') ?> / <?= htmlspecialchars($currentInst['model_type'] ?: '-') ?></span>
                         </div>
                         <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-medium">Nomor Seri (SN)</span>
-                            <span class="font-mono font-medium text-slate-900"><?= htmlspecialchars($currentInst['serial_number']) ?></span>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Nomor Seri (SN)</span>
+                            <span class="font-mono font-bold text-slate-900 dark:text-slate-100"><?= htmlspecialchars($currentInst['serial_number']) ?></span>
                         </div>
                         <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-medium">Kapasitas / Resolusi</span>
-                            <span class="font-medium text-slate-800"><?= htmlspecialchars($currentInst['capacity_range'] ?: '-') ?> (<?= htmlspecialchars($currentInst['resolution'] ?: '-') ?>)</span>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Kapasitas / Resolusi</span>
+                            <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($currentInst['capacity_range'] ?: '-') ?> (<?= htmlspecialchars($currentInst['resolution'] ?: '-') ?>)</span>
                         </div>
                         <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-medium">Teknisi Bertugas</span>
-                            <span class="font-medium text-slate-900"><?= htmlspecialchars($currentInst['technician_name'] ?: '-') ?></span>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Teknisi Bertugas</span>
+                            <span class="font-bold text-slate-900 dark:text-slate-100"><?= htmlspecialchars($currentInst['technician_name'] ?: '-') ?></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Section 1: Kondisi Lingkungan -->
                 <div class="space-y-3">
-                    <div class="border-b border-slate-100 pb-2">
-                        <span class="text-[11px] font-semibold text-slate-900 uppercase tracking-wider">1. Kondisi Lingkungan Kalibrasi</span>
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <span class="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">1. Kondisi Lingkungan Kalibrasi</span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-slate-50/60 p-3.5 rounded-lg border border-slate-200">
-                            <label class="block font-medium text-slate-700 mb-1.5">Suhu Ruangan Lab / Site (°C)</label>
+                        <div class="bg-slate-50/60 dark:bg-slate-800/60 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">Suhu Ruangan Lab / Site (°C)</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" step="0.1" name="temperature" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['temperature'] ?? 20.0)) ?>" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 w-20 text-center font-mono font-medium focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                <input type="number" step="0.1" name="temperature" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['temperature'] ?? 20.0)) ?>" class="ent-input w-24 text-center font-mono font-bold <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                 <span class="text-slate-400 text-xs">±</span>
-                                <input type="number" step="0.1" name="temperature_uncertainty" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['temperature_uncertainty'] ?? 1.0)) ?>" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 w-16 text-center font-mono focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
-                                <span class="text-slate-500 text-xs">°C</span>
+                                <input type="number" step="0.1" name="temperature_uncertainty" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['temperature_uncertainty'] ?? 1.0)) ?>" class="ent-input w-20 text-center font-mono <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                <span class="text-slate-500 text-xs font-mono">°C</span>
                             </div>
                         </div>
 
-                        <div class="bg-slate-50/60 p-3.5 rounded-lg border border-slate-200">
-                            <label class="block font-medium text-slate-700 mb-1.5">Kelembaban Relatif (% RH)</label>
+                        <div class="bg-slate-50/60 dark:bg-slate-800/60 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">Kelembaban Relatif (% RH)</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" step="0.1" name="humidity" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['humidity'] ?? 55.0)) ?>" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 w-20 text-center font-mono font-medium focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                <input type="number" step="0.1" name="humidity" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['humidity'] ?? 55.0)) ?>" class="ent-input w-24 text-center font-mono font-bold <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                 <span class="text-slate-400 text-xs">±</span>
-                                <input type="number" step="0.1" name="humidity_uncertainty" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['humidity_uncertainty'] ?? 5.0)) ?>" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 w-16 text-center font-mono focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
-                                <span class="text-slate-500 text-xs">% RH</span>
+                                <input type="number" step="0.1" name="humidity_uncertainty" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['humidity_uncertainty'] ?? 5.0)) ?>" class="ent-input w-20 text-center font-mono <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                <span class="text-slate-500 text-xs font-mono">% RH</span>
                             </div>
                         </div>
                     </div>
@@ -383,60 +398,60 @@ require_once __DIR__ . '/includes/header.php';
 
                 <!-- Section 2: Standar Acuan -->
                 <div class="space-y-3">
-                    <div class="border-b border-slate-100 pb-2">
-                        <span class="text-[11px] font-semibold text-slate-900 uppercase tracking-wider">2. Standar Acuan Tertelusur (Calibrator)</span>
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <span class="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">2. Standar Acuan Tertelusur (Calibrator)</span>
                     </div>
 
                     <div class="space-y-3">
                         <div>
-                            <label class="block font-medium text-slate-700 mb-1">Nama Alat Standar Acuan & SN <span class="text-rose-500">*</span></label>
-                            <input type="text" name="standard_calibrator" <?= $isCertified ? 'disabled' : '' ?> required value="<?= htmlspecialchars((string)($currentWs['standard_calibrator'] ?? 'Dead Weight Tester Fluke P3000 Series SN: DWT-4412')) ?>" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Alat Standar Acuan & SN <span class="text-rose-500">*</span></label>
+                            <input type="text" name="standard_calibrator" <?= $isCertified ? 'disabled' : '' ?> required value="<?= htmlspecialchars((string)($currentWs['standard_calibrator'] ?? 'Dead Weight Tester Fluke P3000 Series SN: DWT-4412')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block font-medium text-slate-700 mb-1">No. Sertifikat Standar</label>
-                                <input type="text" name="standard_cert_no" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['standard_cert_no'] ?? 'CERT-KAN-2025-042')) ?>" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">No. Sertifikat Standar</label>
+                                <input type="text" name="standard_cert_no" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['standard_cert_no'] ?? 'CERT-KAN-2025-042')) ?>" class="ent-input font-mono <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                             </div>
                             <div>
-                                <label class="block font-medium text-slate-700 mb-1">Masa Berlaku Kalibrasi Standar</label>
-                                <input type="date" name="standard_valid_until" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['standard_valid_until'] ?? date('Y-m-d', strtotime('+1 year')))) ?>" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Masa Berlaku Kalibrasi Standar</label>
+                                <input type="date" name="standard_valid_until" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['standard_valid_until'] ?? date('Y-m-d', strtotime('+1 year')))) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block font-medium text-slate-700 mb-1">Metode Kalibrasi (Instruksi Kerja)</label>
-                            <input type="text" name="calibration_method" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['calibration_method'] ?? 'Instruksi Kerja Kalibrasi IK-KAL-01 (EURAMET/JIS)')) ?>" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Metode Kalibrasi (Instruksi Kerja)</label>
+                            <input type="text" name="calibration_method" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['calibration_method'] ?? 'Instruksi Kerja Kalibrasi IK-KAL-01 (EURAMET/JIS)')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                         </div>
                     </div>
                 </div>
 
                 <!-- Section 3: Tabel Pembacaan Ukur -->
                 <div class="space-y-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                         <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-semibold text-slate-900 uppercase tracking-wider">3. Tabel Rekapitulasi Data Mentah</span>
+                            <span class="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">3. Tabel Rekapitulasi Data Mentah</span>
                             <span class="font-mono text-[10px] text-slate-400 hidden sm:inline">(Koreksi = Standar - Rata-rata)</span>
                         </div>
 
                         <?php if (!$isCertified && hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" onclick="autoFillWorksheetDemo('<?= $currentInst['scope_code'] ?>')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-medium text-[11px] transition-colors">
+                                <button type="button" onclick="autoFillWorksheetDemo('<?= $currentInst['scope_code'] ?>')" class="btn-surface text-[11px] py-1 px-2.5">
                                     Contoh Ukur
                                 </button>
-                                <button type="button" onclick="addWorksheetRow()" class="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium text-[11px] transition-colors">
+                                <button type="button" onclick="addWorksheetRow()" class="btn-surface text-[11px] py-1 px-2.5">
                                     + Tambah Titik
                                 </button>
-                                <button type="button" onclick="removeWorksheetRow()" class="px-2.5 py-1 rounded bg-white hover:bg-rose-50 text-rose-700 border border-slate-300 font-medium text-[11px] transition-colors">
+                                <button type="button" onclick="removeWorksheetRow()" class="btn-surface text-[11px] py-1 px-2.5 text-rose-600 hover:text-rose-700">
                                     Hapus
                                 </button>
                             </div>
                         <?php endif; ?>
                     </div>
 
-                    <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                        <table id="worksheet-table" class="w-full text-left min-w-[680px]">
-                            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
+                    <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                        <table id="worksheet-table" class="ent-table min-w-[680px]">
+                            <thead>
                                 <tr>
                                     <th class="py-2.5 px-3">Titik Nominal</th>
                                     <th class="py-2.5 px-3 text-right">Nilai Standar</th>
@@ -448,32 +463,32 @@ require_once __DIR__ . '/includes/header.php';
                                     <th class="py-2.5 px-3 text-right">U95 (k=2)</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 font-mono text-[11px]">
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-[11px]">
                                 <?php foreach ($readings as $idx => $r): ?>
-                                    <tr class="reading-calc-row hover:bg-slate-50/50 transition-colors">
+                                    <tr class="reading-calc-row">
                                         <td class="py-2 px-2.5">
-                                            <input type="text" name="points[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['point']) ?>" class="bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-24 focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                            <input type="text" name="points[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['point']) ?>" class="ent-input w-24 py-1 px-2 text-[11px] <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                         </td>
                                         <td class="py-2 px-2.5 text-right">
-                                            <input type="number" step="any" name="standards[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['standard']) ?>" class="std-val bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-20 text-right focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                            <input type="number" step="any" name="standards[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['standard']) ?>" class="std-val ent-input w-20 py-1 px-2 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                         </td>
                                         <td class="py-2 px-1 text-right">
-                                            <input type="number" step="any" name="run1[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run1']) ?>" class="r1-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                            <input type="number" step="any" name="run1[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run1']) ?>" class="r1-val ent-input w-16 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                         </td>
                                         <td class="py-2 px-1 text-right">
-                                            <input type="number" step="any" name="run2[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run2']) ?>" class="r2-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                            <input type="number" step="any" name="run2[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run2']) ?>" class="r2-val ent-input w-16 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                         </td>
                                         <td class="py-2 px-1 text-right">
-                                            <input type="number" step="any" name="run3[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run3']) ?>" class="r3-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                            <input type="number" step="any" name="run3[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run3']) ?>" class="r3-val ent-input w-16 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                         </td>
                                         <td class="py-2 px-1 text-right">
-                                            <input type="text" readonly value="<?= number_format((float)$r['mean'], 4, '.', '') ?>" class="mean-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right font-medium cursor-not-allowed">
+                                            <input type="text" readonly value="<?= number_format((float)$r['mean'], 4, '.', '') ?>" class="mean-val bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 text-[11px] text-slate-700 dark:text-slate-300 w-18 text-right font-semibold cursor-not-allowed">
                                         </td>
                                         <td class="py-2 px-1 text-right">
-                                            <input type="text" readonly value="<?= ($r['correction'] >= 0 ? '+' : '') . number_format((float)$r['correction'], 4, '.', '') ?>" class="corr-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-800 w-18 text-right font-medium cursor-not-allowed">
+                                            <input type="text" readonly value="<?= ($r['correction'] >= 0 ? '+' : '') . number_format((float)$r['correction'], 4, '.', '') ?>" class="corr-val bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 text-[11px] text-slate-800 dark:text-slate-200 w-18 text-right font-semibold cursor-not-allowed">
                                         </td>
                                         <td class="py-2 px-2.5 text-right">
-                                            <input type="number" step="any" name="uncertainties[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['uncertainty']) ?>" class="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                            <input type="number" step="any" name="uncertainties[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['uncertainty']) ?>" class="ent-input w-18 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -485,39 +500,40 @@ require_once __DIR__ . '/includes/header.php';
                 <!-- Section 4: Catatan & Visual -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Pemeriksaan Visual / Kondisi Fisik</label>
-                        <input type="text" name="visual_inspection" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['visual_inspection'] ?? 'Fisik bersih, display jernih, berfungsi normal')) ?>" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Pemeriksaan Visual / Kondisi Fisik</label>
+                        <input type="text" name="visual_inspection" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['visual_inspection'] ?? 'Fisik bersih, display jernih, berfungsi normal')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Catatan Tambahan Teknisi</label>
-                        <input type="text" name="technician_notes" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['technician_notes'] ?? 'Pengambilan data lancar, siap diterbitkan sertifikat.')) ?>" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Catatan Tambahan Teknisi</label>
+                        <input type="text" name="technician_notes" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['technician_notes'] ?? 'Pengambilan data lancar, siap diterbitkan sertifikat.')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
                     </div>
                 </div>
 
                 <!-- Action Toolbar -->
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100">
-                    <span class="text-slate-500 text-[11px]">
-                        Status Alur: <strong class="text-slate-800"><?= htmlspecialchars($currentInst['status']) ?></strong>
-                    </span>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-500 dark:text-slate-400 text-xs">Status Alur:</span>
+                        <?= renderStatusBadge($currentInst['status']) ?>
+                    </div>
 
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <?php if ($isCertified): ?>
-                            <a href="print_certificate.php?instrument_id=<?= $currentInst['id'] ?>&action=preview" target="_blank" class="px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 text-xs inline-flex items-center gap-1.5 transition-colors">
+                            <a href="print_certificate.php?instrument_id=<?= $currentInst['id'] ?>&action=preview" target="_blank" class="btn-brand-primary">
                                 <i class="ph-bold ph-printer"></i>
                                 <span>Cetak Sertifikat Resmi</span>
                             </a>
                         <?php elseif (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                            <button type="submit" class="px-3.5 py-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs transition-colors flex-1 sm:flex-none justify-center">
+                            <button type="submit" class="btn-surface">
                                 Simpan Draf
                             </button>
 
-                            <button type="submit" name="submit_to_certificate" value="1" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-4 py-2 rounded-lg font-semibold text-xs shadow-subtle transition-colors flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5">
+                            <button type="submit" name="submit_to_certificate" value="1" class="btn-brand-primary">
                                 <i class="ph-bold ph-paper-plane-right"></i>
                                 <span>Serahkan ke Bagian Sertifikat &rarr;</span>
                             </button>
                         <?php else: ?>
-                            <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 font-medium text-xs inline-flex items-center gap-1.5 border border-slate-200">
-                                <i class="ph-bold ph-lock-key text-slate-400"></i>
+                            <span class="badge-status neutral">
+                                <i class="ph-bold ph-lock-key"></i>
                                 <span>Mode Tinjau</span>
                             </span>
                         <?php endif; ?>
@@ -532,3 +548,4 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
