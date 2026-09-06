@@ -176,30 +176,30 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
 <body>
 
     <!-- Web UI Action Bar (Hidden on Print) -->
-    <div class="no-print max-w-[210mm] mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 bg-white px-5 py-3.5 rounded-xl shadow-xl border border-slate-200/80 text-xs">
+    <div class="no-print max-w-[210mm] mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 bg-slate-900/90 text-slate-200 border border-slate-700/80 px-5 py-3.5 rounded-xl shadow-2xl backdrop-blur text-xs">
         <div class="flex items-center gap-3">
             <?php if (isLoggedIn()): ?>
                 <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                    <a href="certificates.php" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium flex items-center gap-1.5 transition-colors">
+                    <a href="certificates.php" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center gap-1.5 transition-colors border border-slate-700">
                         <i class="ph-bold ph-arrow-left"></i> Kembali ke Bagian Sertifikat
                     </a>
                 <?php else: ?>
-                    <a href="index.php" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium flex items-center gap-1.5 transition-colors">
+                    <a href="index.php" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center gap-1.5 transition-colors border border-slate-700">
                         <i class="ph-bold ph-arrow-left"></i> Kembali ke Dashboard
                     </a>
                 <?php endif; ?>
             <?php else: ?>
-                <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium flex items-center gap-1.5 transition-colors">
+                <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center gap-1.5 transition-colors border border-slate-700">
                     <i class="ph-bold ph-shield-check"></i> Verifikasi Keabsahan
                 </a>
             <?php endif; ?>
             
-            <span class="text-slate-300">|</span>
+            <span class="text-slate-600">|</span>
             
-            <span class="font-mono font-semibold text-slate-900 tracking-tight">
+            <span class="font-mono font-semibold text-white tracking-tight">
                 <?= htmlspecialchars($cert['certificate_number']) ?>
             </span>
-            <span class="text-slate-500 font-medium text-[11px]">
+            <span class="text-slate-400 font-medium text-[11px]">
                 (<?= $isKan ? 'Akreditasi KAN LK-088' : 'Non-KAN Tertelusur' ?>)
             </span>
         </div>

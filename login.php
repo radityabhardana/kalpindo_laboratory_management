@@ -54,9 +54,35 @@ $flash = getFlash();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <!-- Anti-flicker Theme Script -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex items-center justify-center p-4">
+
+    <!-- Theme Toggle Button -->
+    <div class="fixed top-4 right-4 z-50">
+        <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-subtle hover:shadow transition-all" title="Ganti Mode Tema (Terang / Gelap)">
+            <i class="ph-bold ph-moon text-base theme-icon-moon"></i>
+            <i class="ph-bold ph-sun text-base theme-icon-sun"></i>
+        </button>
+    </div>
 
     <!-- Centered Enterprise Login Card -->
     <div class="w-full max-w-sm bg-white rounded-xl shadow-subtle border border-slate-200/80 overflow-hidden">
@@ -140,6 +166,6 @@ $flash = getFlash();
             }
         }
     </script>
-
+    <script src="assets/js/app.js"></script>
 </body>
 </html>

@@ -112,10 +112,22 @@ if (hasRole('SUPER_ADMIN')) {
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
+    <!-- Dark Mode Immediate Anti-Flicker Script -->
+    <script>
+        try {
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        } catch (e) {}
+    </script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -161,9 +173,15 @@ if (hasRole('SUPER_ADMIN')) {
                 <a href="index.php" class="flex items-center">
                     <img src="assets/img/logo.png" alt="Logo PT Kalpindo Kalibrasi" class="h-8 object-contain">
                 </a>
-                <button type="button" onclick="closeMobileSidebar()" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg">
-                    <i class="ph-bold ph-x text-lg"></i>
-                </button>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="Mode Gelap / Terang" aria-label="Toggle dark mode">
+                        <i class="ph-bold ph-moon theme-icon-moon text-base"></i>
+                        <i class="ph-bold ph-sun theme-icon-sun text-base text-amber-400"></i>
+                    </button>
+                    <button type="button" onclick="closeMobileSidebar()" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg">
+                        <i class="ph-bold ph-x text-lg"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Accreditation Sub-banner -->
@@ -349,6 +367,12 @@ if (hasRole('SUPER_ADMIN')) {
                         <span class="hidden sm:inline">Input SPK</span>
                     </a>
                 <?php endif; ?>
+
+                <!-- Dark / Light Mode Toggle Button -->
+                <button type="button" onclick="toggleTheme()" class="theme-toggle-btn p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0" title="Mode Gelap / Terang" aria-label="Toggle dark mode">
+                    <i class="ph-bold ph-moon theme-icon-moon text-sm"></i>
+                    <i class="ph-bold ph-sun theme-icon-sun text-sm text-amber-400"></i>
+                </button>
 
                 <!-- Direct Logout Icon Button -->
                 <a href="logout.php" title="Keluar / Logout Akun" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors shrink-0" aria-label="Logout">

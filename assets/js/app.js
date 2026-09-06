@@ -240,3 +240,41 @@ function closeMobileSidebar() {
     }, 300);
 }
 
+/**
+ * Dark Mode Theme Controller
+ */
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    try {
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    } catch (e) {}
+    updateThemeToggleButtons(isDark);
+}
+
+function updateThemeToggleButtons(isDark) {
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+        btn.setAttribute('aria-label', isDark ? 'Beralih ke mode terang' : 'Beralih ke mode gelap');
+        btn.setAttribute('title', isDark ? 'Mode Terang (Light Mode)' : 'Mode Gelap (Dark Mode)');
+    });
+}
+
+function initTheme() {
+    let isDark = false;
+    try {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        isDark = (savedTheme === 'dark' || (!savedTheme && prefersDark));
+    } catch (e) {}
+
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+    updateThemeToggleButtons(isDark);
+}
+
+initTheme();
+document.addEventListener('DOMContentLoaded', initTheme);
+
+

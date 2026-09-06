@@ -1,6 +1,7 @@
 /* 
  * Kalpindo CalibFlow - Modern Enterprise Design System Stylesheet
  * PT Kalibrasi Pengujian Indonesia (Kalpindo) - ISO/IEC 17025
+ * Integrated Light & Dark Mode Tokens
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -19,12 +20,23 @@
     --font-mono: 'JetBrains Mono', monospace;
 }
 
+html.dark {
+    color-scheme: dark;
+    --brand-surface: #111827;
+    --brand-bg: #0B0F19;
+    --brand-border: #1F2937;
+    --brand-text-primary: #F8FAFC;
+    --brand-text-secondary: #94A3B8;
+    --brand-text-muted: #64748B;
+}
+
 body {
     font-family: var(--font-sans);
     background-color: var(--brand-bg);
     color: var(--brand-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .font-mono {
@@ -71,12 +83,222 @@ table tr {
     background: #94A3B8;
 }
 
+/* ========================================================== */
+/* DARK MODE COMPREHENSIVE ENTERPRISE STYLES                  */
+/* ========================================================== */
+
+html.dark body {
+    background-color: #0B0F19 !important;
+    color: #E2E8F0 !important;
+}
+
+/* Surfaces & Containers */
+html.dark .bg-white {
+    background-color: #111827 !important;
+    border-color: #1F2937 !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/40,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/75,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/90 {
+    background-color: #151E2E !important;
+    border-color: #1F2937 !important;
+}
+
+html.dark .bg-slate-100 {
+    background-color: #1E293B !important;
+    color: #E2E8F0 !important;
+    border-color: #334155 !important;
+}
+
+html.dark .bg-slate-200,
+html.dark .bg-slate-200\/70 {
+    background-color: #27354A !important;
+    color: #CBD5E1 !important;
+}
+
+/* Sidebar & Header */
+html.dark aside {
+    background-color: #0E1524 !important;
+    border-color: #1E293B !important;
+}
+
+html.dark header {
+    background-color: rgba(14, 21, 36, 0.95) !important;
+    border-color: #1E293B !important;
+}
+
+/* Text Hierarchy */
+html.dark .text-slate-950,
+html.dark .text-slate-900 {
+    color: #F8FAFC !important;
+}
+
+html.dark .text-slate-800 {
+    color: #F1F5F9 !important;
+}
+
+html.dark .text-slate-700 {
+    color: #E2E8F0 !important;
+}
+
+html.dark .text-slate-600 {
+    color: #CBD5E1 !important;
+}
+
+html.dark .text-slate-500 {
+    color: #94A3B8 !important;
+}
+
+html.dark .text-slate-400 {
+    color: #64748B !important;
+}
+
+/* Borders & Dividers */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-300,
+html.dark .border-slate-700,
+html.dark .divide-slate-100,
+html.dark .divide-slate-200 {
+    border-color: #1F2937 !important;
+}
+
+/* Tables */
+html.dark thead {
+    background-color: #151E2E !important;
+    color: #94A3B8 !important;
+    border-color: #1F2937 !important;
+}
+
+html.dark tbody tr:hover,
+html.dark tr.hover\:bg-slate-50\/60:hover,
+html.dark tr.hover\:bg-slate-50\/50:hover {
+    background-color: #172133 !important;
+}
+
+/* Form Controls & Inputs */
+html.dark input[type="text"],
+html.dark input[type="date"],
+html.dark input[type="number"],
+html.dark input[type="password"],
+html.dark input[type="email"],
+html.dark select,
+html.dark textarea {
+    background-color: #0F172A !important;
+    border-color: #334155 !important;
+    color: #F8FAFC !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: #64748B !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+    border-color: #94A3B8 !important;
+    outline: none !important;
+}
+
+html.dark input:disabled,
+html.dark select:disabled,
+html.dark textarea:disabled,
+html.dark .cursor-not-allowed {
+    background-color: #1E293B !important;
+    color: #64748B !important;
+    border-color: #27354A !important;
+}
+
+/* Hover States on Buttons */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover {
+    background-color: #1E293B !important;
+    color: #F8FAFC !important;
+}
+
+/* Dark Mode Scrollbar */
+html.dark ::-webkit-scrollbar-thumb {
+    background: #334155;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Theme Icon Display Utilities */
+html.dark .theme-icon-moon {
+    display: none !important;
+}
+
+html.dark .theme-icon-sun {
+    display: block !important;
+}
+
+html:not(.dark) .theme-icon-moon {
+    display: block !important;
+}
+
+html:not(.dark) .theme-icon-sun {
+    display: none !important;
+}
+
 /* Print Cleanliness */
 @media print {
     body {
         background-color: #FFFFFF !important;
+        color: #0F172A !important;
     }
     .no-print {
         display: none !important;
     }
+}
+
+/* Certificate Paper Safeguard (ISO/IEC 17025 standard requires crisp white paper) */
+html.dark .certificate-sheet {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+}
+
+html.dark .certificate-sheet .bg-white {
+    background-color: #FFFFFF !important;
+}
+
+html.dark .certificate-sheet .text-slate-950,
+html.dark .certificate-sheet .text-slate-900,
+html.dark .certificate-sheet .text-slate-800 {
+    color: #0F172A !important;
+}
+
+html.dark .certificate-sheet .text-slate-700,
+html.dark .certificate-sheet .text-slate-600 {
+    color: #334155 !important;
+}
+
+html.dark .certificate-sheet .text-slate-500 {
+    color: #64748B !important;
+}
+
+html.dark .certificate-sheet thead {
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
+}
+
+html.dark .certificate-sheet .border-slate-900 {
+    border-color: #0F172A !important;
+}
+
+html.dark .certificate-sheet .border-slate-300 {
+    border-color: #CBD5E1 !important;
+}
+
+html.dark .certificate-sheet .border-slate-200 {
+    border-color: #E2E8F0 !important;
 }
