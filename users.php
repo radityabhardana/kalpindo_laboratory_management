@@ -35,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if (empty($username) || strlen($username) < 3) {
                 throw new Exception('Username minimal 3 karakter tanpa spasi.');
             }
+            if ($username === 'admin') {
+                throw new Exception("Username 'admin' dicadangkan khusus untuk Akun Master Setup Sistem dan tidak dapat didaftarkan sebagai akun karyawan.");
+            }
             if (!preg_match('/^[a-z0-9_.-]+$/i', $username)) {
                 throw new Exception('Username hanya boleh berisi huruf, angka, titik, atau garis bawah.');
             }
@@ -218,21 +221,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch all registered users (Pinned admin first, then ID ascending)
-$users = $db->query("
+// 1. Akun Master Setup Sistem (Built-in Root, Bukan Karyawan)
+$systemAdmin = $db->query("SELECT * FROM users WHERE username = 'admin' LIMIT 1")->fetch();
+
+// 2. Daftar Karyawan Terdaftar (Seluruh personil laboratorium selain akun setup)
+$employees = $db->query("
     SELECT * FROM users 
-    ORDER BY (username = 'admin') DESC, id ASC
+    WHERE username != 'admin' 
+    ORDER BY id ASC
 ")->fetchAll();
 
-// Statistics
-$totalUsers = count($users);
-$countAdmin = 0;
+// Statistik Karyawan (HANYA MENGHITUNG KARYAWAN)
+$totalEmployees = count($employees);
+$countAdminEmployees = 0;
 $countSales = 0;
 $countTech = 0;
 $countCert = 0;
 
-foreach ($users as $u) {
-    if ($u['role'] === 'SUPER_ADMIN') $countAdmin++;
+foreach ($employees as $u) {
+    if ($u['role'] === 'SUPER_ADMIN') $countAdminEmployees++;
     elseif ($u['role'] === 'SALES') $countSales++;
     elseif ($u['role'] === 'TECHNICIAN') $countTech++;
     elseif ($u['role'] === 'CERT_ADMIN') $countCert++;
@@ -245,26 +252,56 @@ require_once __DIR__ . '/includes/header.php';
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
         <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
-            <span>Portal Karyawan</span>
+            <span>Sistem Operasional</span>
             <i class="ph-bold ph-caret-right text-[10px] text-gray-400"></i>
             <span>Administrator</span>
             <i class="ph-bold ph-caret-right text-[10px] text-gray-400"></i>
-            <span class="text-slate-800 font-semibold">Kelola Karyawan & Peran</span>
+            <span class="text-slate-800 font-semibold">Kelola Karyawan</span>
         </div>
-        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Manajemen Karyawan & Hak Akses</h1>
-        <p class="text-xs text-slate-500 mt-0.5">Daftarkan akun resmi karyawan dan tentukan peran (Super Admin, Sales, Teknisi, atau Sertifikat).</p>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Manajemen Akun Karyawan</h1>
+        <p class="text-xs text-slate-500 mt-0.5">Daftarkan akun personil laboratorium dan tentukan peran kerja masing-masing (Super Admin, Sales, Teknisi, atau Pengurus Sertifikat).</p>
     </div>
 
     <!-- Action: Tambah Karyawan Baru Button -->
     <div class="flex items-center gap-2.5">
-        <button type="button" onclick="openModal('modal-add-user')" class="bg-[#C81E26] hover:bg-[#A8141B] active:scale-[0.98] text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition-all">
+        <button type="button" onclick="openModal('modal-add-user')" class="bg-[#C81E26] hover:bg-[#A8141B] active:scale-[0.98] text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer">
             <i class="ph-bold ph-user-plus text-base"></i>
             <span>Tambah Karyawan Baru</span>
         </button>
     </div>
 </div>
 
-<!-- Role Statistics Summary Cards -->
+<!-- ========================================================== -->
+<!-- BANNER: AKUN MASTER SETUP SISTEM (BUKAN KARYAWAN)          -->
+<!-- ========================================================== -->
+<div class="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 mb-6 border border-purple-800/40 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-purple-600/30 border border-purple-400/30 text-purple-300 flex items-center justify-center text-lg shrink-0 shadow-inner">
+            <i class="ph-bold ph-gear-six"></i>
+        </div>
+        <div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-sm font-black tracking-tight text-white">Akun Master Setup Sistem</h2>
+                <span class="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-purple-500/20 text-purple-200 border border-purple-400/30 uppercase tracking-wider">
+                    Khusus Setup &bull; Bukan Karyawan
+                </span>
+            </div>
+            <p class="text-[11px] text-purple-200/80 mt-1">
+                Username: <span class="font-mono font-bold text-white bg-purple-900/80 px-1.5 py-0.5 rounded border border-purple-700/50">admin</span> &bull; Akun bawaan sistem berlevel root khusus untuk konfigurasi awal, inisialisasi modul, dan otorisasi karyawan.
+            </p>
+        </div>
+    </div>
+    <?php if ($systemAdmin): ?>
+        <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="openEditUserModal(<?= htmlspecialchars(json_encode($systemAdmin)) ?>)" class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <i class="ph-bold ph-key"></i>
+                <span>Ganti Sandi Setup</span>
+            </button>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Role Statistics Summary Cards (HANYA MENGHITUNG KARYAWAN) -->
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 mb-6">
     
     <!-- 1. Total Karyawan -->
@@ -276,22 +313,22 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
-            <span class="text-2xl font-black text-slate-900"><?= $totalUsers ?></span>
-            <span class="text-[10px] text-slate-400 font-medium">Akun Aktif</span>
+            <span class="text-2xl font-black text-slate-900"><?= $totalEmployees ?></span>
+            <span class="text-[10px] text-slate-400 font-medium">Staf Terdaftar</span>
         </div>
     </div>
 
-    <!-- 2. Super Admin -->
+    <!-- 2. Super Admin Karyawan -->
     <div class="bg-white p-4 rounded-2xl border border-purple-200 shadow-2xs">
         <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Super Admin</span>
+            <span class="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Admin Karyawan</span>
             <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center text-base border border-purple-200">
                 <i class="ph-bold ph-shield-check"></i>
             </div>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
-            <span class="text-2xl font-black text-purple-950"><?= $countAdmin ?></span>
-            <span class="text-[10px] text-purple-600 font-medium">Akses Penuh</span>
+            <span class="text-2xl font-black text-purple-950"><?= $countAdminEmployees ?></span>
+            <span class="text-[10px] text-purple-600 font-medium">Super Admin</span>
         </div>
     </div>
 
@@ -333,7 +370,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-2xl font-black text-red-950"><?= $countCert ?></span>
-            <span class="text-[10px] text-[#C81E26] font-medium">Format Sertifikat</span>
+            <span class="text-[10px] text-[#C81E26] font-medium">Penerbitan Format</span>
         </div>
     </div>
 
@@ -345,10 +382,10 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Real-time Filter Buttons -->
     <div class="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0" id="role-filter-group">
         <button type="button" onclick="filterUserRole('ALL', this)" class="role-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold border transition-all bg-slate-900 text-white border-slate-900 shadow-2xs">
-            Semua (<?= $totalUsers ?>)
+            Semua Karyawan (<?= $totalEmployees ?>)
         </button>
         <button type="button" onclick="filterUserRole('SUPER_ADMIN', this)" class="role-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all">
-            Admin (<?= $countAdmin ?>)
+            Admin (<?= $countAdminEmployees ?>)
         </button>
         <button type="button" onclick="filterUserRole('SALES', this)" class="role-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all">
             Sales (<?= $countSales ?>)
@@ -384,59 +421,58 @@ require_once __DIR__ . '/includes/header.php';
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-                <?php foreach ($users as $u): 
-                    $roleInfo = $allRoles[$u['role']] ?? [
-                        'name' => $u['role'],
-                        'short' => $u['role'],
-                        'badge_class' => 'bg-slate-100 text-slate-700 border-slate-200',
-                        'icon' => 'ph-user'
-                    ];
-                    $isMasterAdmin = ($u['username'] === 'admin');
-                    $isSelf = ($u['id'] === $currentUser['id']);
-                ?>
-                    <tr class="user-row hover:bg-slate-50/80 transition-colors" data-role="<?= htmlspecialchars($u['role']) ?>" data-search="<?= htmlspecialchars(strtolower($u['full_name'] . ' ' . $u['username'] . ' ' . $u['email'] . ' ' . $u['department'])) ?>">
-                        
-                        <!-- 1. Karyawan -->
-                        <td class="py-3 px-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs <?= $isMasterAdmin ? 'bg-purple-700 text-white' : ($u['role'] === 'SALES' ? 'bg-slate-800 text-white' : ($u['role'] === 'TECHNICIAN' ? 'bg-blue-600 text-white' : 'bg-[#C81E26] text-white')) ?>">
-                                    <?= htmlspecialchars($u['avatar_initials'] ?: 'KP') ?>
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="font-bold text-slate-900 truncate"><?= htmlspecialchars($u['full_name']) ?></span>
-                                        <?php if ($isMasterAdmin): ?>
-                                            <span class="px-1.5 py-0.2 bg-purple-100 text-purple-800 border border-purple-200 rounded text-[9px] font-black tracking-wider uppercase">Master</span>
-                                        <?php endif; ?>
-                                        <?php if ($isSelf): ?>
-                                            <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[9px] font-bold">Anda</span>
-                                        <?php endif; ?>
+                <?php if (empty($employees)): ?>
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400">
+                            <i class="ph-bold ph-users-three text-3xl text-slate-300 mb-2 block"></i>
+                            <p class="font-bold text-sm text-slate-700">Belum Ada Karyawan Terdaftar</p>
+                            <p class="text-xs text-slate-400 mt-1">Klik tombol "Tambah Karyawan Baru" di atas untuk mendaftarkan personil laboratorium.</p>
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($employees as $u): 
+                        $roleInfo = $allRoles[$u['role']] ?? [
+                            'name' => $u['role'],
+                            'short' => $u['role'],
+                            'badge_class' => 'bg-slate-100 text-slate-700 border-slate-200',
+                            'icon' => 'ph-user'
+                        ];
+                        $isSelf = ($u['id'] === $currentUser['id']);
+                    ?>
+                        <tr class="user-row hover:bg-slate-50/80 transition-colors" data-role="<?= htmlspecialchars($u['role']) ?>" data-search="<?= htmlspecialchars(strtolower($u['full_name'] . ' ' . $u['username'] . ' ' . $u['email'] . ' ' . $u['department'])) ?>">
+                            
+                            <!-- 1. Karyawan -->
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs <?= $u['role'] === 'SUPER_ADMIN' ? 'bg-purple-700 text-white' : ($u['role'] === 'SALES' ? 'bg-slate-800 text-white' : ($u['role'] === 'TECHNICIAN' ? 'bg-blue-600 text-white' : 'bg-[#C81E26] text-white')) ?>">
+                                        <?= htmlspecialchars($u['avatar_initials'] ?: 'KP') ?>
                                     </div>
-                                    <p class="text-[11px] text-gray-400 truncate"><?= htmlspecialchars($u['email'] ?: 'Belum diisi') ?></p>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="font-bold text-slate-900 truncate"><?= htmlspecialchars($u['full_name']) ?></span>
+                                            <?php if ($isSelf): ?>
+                                                <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[9px] font-bold">Anda</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <p class="text-[11px] text-gray-400 truncate"><?= htmlspecialchars($u['email'] ?: 'Belum diisi') ?></p>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
+                            </td>
 
-                        <!-- 2. Username -->
-                        <td class="py-3 px-4">
-                            <span class="font-mono text-xs font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 inline-block">
-                                <?= htmlspecialchars($u['username']) ?>
-                            </span>
-                        </td>
-
-                        <!-- 3. Departemen -->
-                        <td class="py-3 px-4">
-                            <span class="text-xs text-slate-600 font-medium"><?= htmlspecialchars($u['department']) ?></span>
-                        </td>
-
-                        <!-- 4. Peran Sistem (Role) + Quick Role Changer -->
-                        <td class="py-3 px-4">
-                            <?php if ($isMasterAdmin): ?>
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 shadow-2xs">
-                                    <i class="ph-bold ph-shield-check"></i>
-                                    <span>Super Admin (Akses Penuh)</span>
+                            <!-- 2. Username -->
+                            <td class="py-3 px-4">
+                                <span class="font-mono text-xs font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 inline-block">
+                                    <?= htmlspecialchars($u['username']) ?>
                                 </span>
-                            <?php else: ?>
+                            </td>
+
+                            <!-- 3. Departemen -->
+                            <td class="py-3 px-4">
+                                <span class="text-xs text-slate-600 font-medium"><?= htmlspecialchars($u['department']) ?></span>
+                            </td>
+
+                            <!-- 4. Peran Sistem (Role) + Quick Role Changer -->
+                            <td class="py-3 px-4">
                                 <!-- Quick Select Dropdown Form for instant role change -->
                                 <form action="users.php" method="POST" class="inline-flex items-center gap-1.5 m-0" id="quick-role-form-<?= $u['id'] ?>">
                                     <input type="hidden" name="action" value="quick_set_role">
@@ -453,47 +489,47 @@ require_once __DIR__ . '/includes/header.php';
                                         <i class="ph-bold ph-caret-down text-[10px] text-gray-500 absolute right-2 top-2.5 pointer-events-none"></i>
                                     </div>
                                 </form>
-                            <?php endif; ?>
-                        </td>
+                            </td>
 
-                        <!-- 5. Terdaftar -->
-                        <td class="py-3 px-4 text-[11px] text-slate-500 font-mono">
-                            <?= !empty($u['created_at']) ? date('d/m/Y', strtotime($u['created_at'])) : '-' ?>
-                        </td>
+                            <!-- 5. Terdaftar -->
+                            <td class="py-3 px-4 text-[11px] text-slate-500 font-mono">
+                                <?= !empty($u['created_at']) ? date('d/m/Y', strtotime($u['created_at'])) : '-' ?>
+                            </td>
 
-                        <!-- 6. Aksi Manajemen -->
-                        <td class="py-3 px-4 text-right">
-                            <div class="inline-flex items-center gap-1.5">
-                                
-                                <!-- Edit & Set Role Modal Button -->
-                                <button type="button" 
-                                    onclick="openEditUserModal(<?= htmlspecialchars(json_encode($u)) ?>)" 
-                                    class="p-1.5 px-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
-                                    title="Ubah Data & Peran Karyawan">
-                                    <i class="ph-bold ph-pencil-simple"></i>
-                                    <span class="hidden sm:inline">Ubah</span>
-                                </button>
-
-                                <!-- Delete Button -->
-                                <?php if (!$isMasterAdmin && !$isSelf): ?>
+                            <!-- 6. Aksi Manajemen -->
+                            <td class="py-3 px-4 text-right">
+                                <div class="inline-flex items-center gap-1.5">
+                                    
+                                    <!-- Edit & Set Role Modal Button -->
                                     <button type="button" 
-                                        onclick="confirmDeleteUser(<?= $u['id'] ?>, '<?= htmlspecialchars(addslashes($u['full_name'])) ?>', '<?= htmlspecialchars(addslashes($u['username'])) ?>')"
-                                        class="p-1.5 px-2 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
-                                        title="Hapus Karyawan">
-                                        <i class="ph-bold ph-trash"></i>
-                                        <span class="hidden sm:inline">Hapus</span>
+                                        onclick="openEditUserModal(<?= htmlspecialchars(json_encode($u)) ?>)" 
+                                        class="p-1.5 px-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                                        title="Ubah Data & Peran Karyawan">
+                                        <i class="ph-bold ph-pencil-simple"></i>
+                                        <span class="hidden sm:inline">Ubah</span>
                                     </button>
-                                <?php else: ?>
-                                    <span class="p-1.5 px-2 text-gray-300 bg-gray-50 rounded-lg text-xs font-medium cursor-not-allowed" title="Akun ini diproteksi dan tidak dapat dihapus">
-                                        <i class="ph-bold ph-lock-key"></i>
-                                    </span>
-                                <?php endif; ?>
 
-                            </div>
-                        </td>
+                                    <!-- Delete Button -->
+                                    <?php if (!$isSelf): ?>
+                                        <button type="button" 
+                                            onclick="confirmDeleteUser(<?= $u['id'] ?>, '<?= htmlspecialchars(addslashes($u['full_name'])) ?>', '<?= htmlspecialchars(addslashes($u['username'])) ?>')"
+                                            class="p-1.5 px-2 text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                                            title="Hapus Karyawan">
+                                            <i class="ph-bold ph-trash"></i>
+                                            <span class="hidden sm:inline">Hapus</span>
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="p-1.5 px-2 text-gray-300 bg-gray-50 rounded-lg text-xs font-medium cursor-not-allowed" title="Akun Anda sedang aktif">
+                                            <i class="ph-bold ph-lock-key"></i>
+                                        </span>
+                                    <?php endif; ?>
 
-                    </tr>
-                <?php endforeach; ?>
+                                </div>
+                            </td>
+
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

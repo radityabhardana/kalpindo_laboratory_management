@@ -25,6 +25,7 @@ $activeRoleInfo = $allRoles[$currentUser['role']] ?? [
 
 $nameParts = explode(' ', trim($currentUser['full_name']));
 $userInitials = strtoupper(substr($nameParts[0], 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : ''));
+$isMasterSetupAdmin = ($currentUser['username'] === 'admin');
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 $flash = getFlash();
@@ -200,12 +201,14 @@ if (hasRole('SUPER_ADMIN')) {
         <div class="p-4 border-t border-slate-200 bg-slate-50/60">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                        <?= $userInitials ?>
+                    <div class="w-8 h-8 rounded-xl <?= $isMasterSetupAdmin ? 'bg-purple-700' : 'bg-slate-900' ?> text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                        <?= $isMasterSetupAdmin ? 'AD' : $userInitials ?>
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs font-bold text-slate-900 truncate"><?= htmlspecialchars($currentUser['full_name']) ?></p>
-                        <p class="text-[10px] text-slate-500 truncate"><?= htmlspecialchars($activeRoleInfo['name']) ?></p>
+                        <p class="text-[10px] <?= $isMasterSetupAdmin ? 'text-purple-700 font-bold' : 'text-slate-500' ?> truncate">
+                            <?= $isMasterSetupAdmin ? 'Master Setup Sistem' : htmlspecialchars($activeRoleInfo['name']) ?>
+                        </p>
                     </div>
                 </div>
                 <a href="logout.php" title="Keluar / Logout" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0">
@@ -231,7 +234,9 @@ if (hasRole('SUPER_ADMIN')) {
                     <div class="border-l border-slate-200 pl-2.5">
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs font-black tracking-wider text-slate-900 uppercase">CalibFlow</span>
-                            <span class="px-1.5 py-0.5 text-[8px] font-extrabold bg-slate-100 text-slate-800 rounded border border-slate-300 tracking-wider">KARYAWAN</span>
+                            <span class="px-1.5 py-0.5 text-[8px] font-extrabold <?= $isMasterSetupAdmin ? 'bg-purple-100 text-purple-800 border-purple-200' : 'bg-slate-100 text-slate-800 border-slate-300' ?> rounded border tracking-wider">
+                                <?= $isMasterSetupAdmin ? 'SETUP SISTEM' : 'PORTAL KARYAWAN' ?>
+                            </span>
                         </div>
                         <p class="text-[9px] text-gray-500 font-medium whitespace-nowrap">Portal Kalibrasi & Sertifikasi</p>
                     </div>
@@ -282,12 +287,14 @@ if (hasRole('SUPER_ADMIN')) {
         <div class="p-3.5 border-t border-slate-200 bg-slate-50/70 shrink-0">
             <div class="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-lg bg-slate-900 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                        <?= $userInitials ?>
+                    <div class="w-8 h-8 rounded-lg <?= $isMasterSetupAdmin ? 'bg-purple-700' : 'bg-slate-900' ?> text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                        <?= $isMasterSetupAdmin ? 'AD' : $userInitials ?>
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs font-bold text-slate-900 truncate leading-tight"><?= htmlspecialchars($currentUser['full_name']) ?></p>
-                        <p class="text-[10px] text-slate-500 truncate mt-0.5"><?= htmlspecialchars($activeRoleInfo['name']) ?></p>
+                        <p class="text-[10px] <?= $isMasterSetupAdmin ? 'text-purple-700 font-bold' : 'text-slate-500' ?> truncate mt-0.5">
+                            <?= $isMasterSetupAdmin ? 'Master Setup Sistem' : htmlspecialchars($activeRoleInfo['name']) ?>
+                        </p>
                     </div>
                 </div>
                 <a href="logout.php" title="Keluar / Logout Akun" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0" aria-label="Logout">

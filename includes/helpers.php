@@ -294,6 +294,14 @@ function getCurrentUser(): ?array {
 }
 
 /**
+ * Check if the active user is the built-in Master Setup Admin (not an employee)
+ */
+function isSystemAdmin(): bool {
+    $user = getCurrentUser();
+    return $user !== null && ($user['username'] === 'admin');
+}
+
+/**
  * Require active authentication session; redirects to login.php if unauthenticated
  */
 function requireLogin(): void {

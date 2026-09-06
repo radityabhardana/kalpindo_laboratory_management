@@ -61,225 +61,96 @@ $flash = getFlash();
     <link rel="stylesheet" href="assets/css/custom.css">
 
     <style>
-        /* Strict solid viewport locks on screens above mobile */
-        @media (min-height: 600px) and (min-width: 768px) {
+        /* Solid viewport locks on screens above mobile */
+        @media (min-height: 500px) and (min-width: 768px) {
             html, body {
                 height: 100vh !important;
                 overflow: hidden !important;
             }
         }
-        .role-btn.active-role {
-            border-color: #C81E26 !important;
-            background-color: #FEF2F2 !important;
-            box-shadow: 0 0 0 1px #C81E26 inset;
-        }
     </style>
 </head>
-<body class="bg-[#F1F5F9] text-slate-800 font-sans antialiased min-h-screen md:h-screen md:overflow-hidden flex items-center justify-center p-3 sm:p-5 lg:p-6">
+<body class="bg-[#F1F5F9] text-slate-800 font-sans antialiased min-h-screen flex items-center justify-center p-4">
 
     <!-- Top Red Accent Bar -->
-    <div class="fixed top-0 left-0 right-0 h-1 bg-[#C81E26] z-50"></div>
+    <div class="fixed top-0 left-0 right-0 h-1.5 bg-[#C81E26] z-50"></div>
 
-    <!-- Main Solid Container (Max-W-5xl) -->
-    <div class="w-full max-w-5xl bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-200/80 border border-slate-200 overflow-hidden grid grid-cols-1 lg:grid-cols-12 max-h-[96vh]">
+    <!-- Centered Login Card -->
+    <div class="w-full max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-200/80 border border-slate-200 overflow-hidden">
         
-        <!-- LEFT COLUMN: Quick Role Picker & System Info (5 cols) -->
-        <div class="lg:col-span-5 bg-slate-50/80 border-b lg:border-b-0 lg:border-r border-slate-200 p-5 sm:p-6 lg:p-7 flex flex-col justify-between">
+        <div class="p-6 sm:p-8">
             
-            <!-- Brand & Heading -->
-            <div>
-                <div class="flex items-center gap-3">
-                    <img src="assets/img/logo.png" alt="Logo PT Kalpindo" class="h-8 sm:h-9 object-contain">
-                    <div class="border-l border-gray-200 pl-2.5">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs font-black tracking-wider text-slate-900 uppercase">CalibFlow</span>
-                            <span class="px-1.5 py-0.5 text-[9px] font-extrabold bg-slate-200 text-slate-800 rounded border border-slate-300 tracking-wider">PORTAL KARYAWAN</span>
-                        </div>
-                        <p class="text-[10px] text-gray-500 font-medium">Sistem Operasional Kalibrasi</p>
-                    </div>
+            <!-- Logo & Brand Header -->
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center mb-3">
+                    <img src="assets/img/logo.png" alt="Logo PT Kalpindo" class="h-10 object-contain">
                 </div>
-
-                <div class="mt-4 pb-3 border-b border-gray-200/80">
-                    <h2 class="text-sm font-bold text-slate-900">Pilihan Akun & Peran Pengguna</h2>
-                    <p class="text-[11px] text-gray-500 mt-0.5">Klik salah satu akun karyawan untuk mengisi formulir login:</p>
+                <div class="flex items-center justify-center gap-2 mb-1.5">
+                    <span class="text-xs font-black tracking-wider text-slate-900 uppercase">CalibFlow</span>
+                    <span class="px-1.5 py-0.5 text-[9px] font-extrabold bg-slate-100 text-slate-700 rounded border border-slate-200 tracking-wider">PORTAL RESMI</span>
                 </div>
+                <h1 class="text-xl font-black text-slate-900 tracking-tight">Masuk ke Sistem</h1>
+                <p class="text-xs text-gray-500 mt-1">Masukkan username dan kata sandi akun Anda untuk memulai sesi kerja.</p>
             </div>
 
-            <!-- Role Selector Buttons (Compact 4-stack) -->
-            <div class="my-3 space-y-2" id="role-buttons-container">
+            <!-- Flash & Error Alert -->
+            <?php if ($error || $flash): ?>
+                <div class="mb-5 p-3 rounded-xl border flex items-center gap-2.5 text-xs <?= $error ? 'bg-red-50 border-red-200 text-[#C81E26]' : 'bg-emerald-50 border-emerald-200 text-emerald-800' ?>">
+                    <i class="ph-bold <?= $error ? 'ph-warning-circle text-base text-[#C81E26]' : 'ph-check-circle text-base text-emerald-600' ?> shrink-0"></i>
+                    <span class="font-medium"><?= htmlspecialchars($error ?: $flash['message']) ?></span>
+                </div>
+            <?php endif; ?>
+
+            <!-- Form -->
+            <form action="login.php" method="POST" class="space-y-4 text-xs" id="login-form">
                 
-                <!-- 1. Master Admin -->
-                <button type="button" onclick="selectRole('admin', 'admin', this)" class="role-btn w-full p-2.5 rounded-xl border border-purple-200 bg-white hover:bg-purple-50/60 transition-all flex items-center justify-between text-left group shadow-2xs active-role">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-purple-700 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            AD
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-purple-950 font-bold">Master Admin</strong>
-                                <span class="font-mono text-[9px] text-purple-700 bg-purple-100 px-1 py-0.2 rounded font-bold">admin</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500">Administrator Utama (Atur Sistem & Karyawan)</p>
-                        </div>
+                <!-- Username Field -->
+                <div>
+                    <label for="username" class="block font-bold text-slate-700 mb-1.5">Username Pengguna</label>
+                    <div class="relative">
+                        <i class="ph-bold ph-user absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                        <input id="username" name="username" type="text" required value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" placeholder="Masukkan username akun..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-3.5 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
                     </div>
-                    <i class="ph-bold ph-caret-right text-purple-400 group-hover:text-purple-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
-                </button>
+                </div>
 
-                <!-- 2. Raditya Pratama (Sertifikat) -->
-                <button type="button" onclick="selectRole('radit', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-red-200 bg-white hover:bg-red-50/60 transition-all flex items-center justify-between text-left group shadow-2xs">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-[#C81E26] text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            RP
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-[#C81E26] font-bold">Raditya Pratama</strong>
-                                <span class="font-mono text-[9px] text-red-700 bg-red-100 px-1 py-0.2 rounded font-bold">radit</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500">Pengurus Sertifikat (Format YYMMSNNNN-RR & Cetak)</p>
-                        </div>
+                <!-- Password Field -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="password" class="block font-bold text-slate-700">Kata Sandi</label>
                     </div>
-                    <i class="ph-bold ph-caret-right text-[#C81E26] group-hover:translate-x-0.5 transition-all text-xs"></i>
-                </button>
-
-                <!-- 3. Siti Rahmawati (Sales) -->
-                <button type="button" onclick="selectRole('siti', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100/70 transition-all flex items-center justify-between text-left group shadow-2xs">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-slate-800 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            SR
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-slate-900 font-bold">Siti Rahmawati, S.E.</strong>
-                                <span class="font-mono text-[9px] text-slate-700 bg-gray-200 px-1 py-0.2 rounded font-bold">siti</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500">Divisi Sales & Front Office (Order SPK)</p>
-                        </div>
+                    <div class="relative">
+                        <i class="ph-bold ph-lock-key absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                        <input id="password" name="password" type="password" required placeholder="Masukkan kata sandi..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-10 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-slate-700 p-0.5 rounded cursor-pointer" title="Lihat/Sembunyikan sandi">
+                            <i id="password-toggle-icon" class="ph-bold ph-eye text-sm"></i>
+                        </button>
                     </div>
-                    <i class="ph-bold ph-caret-right text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
-                </button>
+                </div>
 
-                <!-- 4. Ahmad Fauzi (Teknisi) -->
-                <button type="button" onclick="selectRole('fauzi', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-blue-200 bg-white hover:bg-blue-50/60 transition-all flex items-center justify-between text-left group shadow-2xs">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            AF
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-blue-950 font-bold">Ahmad Fauzi, A.Md.</strong>
-                                <span class="font-mono text-[9px] text-blue-700 bg-blue-100 px-1 py-0.2 rounded font-bold">fauzi</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500">Teknisi Kalibrasi (Lembar Kerja Worksheet)</p>
-                        </div>
-                    </div>
-                    <i class="ph-bold ph-caret-right text-blue-400 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
-                </button>
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" id="submit-login-btn" class="w-full bg-[#C81E26] hover:bg-[#A8141B] active:scale-[0.99] text-white py-2.5 px-4 rounded-xl font-bold text-xs transition-all shadow-md shadow-red-900/10 flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="ph-bold ph-sign-in text-sm"></i>
+                        <span>Masuk ke Sistem</span>
+                    </button>
+                </div>
 
-            </div>
-
-            <!-- Left Footer Note -->
-            <div class="pt-2 border-t border-gray-200/80 flex items-center justify-between text-[10px] text-gray-400 font-mono">
-                <span>Laboratorium KAN LK-088-IDN</span>
-                <span class="text-emerald-600 font-semibold flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> ISO/IEC 17025
-                </span>
-            </div>
+            </form>
 
         </div>
 
-        <!-- RIGHT COLUMN: Authentication Form (7 cols) -->
-        <div class="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between">
-            
-            <div>
-                <!-- Top Title -->
-                <div class="mb-5">
-                    <span class="px-2 py-0.5 text-[10px] font-mono font-bold text-slate-500 bg-slate-100 rounded border border-slate-200 uppercase tracking-wider">
-                        Sistem Otentikasi Terintegrasi
-                    </span>
-                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1.5">Masuk ke Portal Operasional</h1>
-                    <p class="text-xs text-gray-500 mt-1">Masukkan username dan kata sandi akun karyawan Anda untuk memulai sesi kerja.</p>
-                </div>
-
-                <!-- Flash & Error Alert -->
-                <?php if ($error || $flash): ?>
-                    <div class="mb-4 p-3 rounded-xl border flex items-center gap-2.5 text-xs <?= $error ? 'bg-red-50 border-red-200 text-[#C81E26]' : 'bg-emerald-50 border-emerald-200 text-emerald-800' ?>">
-                        <i class="ph-bold <?= $error ? 'ph-warning-circle text-base text-[#C81E26]' : 'ph-check-circle text-base text-emerald-600' ?> shrink-0"></i>
-                        <span class="font-medium"><?= htmlspecialchars($error ?: $flash['message']) ?></span>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Form -->
-                <form action="login.php" method="POST" class="space-y-3.5 text-xs" id="login-form">
-                    
-                    <!-- Username Field -->
-                    <div>
-                        <label for="username" class="block font-bold text-slate-700 mb-1">Username Pengguna</label>
-                        <div class="relative">
-                            <i class="ph-bold ph-user absolute left-3.5 top-3 text-gray-400 text-sm"></i>
-                            <input id="username" name="username" type="text" required value="<?= htmlspecialchars($_POST['username'] ?? 'admin') ?>" placeholder="Masukkan username..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-3.5 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Password Field -->
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label for="password" class="block font-bold text-slate-700">Kata Sandi</label>
-                            <span class="text-[10px] text-gray-400 font-mono">Master: admin &bull; Karyawan: password123</span>
-                        </div>
-                        <div class="relative">
-                            <i class="ph-bold ph-lock-key absolute left-3.5 top-3 text-gray-400 text-sm"></i>
-                            <input id="password" name="password" type="password" required value="admin" placeholder="Masukkan password..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-10 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
-                            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-slate-700 p-0.5 rounded" title="Lihat/Sembunyikan sandi">
-                                <i id="password-toggle-icon" class="ph-bold ph-eye text-sm"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="pt-2">
-                        <button type="submit" id="submit-login-btn" class="w-full bg-[#C81E26] hover:bg-[#A8141B] active:scale-[0.99] text-white py-2.5 px-4 rounded-xl font-bold text-xs transition-all shadow-md shadow-red-900/10 flex items-center justify-center gap-2">
-                            <i class="ph-bold ph-sign-in text-sm"></i>
-                            <span>Masuk ke Sistem</span>
-                        </button>
-                    </div>
-
-                </form>
-            </div>
-
-            <!-- Bottom Security & Help Note -->
-            <div class="mt-5 pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-gray-400">
-                <div class="flex items-center gap-1.5 text-slate-600 font-medium">
-                    <i class="ph-fill ph-shield-check text-emerald-600 text-sm"></i>
-                    <span>Sesi Terenkripsi & Akses Berbasis Peran</span>
-                </div>
-                <span class="font-mono text-[10px]">PT Kalpindo Kalibrasi</span>
-            </div>
-
+        <!-- Card Footer -->
+        <div class="bg-slate-50 px-6 py-3.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 font-mono">
+            <span>PT Kalpindo Kalibrasi</span>
+            <span class="text-emerald-700 font-semibold flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> KAN LK-088-IDN
+            </span>
         </div>
 
     </div>
 
     <!-- Interactive Script -->
     <script>
-        function selectRole(username, password, btnElement) {
-            document.getElementById('username').value = username;
-            document.getElementById('password').value = password;
-            
-            // Remove active class from all buttons
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                btn.classList.remove('active-role');
-            });
-            
-            // Add active class to clicked button
-            if (btnElement) {
-                btnElement.classList.add('active-role');
-            }
-            
-            // Focus username briefly
-            document.getElementById('username').focus();
-        }
-
         function togglePasswordVisibility() {
             const pwdInput = document.getElementById('password');
             const icon = document.getElementById('password-toggle-icon');
