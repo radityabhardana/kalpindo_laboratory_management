@@ -158,12 +158,8 @@ if (hasRole('SUPER_ADMIN')) {
         <div>
             <!-- Header Brand & Close Button -->
             <div class="h-16 px-5 border-b border-slate-200 flex items-center justify-between">
-                <a href="index.php" class="flex items-center gap-2.5">
-                    <img src="assets/img/logo.png" alt="Logo Kalpindo" class="h-8 object-contain">
-                    <div class="border-l border-slate-200 pl-2">
-                        <span class="text-xs font-black tracking-wider text-slate-900 uppercase block">CalibFlow</span>
-                        <span class="text-[9px] font-bold text-slate-500 block -mt-0.5">PT Kalpindo</span>
-                    </div>
+                <a href="index.php" class="flex items-center">
+                    <img src="assets/img/logo.png" alt="Logo PT Kalpindo Kalibrasi" class="h-8 object-contain">
                 </a>
                 <button type="button" onclick="closeMobileSidebar()" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg">
                     <i class="ph-bold ph-x text-lg"></i>
@@ -239,17 +235,8 @@ if (hasRole('SUPER_ADMIN')) {
             
             <!-- Header Brand -->
             <div class="h-16 px-5 border-b border-slate-200 flex items-center shrink-0">
-                <a href="index.php" class="flex items-center gap-2.5">
-                    <img src="assets/img/logo.png" alt="Logo Kalpindo" class="h-8 object-contain shrink-0">
-                    <div class="border-l border-slate-200 pl-2.5">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs font-black tracking-wider text-slate-900 uppercase">CalibFlow</span>
-                            <span class="px-1.5 py-0.5 text-[8px] font-extrabold <?= $isMasterSetupAdmin ? 'bg-purple-100 text-purple-800 border-purple-200' : 'bg-slate-100 text-slate-800 border-slate-300' ?> rounded border tracking-wider">
-                                <?= $isMasterSetupAdmin ? 'SETUP SISTEM' : 'PORTAL KARYAWAN' ?>
-                            </span>
-                        </div>
-                        <p class="text-[9px] text-gray-500 font-medium whitespace-nowrap">Portal Kalibrasi & Sertifikasi</p>
-                    </div>
+                <a href="index.php" class="flex items-center">
+                    <img src="assets/img/logo.png" alt="Logo PT Kalpindo Kalibrasi" class="h-8 object-contain">
                 </a>
             </div>
 

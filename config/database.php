@@ -49,6 +49,9 @@ function getDbConnection(): PDO {
             ]);
         }
 
+        // Jalankan migrasi skema & data secara aman (idempotent)
+        runMigrations($pdo);
+
         return $pdo;
     } catch (PDOException $e) {
         die('<div style="font-family:sans-serif;padding:20px;background:#fee2e2;color:#991b1b;border-radius:8px;margin:20px;">' .
@@ -58,3 +61,44 @@ function getDbConnection(): PDO {
             '</div>');
     }
 }
+
+/**
+ * Migrasi Skema & Sinkronisasi Ruang Lingkup (P, M, T, D, E) serta KAN / Non-KAN
+ */
+function runMigrations(PDO $pdo): void {
+    static $hasRun = false;
+    if ($hasRun) return;
+    $hasRun = true;
+
+    // 1. Kolom is_kan pada tabel instruments dan certificates (1 = KAN, 0 = Non-KAN)
+    try {
+        $pdo->exec("ALTER TABLE instruments ADD COLUMN is_kan INTEGER DEFAULT 1");
+    } catch (Exception $e) {}
+
+    try {
+        $pdo->exec("ALTER TABLE certificates ADD COLUMN is_kan INTEGER DEFAULT 1");
+    } catch (Exception $e) {}
+
+    // 2. Ruang Lingkup Resmi: P (Pressure), M (Massa), T (Suhu), D (Dimensi), E (Electric)
+    try {
+        $pdo->exec("
+            INSERT OR REPLACE INTO scopes (code, name, description, unit_samples, color)
+            VALUES 
+                ('P', 'Tekanan (Pressure)', 'Pressure gauge, transmitter tekanan, manometer, vacuum gauge', 'bar, psi, kPa, MPa', 'emerald'),
+                ('M', 'Massa (Mass)', 'Timbangan analitik presisi, timbangan elektronik, anak timbangan standar', 'g, kg, mg', 'indigo'),
+                ('T', 'Suhu (Temperature)', 'Thermometer digital & gelas, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'),
+                ('D', 'Dimensi (Dimension)', 'Vernier caliper, digital micrometer, dial gauge, gauge block', 'mm, inch, µm', 'blue'),
+                ('E', 'Kelistrikan (Electric)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet')
+        ");
+
+        // Migrasi kode 'S' lama ke 'T' (Suhu)
+        $pdo->exec("UPDATE instruments SET scope_code = 'T' WHERE scope_code = 'S'");
+        $pdo->exec("UPDATE certificates SET scope_code = 'T' WHERE scope_code = 'S'");
+        $pdo->exec("DELETE FROM scopes WHERE code IN ('V', 'F', 'S')");
+
+        // Sinkronisasi status is_kan dari awalan nomor sertifikat (N = Non-KAN)
+        $pdo->exec("UPDATE certificates SET is_kan = 0 WHERE certificate_number LIKE 'N%'");
+        $pdo->exec("UPDATE certificates SET is_kan = 1 WHERE certificate_number NOT LIKE 'N%'");
+    } catch (Exception $e) {}
+}
+

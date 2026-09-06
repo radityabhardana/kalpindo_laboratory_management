@@ -20,6 +20,8 @@ $onSiteCount = (int)$db->query("SELECT COUNT(*) FROM orders WHERE service_type =
 $inProgressCount = (int)$db->query("SELECT COUNT(*) FROM instruments WHERE status IN ('ASSIGNED', 'IN_PROGRESS')")->fetchColumn();
 $readyForCertCount = (int)$db->query("SELECT COUNT(*) FROM instruments WHERE status = 'DATA_SUBMITTED'")->fetchColumn();
 $certifiedCount = (int)$db->query("SELECT COUNT(*) FROM certificates")->fetchColumn();
+$certifiedKanCount = (int)$db->query("SELECT COUNT(*) FROM certificates WHERE (is_kan = 1 OR is_kan IS NULL) AND certificate_number NOT LIKE 'N%'")->fetchColumn();
+$certifiedNonKanCount = (int)$db->query("SELECT COUNT(*) FROM certificates WHERE is_kan = 0 OR certificate_number LIKE 'N%'")->fetchColumn();
 
 // Filter & Search
 $filter = $_GET['filter'] ?? 'all';
@@ -34,6 +36,7 @@ $query = "
         i.model_type,
         i.serial_number,
         i.scope_code,
+        i.is_kan as inst_is_kan,
         i.technician_name,
         i.status as instrument_status,
         i.calibration_date,
@@ -41,6 +44,7 @@ $query = "
         o.customer_name,
         o.service_type,
         c.certificate_number,
+        c.is_kan as cert_is_kan,
         c.issue_date,
         w.id as worksheet_id,
         w.submitted_at
@@ -200,9 +204,10 @@ $pendingCerts = $db->query("
             <h3 class="text-2xl font-black text-emerald-600"><?= $certifiedCount ?></h3>
             <span class="text-xs text-gray-400 font-medium">Dokumen Terbit</span>
         </div>
-        <div class="mt-3 pt-2.5 border-t border-gray-100 text-xs text-emerald-600 font-medium flex items-center justify-between">
-            <span>ISO/IEC 17025 KAN</span>
-            <span class="font-mono text-[11px]">Status: Sah</span>
+        <div class="mt-3 pt-2.5 border-t border-gray-100 text-xs text-gray-600 font-medium flex items-center justify-between">
+            <span class="text-blue-700 font-bold">KAN: <?= $certifiedKanCount ?></span>
+            <span>•</span>
+            <span class="text-amber-800 font-bold">Non-KAN: <?= $certifiedNonKanCount ?></span>
         </div>
     </div>
 
@@ -323,6 +328,14 @@ $pendingCerts = $db->query("
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border <?= $scInfo['badge_class'] ?> whitespace-nowrap">
                                 [<?= htmlspecialchars($inst['scope_code']) ?>] <?= htmlspecialchars(explode(' ', $scInfo['name'])[0]) ?>
                             </span>
+                            <?php $isInstKan = (isset($inst['inst_is_kan']) && (int)$inst['inst_is_kan'] === 0) ? false : true; ?>
+                            <div class="mt-0.5">
+                                <?php if ($isInstKan): ?>
+                                    <span class="text-[9px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">KAN</span>
+                                <?php else: ?>
+                                    <span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">NON-KAN</span>
+                                <?php endif; ?>
+                            </div>
                         </td>
 
                         <!-- Lokasi Layanan -->
@@ -349,6 +362,14 @@ $pendingCerts = $db->query("
                                 <span class="font-mono text-[11px] font-bold text-[#C81E26] bg-red-50 px-2 py-0.5 rounded border border-red-200 whitespace-nowrap">
                                     <?= htmlspecialchars($inst['certificate_number']) ?>
                                 </span>
+                                <?php $isCertKan = (substr($inst['certificate_number'], 0, 1) !== 'N'); ?>
+                                <div class="mt-0.5">
+                                    <?php if ($isCertKan): ?>
+                                        <span class="text-[9px] font-bold text-blue-700">Akreditasi KAN</span>
+                                    <?php else: ?>
+                                        <span class="text-[9px] font-bold text-amber-800">Non-KAN (Awalan N)</span>
+                                    <?php endif; ?>
+                                </div>
                             <?php else: ?>
                                 <span class="text-gray-400 italic text-[11px] whitespace-nowrap">Belum terbit</span>
                             <?php endif; ?>
@@ -363,28 +384,50 @@ $pendingCerts = $db->query("
                                         <span>Buat No. Sertifikat</span>
                                     </a>
                                 <?php else: ?>
-                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
-                                        <i class="ph-bold ph-hourglass text-red-500"></i>
-                                        <span>Menunggu Sertifikat</span>
-                                    </span>
+                                    <div class="inline-flex items-center gap-1.5">
+                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
+                                            <i class="ph-bold ph-hourglass text-red-500"></i>
+                                            <span>Menunggu Sertifikat</span>
+                                        </span>
+                                        <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
+                                            <a href="orders.php?edit_order=<?= urlencode($inst['order_number']) ?>" class="px-2 py-1 rounded-md text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1 transition-all" title="Edit SPK">
+                                                <i class="ph-bold ph-pencil-simple"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 <?php endif; ?>
                             <?php elseif ($inst['instrument_status'] === 'CERTIFIED' && $inst['certificate_number']): ?>
-                                <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-slate-700 hover:bg-gray-50 shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all" title="Buka Dokumen & Buat / Cetak PDF">
-                                    <i class="ph-bold ph-file-pdf text-[#C81E26]"></i>
-                                    <span>Buat PDF</span>
-                                </a>
-                            <?php else: ?>
-                                <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                                    <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
-                                        <i class="ph-bold ph-pencil-simple"></i>
-                                        <span>Worksheet</span>
+                                <div class="inline-flex items-center gap-1.5">
+                                    <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-slate-700 hover:bg-gray-50 shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all" title="Buka Dokumen & Buat / Cetak PDF">
+                                        <i class="ph-bold ph-file-pdf text-[#C81E26]"></i>
+                                        <span>Buat PDF</span>
                                     </a>
-                                <?php else: ?>
-                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1">
-                                        <i class="ph-bold ph-gear text-blue-500"></i>
-                                        <span>Proses Teknisi</span>
-                                    </span>
-                                <?php endif; ?>
+                                    <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
+                                        <a href="orders.php?edit_order=<?= urlencode($inst['order_number']) ?>" class="px-2 py-1 rounded-md text-xs font-semibold bg-gray-50 hover:bg-amber-50 text-gray-600 hover:text-amber-800 border border-gray-200 inline-flex items-center transition-all" title="Edit Data SPK">
+                                            <i class="ph-bold ph-pencil-simple"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="inline-flex items-center gap-1.5">
+                                    <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                                        <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
+                                            <i class="ph-bold ph-pencil-simple"></i>
+                                            <span>Worksheet</span>
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1">
+                                            <i class="ph-bold ph-gear text-blue-500"></i>
+                                            <span>Proses Teknisi</span>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
+                                        <a href="orders.php?edit_order=<?= urlencode($inst['order_number']) ?>" class="px-2 py-1 rounded-md text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1 transition-all" title="Edit Data SPK">
+                                            <i class="ph-bold ph-pencil-simple"></i>
+                                            <span>Edit SPK</span>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </td>
                     </tr>

@@ -12,7 +12,9 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
- * Ruang Lingkup Kalibrasi PT Kalpindo
+/**
+ * Ruang Lingkup Kalibrasi Resmi PT Kalpindo
+ * P: Pressure, M: Massa, T: Suhu, D: Dimensi, E: Electric
  */
 function getScopeList(): array {
     return [
@@ -25,23 +27,23 @@ function getScopeList(): array {
             'units' => 'bar, psi, kPa, MPa',
             'icon' => 'ph-gauge'
         ],
-        'S' => [
+        'M' => [
+            'name' => 'Massa & Timbangan (Mass)',
+            'code' => 'M',
+            'desc' => 'Digital Balance (Analitik), Timbangan Elektronik, Anak Timbangan Standar',
+            'color' => 'blue',
+            'badge_class' => 'bg-blue-50 text-blue-700 border-blue-200',
+            'units' => 'g, kg, mg',
+            'icon' => 'ph-scales'
+        ],
+        'T' => [
             'name' => 'Suhu & Kelembapan (Temperature)',
-            'code' => 'S',
+            'code' => 'T',
             'desc' => 'Thermometer Digital & Gelas, Thermocouple, Thermohygrometer, Oven, Furnace',
             'color' => 'orange',
             'badge_class' => 'bg-amber-50 text-amber-700 border-amber-200',
             'units' => '°C, %RH, K',
             'icon' => 'ph-thermometer'
-        ],
-        'M' => [
-            'name' => 'Massa & Timbangan (Mass)',
-            'code' => 'M',
-            'desc' => 'Digital Balance (Analitik), Timbangan Lantai, Anak Timbangan Standar',
-            'color' => 'blue',
-            'badge_class' => 'bg-blue-50 text-blue-700 border-blue-200',
-            'units' => 'g, kg, mg',
-            'icon' => 'ph-scales'
         ],
         'D' => [
             'name' => 'Dimensi & Panjang (Dimension)',
@@ -53,52 +55,40 @@ function getScopeList(): array {
             'icon' => 'ph-ruler'
         ],
         'E' => [
-            'name' => 'Kelistrikan & Waktu (Electrical)',
+            'name' => 'Kelistrikan (Electric)',
             'code' => 'E',
-            'desc' => 'Digital Multimeter, Clamp Meter, Insulation Tester, Tachometer',
+            'desc' => 'Digital Multimeter, Clamp Meter, Insulation Tester, Calibrator Listrik',
             'color' => 'indigo',
             'badge_class' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
             'units' => 'V, A, Ohm, Hz',
             'icon' => 'ph-lightning'
-        ],
-        'V' => [
-            'name' => 'Volumetrik (Volume)',
-            'code' => 'V',
-            'desc' => 'Labu Ukur, Pipet Ukur, Micropipette, Buret, Dispenser',
-            'color' => 'teal',
-            'badge_class' => 'bg-teal-50 text-teal-700 border-teal-200',
-            'units' => 'ml, L, µl',
-            'icon' => 'ph-flask'
-        ],
-        'F' => [
-            'name' => 'Gaya & Torsi (Force & Torque)',
-            'code' => 'F',
-            'desc' => 'Torque Wrench, Push Pull Force Gauge, Testing Machine (UTM)',
-            'color' => 'rose',
-            'badge_class' => 'bg-rose-50 text-rose-700 border-rose-200',
-            'units' => 'Nm, N, kgf',
-            'icon' => 'ph-wrench'
         ]
     ];
 }
 
 /**
  * Generator Nomor Sertifikat Otomatis Sesuai Format PT Kalpindo
- * Format: YYMMSNNNN-RR
- * Contoh: 2605P0012-00
+ * Format KAN: YYMMSNNNN-RR (Contoh: 2609P0001-00)
+ * Format NON-KAN: NYYMMSNNNN-RR (Contoh: N2609P0001-00)
  */
-function generateCertificateNumber(PDO $db, string $scopeCode, ?string $date = null, string $revision = '00'): array {
+function generateCertificateNumber(PDO $db, string $scopeCode, ?string $date = null, string $revision = '00', bool $isKan = true): array {
     $time = $date ? strtotime($date) : time();
     $yearPrefix = date('y', $time);   // '26'
-    $monthPrefix = date('m', $time);  // '05'
+    $monthPrefix = date('m', $time);  // '09'
     $scopeCode = strtoupper(trim($scopeCode));
+    if ($scopeCode === 'S') {
+        $scopeCode = 'T';
+    }
+
+    $prefix = $isKan ? '' : 'N';
+    $searchPattern = "{$prefix}{$yearPrefix}{$monthPrefix}{$scopeCode}%";
 
     $stmt = $db->prepare("
         SELECT MAX(sequence_number) as max_seq 
         FROM certificates 
-        WHERE year_prefix = ? AND month_prefix = ? AND scope_code = ?
+        WHERE certificate_number LIKE ?
     ");
-    $stmt->execute([$yearPrefix, $monthPrefix, $scopeCode]);
+    $stmt->execute([$searchPattern]);
     $row = $stmt->fetch();
     
     $lastSeq = (int)($row['max_seq'] ?? 0);
@@ -106,10 +96,13 @@ function generateCertificateNumber(PDO $db, string $scopeCode, ?string $date = n
     $sequenceFormatted = str_pad((string)$nextSeq, 4, '0', STR_PAD_LEFT);
     $revFormatted = str_pad((string)$revision, 2, '0', STR_PAD_LEFT);
 
-    $certificateNumber = "{$yearPrefix}{$monthPrefix}{$scopeCode}{$sequenceFormatted}-{$revFormatted}";
+    $certificateNumber = "{$prefix}{$yearPrefix}{$monthPrefix}{$scopeCode}{$sequenceFormatted}-{$revFormatted}";
 
     return [
         'certificate_number' => $certificateNumber,
+        'is_kan' => $isKan ? 1 : 0,
+        'accreditation_type' => $isKan ? 'KAN' : 'NON_KAN',
+        'prefix' => $prefix,
         'year_prefix' => $yearPrefix,
         'month_prefix' => $monthPrefix,
         'scope_code' => $scopeCode,
@@ -119,13 +112,22 @@ function generateCertificateNumber(PDO $db, string $scopeCode, ?string $date = n
 }
 
 /**
- * Decode / Bedah Nomor Sertifikat Kalibrasi
+ * Decode / Bedah Nomor Sertifikat Kalibrasi (Mendukung KAN dan Non-KAN awalan N)
  */
 function decodeCertificateNumber(string $certNo): ?array {
-    $pattern = '/^(\d{2})(\d{2})([A-Z])(\d{4})-(\d{2})$/';
-    if (!preg_match($pattern, trim($certNo), $matches)) {
+    $certNo = trim($certNo);
+    $pattern = '/^(N)?(\d{2})(\d{2})([A-Z])(\d{4})-(\d{2})$/';
+    if (!preg_match($pattern, $certNo, $matches)) {
         return null;
     }
+
+    $isNonKan = ($matches[1] === 'N');
+    $isKan = !$isNonKan;
+    $yearPrefix = $matches[2];
+    $monthPrefix = $matches[3];
+    $scopeCode = ($matches[4] === 'S') ? 'T' : $matches[4];
+    $sequence = (int)$matches[5];
+    $revision = $matches[6];
 
     $monthNames = [
         '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
@@ -134,21 +136,30 @@ function decodeCertificateNumber(string $certNo): ?array {
     ];
 
     $scopes = getScopeList();
-    $scopeCode = $matches[3];
-    $scopeInfo = $scopes[$scopeCode] ?? ['name' => 'Ruang Lingkup Khusus', 'desc' => ''];
+    $scopeInfo = $scopes[$scopeCode] ?? [
+        'name' => "Ruang Lingkup ({$scopeCode})",
+        'code' => $scopeCode,
+        'desc' => '',
+        'badge_class' => 'bg-gray-100 text-gray-700 border-gray-200'
+    ];
 
     return [
         'full' => $certNo,
-        'year_2digit' => $matches[1],
-        'year_full' => '20' . $matches[1],
-        'month_2digit' => $matches[2],
-        'month_name' => $monthNames[$matches[2]] ?? 'Bulan ' . $matches[2],
+        'certificate_number' => $certNo,
+        'is_kan' => $isKan,
+        'accreditation_type' => $isKan ? 'KAN' : 'NON_KAN',
+        'type_label' => $isKan ? 'Akreditasi KAN' : 'Non-KAN (Tertelusur)',
+        'year_2digit' => $yearPrefix,
+        'year_full' => '20' . $yearPrefix,
+        'month_2digit' => $monthPrefix,
+        'month_name' => $monthNames[$monthPrefix] ?? 'Bulan ' . $monthPrefix,
         'scope_code' => $scopeCode,
         'scope_name' => $scopeInfo['name'],
-        'sequence_int' => (int)$matches[4],
-        'sequence_str' => $matches[4],
-        'revision' => $matches[5],
-        'is_original' => ($matches[5] === '00')
+        'scope_info' => $scopeInfo,
+        'sequence_int' => $sequence,
+        'sequence_str' => $matches[5],
+        'revision' => $revision,
+        'is_original' => ($revision === '00')
     ];
 }
 

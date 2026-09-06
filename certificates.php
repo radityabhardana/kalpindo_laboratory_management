@@ -17,6 +17,18 @@ requireRole(['SUPER_ADMIN', 'CERT_ADMIN'], 'index.php');
 $db = getDbConnection();
 $scopes = getScopeList();
 
+// Endpoint AJAX untuk live preview generator nomor (mendukung KAN dan Non-KAN awalan N)
+if (isset($_GET['ajax_preview'])) {
+    header('Content-Type: application/json');
+    $sc = strtoupper(trim($_GET['scope'] ?? 'P'));
+    if ($sc === 'S') $sc = 'T';
+    $dt = $_GET['date'] ?? date('Y-m-d');
+    $kan = isset($_GET['is_kan']) ? ((int)$_GET['is_kan'] === 1) : true;
+    $res = generateCertificateNumber($db, $sc, $dt, '00', $kan);
+    echo json_encode(['certificate_number' => $res['certificate_number']]);
+    exit;
+}
+
 // Handle Form Submission: Buat Nomor & Terbitkan Sertifikat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
@@ -37,29 +49,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception('Data alat tidak ditemukan.');
             }
 
+            // Tentukan status akreditasi KAN vs Non-KAN
+            $isKan = isset($_POST['is_kan']) ? (int)$_POST['is_kan'] : (int)($inst['is_kan'] ?? 1);
+
             $validUntil = date('Y-m-d', strtotime("+{$validMonths} months", strtotime($issueDate)));
 
             $scopeCode = $inst['scope_code'];
-            $genResult = generateCertificateNumber($db, $scopeCode, $issueDate, '00');
+            if ($scopeCode === 'S') $scopeCode = 'T';
+            $genResult = generateCertificateNumber($db, $scopeCode, $issueDate, '00', (bool)$isKan);
             $certNumber = $genResult['certificate_number'];
 
             $db->beginTransaction();
 
             $stmtCert = $db->prepare("
                 INSERT INTO certificates (
-                    instrument_id, certificate_number, scope_code,
+                    instrument_id, certificate_number, scope_code, is_kan,
                     year_prefix, month_prefix, sequence_number, revision_number,
                     issue_date, valid_until, technical_manager, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ISSUED')
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ISSUED')
             ");
             $stmtCert->execute([
-                $instrumentId, $certNumber, $scopeCode,
+                $instrumentId, $certNumber, $scopeCode, $isKan,
                 $genResult['year_prefix'], $genResult['month_prefix'],
                 $genResult['sequence_number'], $genResult['revision_number'],
                 $issueDate, $validUntil, $technicalManager
             ]);
 
-            $db->exec("UPDATE instruments SET status = 'CERTIFIED' WHERE id = {$instrumentId}");
+            $db->exec("UPDATE instruments SET status = 'CERTIFIED', is_kan = {$isKan} WHERE id = {$instrumentId}");
             
             $orderId = (int)$inst['order_id'];
             $uncompletedCount = (int)$db->query("SELECT COUNT(*) FROM instruments WHERE order_id = {$orderId} AND status != 'CERTIFIED'")->fetchColumn();
@@ -69,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             $db->commit();
 
-            setFlash('success', "Sertifikat Nomor <strong>{$certNumber}</strong> berhasil diterbitkan dan masuk ke daftar Arsip Sertifikat Resmi!");
+            $kanText = $isKan ? 'Akreditasi KAN' : 'Non-KAN (Awalan N)';
+            setFlash('success', "Sertifikat Nomor <strong>{$certNumber}</strong> ({$kanText}) berhasil diterbitkan dan masuk ke Arsip Sertifikat Resmi!");
             header("Location: certificates.php?issued=" . urlencode($certNumber) . "#archive-section");
             exit;
 
@@ -143,6 +160,7 @@ $incomingQueue = $db->query("
 // 2. Filter & Sortir Arsip Sertifikat Kalibrasi Resmi Terbit
 $searchQuery = trim($_GET['search'] ?? '');
 $scopeFilter = trim($_GET['scope'] ?? '');
+$kanFilter = trim($_GET['kan'] ?? '');
 $sortOption = trim($_GET['sort'] ?? 'newest');
 $newlyIssued = trim($_GET['issued'] ?? '');
 
@@ -178,6 +196,12 @@ if ($scopeFilter !== '') {
     $paramsIssued[] = $scopeFilter;
 }
 
+if ($kanFilter === '1') {
+    $sqlIssued .= " AND (c.is_kan = 1 AND c.certificate_number NOT LIKE 'N%')";
+} elseif ($kanFilter === '0') {
+    $sqlIssued .= " AND (c.is_kan = 0 OR c.certificate_number LIKE 'N%')";
+}
+
 if ($sortOption === 'oldest') {
     $sqlIssued .= " ORDER BY c.id ASC";
 } elseif ($sortOption === 'cert_no') {
@@ -193,6 +217,8 @@ $stmtIssued->execute($paramsIssued);
 $issuedCertificates = $stmtIssued->fetchAll();
 
 $totalIssuedCount = (int)$db->query("SELECT COUNT(*) FROM certificates")->fetchColumn();
+$totalKanCount = (int)$db->query("SELECT COUNT(*) FROM certificates WHERE (is_kan = 1 OR is_kan IS NULL) AND certificate_number NOT LIKE 'N%'")->fetchColumn();
+$totalNonKanCount = (int)$db->query("SELECT COUNT(*) FROM certificates WHERE is_kan = 0 OR certificate_number LIKE 'N%'")->fetchColumn();
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -245,7 +271,8 @@ require_once __DIR__ . '/includes/header.php';
                     <?php foreach ($incomingQueue as $item): ?>
                         <?php 
                             $sc = $scopes[$item['scope_code']] ?? ['name' => $item['scope_code'], 'badge_class' => ''];
-                            $predicted = generateCertificateNumber($db, $item['scope_code'], date('Y-m-d'));
+                            $isItemKan = ((int)($item['is_kan'] ?? 1) === 1);
+                            $predicted = generateCertificateNumber($db, $item['scope_code'], date('Y-m-d'), '00', $isItemKan);
                         ?>
                         <tr class="hover:bg-red-50/30 transition-colors">
                             <td class="py-3 px-3">
@@ -258,6 +285,17 @@ require_once __DIR__ . '/includes/header.php';
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border <?= $sc['badge_class'] ?>">
                                     [<?= htmlspecialchars($item['scope_code']) ?>] <?= htmlspecialchars(explode(' ', $sc['name'])[0]) ?>
                                 </span>
+                                <div class="mt-1">
+                                    <?php if ($isItemKan): ?>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                                            Akreditasi KAN
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                                            NON-KAN (Awalan N)
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                             </td>
 
                             <td class="py-3 px-3">
@@ -275,7 +313,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <td class="py-3 px-3 text-right whitespace-nowrap">
                                 <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                                    <button onclick="openGenerateModal(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['name'])) ?>', '<?= htmlspecialchars(addslashes($item['customer_name'])) ?>', '<?= $item['scope_code'] ?>', '<?= $predicted['certificate_number'] ?>')" class="bg-[#C81E26] hover:bg-[#A8141B] text-white px-3.5 py-1.5 rounded-lg font-semibold text-xs shadow-2xs inline-flex items-center gap-1 transition-all">
+                                    <button onclick="openGenerateModal(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['name'])) ?>', '<?= htmlspecialchars(addslashes($item['customer_name'])) ?>', '<?= $item['scope_code'] ?>', <?= $isItemKan ? 1 : 0 ?>, '<?= $predicted['certificate_number'] ?>')" class="bg-[#C81E26] hover:bg-[#A8141B] text-white px-3.5 py-1.5 rounded-lg font-semibold text-xs shadow-2xs inline-flex items-center gap-1 transition-all">
                                         <i class="ph-bold ph-plus-circle"></i>
                                         <span>Buat No. (<?= $predicted['certificate_number'] ?>)</span>
                                     </button>
@@ -306,7 +344,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
         <div class="flex items-center gap-2">
             <span class="text-xs font-mono font-bold text-[#C81E26] bg-red-50 px-3 py-1 rounded-full border border-red-200">
-                Total: <?= $totalIssuedCount ?> Sertifikat Terbit
+                Total: <?= $totalIssuedCount ?> (<?= $totalKanCount ?> KAN • <?= $totalNonKanCount ?> Non-KAN)
             </span>
         </div>
     </div>
@@ -332,6 +370,13 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endforeach; ?>
             </select>
 
+            <!-- Filter Status Akreditasi -->
+            <select name="kan" class="bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-[#C81E26]">
+                <option value="">Semua Akreditasi</option>
+                <option value="1" <?= $kanFilter === '1' ? 'selected' : '' ?>>Akreditasi KAN</option>
+                <option value="0" <?= $kanFilter === '0' ? 'selected' : '' ?>>Non-KAN (Awalan N)</option>
+            </select>
+
             <!-- Sortir -->
             <select name="sort" class="bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-[#C81E26]">
                 <option value="newest" <?= $sortOption === 'newest' ? 'selected' : '' ?>>Urutkan: Terbaru</option>
@@ -346,7 +391,7 @@ require_once __DIR__ . '/includes/header.php';
                 <i class="ph-bold ph-faders"></i>
                 <span>Sortir & Filter</span>
             </button>
-            <?php if ($searchQuery !== '' || $scopeFilter !== '' || $sortOption !== 'newest'): ?>
+            <?php if ($searchQuery !== '' || $scopeFilter !== '' || $kanFilter !== '' || $sortOption !== 'newest'): ?>
                 <a href="certificates.php#archive-section" class="px-2.5 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 font-medium">
                     Reset
                 </a>
@@ -371,7 +416,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php if (empty($issuedCertificates)): ?>
                     <tr>
                         <td colspan="7" class="py-8 text-center text-gray-400">
-                            <?= ($searchQuery !== '' || $scopeFilter !== '') ? 'Tidak ada sertifikat yang cocok dengan filter sortir pencarian.' : 'Belum ada sertifikat yang diterbitkan.' ?>
+                            <?= ($searchQuery !== '' || $scopeFilter !== '' || $kanFilter !== '') ? 'Tidak ada sertifikat yang cocok dengan filter sortir pencarian.' : 'Belum ada sertifikat yang diterbitkan.' ?>
                         </td>
                     </tr>
                 <?php endif; ?>
@@ -381,21 +426,31 @@ require_once __DIR__ . '/includes/header.php';
                         $decoded = decodeCertificateNumber($cert['certificate_number']);
                         $scope = $scopes[$cert['scope_code']] ?? ['name' => $cert['scope_code'], 'badge_class' => ''];
                         $isJustIssued = ($newlyIssued && $cert['certificate_number'] === $newlyIssued);
+                        $isCertKan = (isset($cert['is_kan']) && (int)$cert['is_kan'] === 1 && substr($cert['certificate_number'], 0, 1) !== 'N');
                     ?>
                     <tr class="transition-colors <?= $isJustIssued ? 'bg-emerald-50/70 border-l-4 border-l-emerald-600' : 'hover:bg-slate-50/80' ?>">
                         <td class="py-3 px-3">
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="font-mono text-xs font-black text-[#C81E26] bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block">
                                     <?= htmlspecialchars($cert['certificate_number']) ?>
                                 </span>
+                                <?php if ($isCertKan): ?>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                                        KAN LK-088
+                                    </span>
+                                <?php else: ?>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                                        NON-KAN (Awalan N)
+                                    </span>
+                                <?php endif; ?>
                                 <?php if ($isJustIssued): ?>
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse whitespace-nowrap">
                                         Baru Diterbitkan
                                     </span>
                                 <?php endif; ?>
                             </div>
-                            <div class="text-[10px] text-gray-500 mt-0.5">
-                                Lingkup: <strong class="text-slate-800"><?= htmlspecialchars($scope['name']) ?></strong>
+                            <div class="text-[10px] text-gray-500 mt-1">
+                                Lingkup: <strong class="text-slate-800">[<?= htmlspecialchars($cert['scope_code']) ?>] <?= htmlspecialchars($scope['name']) ?></strong>
                             </div>
                         </td>
 
@@ -490,24 +545,34 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <!-- Preview Nomor -->
-            <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center">
+            <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center transition-all">
                 <span class="text-[10px] font-bold text-[#C81E26] uppercase tracking-wider block mb-0.5">
                     Nomor Sertifikat Diterbitkan:
                 </span>
-                <div id="modal-cert-preview" class="font-mono text-2xl font-black text-[#C81E26] tracking-wider">
+                <div id="modal-cert-preview" class="font-mono text-2xl font-black text-[#C81E26] tracking-wider transition-opacity duration-150">
                     2605P0012-00
                 </div>
-                <p class="text-[11px] text-gray-500 mt-1">
-                    Format: Tahun (26) + Bulan (05) + Scope (P) + No. Urut (0012) + Revisi (-00)
+                <p id="modal-cert-desc" class="text-[11px] text-gray-500 mt-1">
+                    Format: Tahun (26) + Bulan + Scope + No. Urut + Revisi (-00)
                 </p>
             </div>
 
             <div class="space-y-2.5">
                 <div class="grid grid-cols-2 gap-2.5">
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Tanggal Terbit *</label>
-                        <input type="date" name="issue_date" required value="<?= date('Y-m-d') ?>" class="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
+                        <label class="block font-semibold text-slate-700 mb-1">Status Akreditasi *</label>
+                        <select id="modal-is-kan" name="is_kan" onchange="refreshModalCertPreview()" class="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:border-[#C81E26]">
+                            <option value="1">Akreditasi KAN (ISO/IEC 17025)</option>
+                            <option value="0">Non-KAN (Awalan N)</option>
+                        </select>
                     </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Tanggal Terbit *</label>
+                        <input type="date" id="modal-issue-date" name="issue_date" required value="<?= date('Y-m-d') ?>" onchange="refreshModalCertPreview()" class="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Masa Berlaku</label>
                         <select name="valid_months" class="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
@@ -516,11 +581,10 @@ require_once __DIR__ . '/includes/header.php';
                             <option value="24">24 Bulan</option>
                         </select>
                     </div>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Penandatangan Manajer Teknis</label>
-                    <input type="text" name="technical_manager" value="Ir. Hendra Wijaya, M.T." class="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Penandatangan Manajer Teknis</label>
+                        <input type="text" name="technical_manager" value="Ir. Hendra Wijaya, M.T." class="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
+                    </div>
                 </div>
             </div>
 
@@ -570,11 +634,39 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-function openGenerateModal(instId, instName, customerName, scopeCode, previewNum) {
+let currentModalScopeCode = 'P';
+
+function refreshModalCertPreview() {
+    const isKan = document.getElementById('modal-is-kan').value;
+    const dateVal = document.getElementById('modal-issue-date').value || '<?= date('Y-m-d') ?>';
+    const previewEl = document.getElementById('modal-cert-preview');
+    const descEl = document.getElementById('modal-cert-desc');
+    
+    previewEl.classList.add('opacity-40');
+    fetch(`certificates.php?ajax_preview=1&scope=${encodeURIComponent(currentModalScopeCode)}&date=${encodeURIComponent(dateVal)}&is_kan=${isKan}`)
+        .then(res => res.json())
+        .then(data => {
+            previewEl.textContent = data.certificate_number;
+            previewEl.classList.remove('opacity-40');
+            if (isKan === '1') {
+                descEl.innerHTML = 'Format KAN: Tahun (26) + Bulan + Scope (' + currentModalScopeCode + ') + No. Urut + Revisi (-00)';
+            } else {
+                descEl.innerHTML = '<span class="text-amber-800 font-bold">Format Non-KAN: Awalan N</span> + Tahun (26) + Bulan + Scope (' + currentModalScopeCode + ') + No. Urut + Revisi (-00)';
+            }
+        })
+        .catch(err => {
+            previewEl.classList.remove('opacity-40');
+        });
+}
+
+function openGenerateModal(instId, instName, customerName, scopeCode, isKan, previewNum) {
+    currentModalScopeCode = scopeCode;
     document.getElementById('modal-inst-id').value = instId;
     document.getElementById('modal-inst-name').textContent = instName;
     document.getElementById('modal-customer-name').textContent = customerName;
+    document.getElementById('modal-is-kan').value = (isKan !== undefined && isKan !== null) ? isKan : 1;
     document.getElementById('modal-cert-preview').textContent = previewNum;
+    refreshModalCertPreview();
     openModal('generate-cert-modal');
 }
 

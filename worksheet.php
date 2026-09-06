@@ -245,9 +245,14 @@ require_once __DIR__ . '/includes/header.php';
                     <a href="worksheet.php?instrument_id=<?= $item['id'] ?>" class="block p-3 rounded-xl border transition-all text-left <?= $isSelected ? 'bg-red-50/50 border-[#C81E26] shadow-2xs' : 'bg-gray-50/50 border-gray-200 hover:border-gray-300 hover:bg-white' ?>">
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-mono text-[11px] font-bold text-slate-900"><?= htmlspecialchars($item['order_number']) ?></span>
-                            <span class="text-[10px] font-bold px-1.5 py-0.2 rounded border <?= $scInfo['badge_class'] ?>">
-                                [<?= htmlspecialchars($item['scope_code']) ?>]
-                            </span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded border <?= $scInfo['badge_class'] ?>">
+                                    [<?= htmlspecialchars($item['scope_code']) ?>]
+                                </span>
+                                <?php if ((int)($item['is_kan'] ?? 1) === 0): ?>
+                                    <span class="text-[9px] font-extrabold px-1 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200">Non-KAN</span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <h4 class="font-bold text-xs text-slate-900 <?= $isSelected ? 'text-[#C81E26]' : '' ?>"><?= htmlspecialchars($item['name']) ?></h4>
                         <p class="text-[11px] text-gray-500 mt-0.5 truncate"><?= htmlspecialchars($item['customer_name']) ?></p>
@@ -286,9 +291,18 @@ require_once __DIR__ . '/includes/header.php';
                                 <?= htmlspecialchars($currentInst['order_number']) ?>
                             </span>
                             <?= renderLocationBadge($currentInst['service_type']) ?>
-                            <span class="px-2 py-0.5 rounded font-bold border <?= $scopes[$currentInst['scope_code']]['badge_class'] ?>">
-                                Lingkup: <?= htmlspecialchars($scopes[$currentInst['scope_code']]['name']) ?>
+                            <span class="px-2 py-0.5 rounded font-bold border <?= $scopes[$currentInst['scope_code']]['badge_class'] ?? 'bg-gray-100 text-gray-700' ?>">
+                                Lingkup: <?= htmlspecialchars($scopes[$currentInst['scope_code']]['name'] ?? $currentInst['scope_code']) ?>
                             </span>
+                            <?php if ((int)($currentInst['is_kan'] ?? 1) === 0): ?>
+                                <span class="px-2 py-0.5 rounded font-extrabold text-[10px] bg-amber-50 text-amber-800 border border-amber-200">
+                                    NON-KAN (Awalan N)
+                                </span>
+                            <?php else: ?>
+                                <span class="px-2 py-0.5 rounded font-extrabold text-[10px] bg-blue-50 text-blue-700 border border-blue-200">
+                                    Akreditasi KAN
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <?= renderStatusBadge($currentInst['status']) ?>
                     </div>

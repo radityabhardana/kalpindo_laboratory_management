@@ -47,6 +47,7 @@ function initializeDatabase(PDO $pdo): void {
             resolution VARCHAR(50),
             technician_name VARCHAR(100),
             calibration_date DATE,
+            is_kan INTEGER DEFAULT 1, -- 1: KAN, 0: Non-KAN
             status VARCHAR(30) DEFAULT 'ASSIGNED', -- ASSIGNED, IN_PROGRESS, DATA_SUBMITTED, CERTIFIED
             FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
             FOREIGN KEY (scope_code) REFERENCES scopes(code)
@@ -81,6 +82,7 @@ function initializeDatabase(PDO $pdo): void {
             instrument_id INTEGER UNIQUE NOT NULL,
             certificate_number VARCHAR(50) UNIQUE NOT NULL, -- Contoh: 2605P0012-00
             scope_code VARCHAR(5) NOT NULL,
+            is_kan INTEGER DEFAULT 1, -- 1: KAN, 0: Non-KAN
             year_prefix VARCHAR(2) NOT NULL,
             month_prefix VARCHAR(2) NOT NULL,
             sequence_number INTEGER NOT NULL,
@@ -111,15 +113,13 @@ function initializeDatabase(PDO $pdo): void {
         );
     ");
 
-    // Seed Scopes
+    // Seed Scopes: P (Pressure), M (Massa), T (Suhu), D (Dimensi), E (Electric)
     $scopesData = [
         ['P', 'Pressure (Tekanan)', 'Kalibrasi pressure gauge, differential manometer, transmitter tekanan', 'bar, psi, kPa, MPa', 'emerald'],
-        ['S', 'Suhu & Kelembaban (Temperature)', 'Thermometer digital, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'],
         ['M', 'Massa (Mass)', 'Timbangan analitik presisi, timbangan elektronik, anak timbangan kelas E2/F1/M1', 'g, kg, mg', 'indigo'],
+        ['T', 'Suhu (Temperature)', 'Thermometer digital, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'],
         ['D', 'Dimensi (Dimension)', 'Vernier caliper, digital micrometer, dial gauge, height gauge', 'mm, inch, µm', 'blue'],
-        ['E', 'Kelistrikan (Electrical)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet'],
-        ['V', 'Volumetrik (Volume)', 'Labu ukur, micropipette, buret, piknometer', 'ml, L, µl', 'cyan'],
-        ['F', 'Gaya & Torsi (Force & Torque)', 'Torque wrench, digital push-pull gauge, load cell', 'Nm, N, kgf', 'rose']
+        ['E', 'Kelistrikan (Electric)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet']
     ];
 
     $stmtScope = $pdo->prepare("INSERT OR IGNORE INTO scopes (code, name, description, unit_samples, color) VALUES (?, ?, ?, ?, ?)");

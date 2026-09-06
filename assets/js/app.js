@@ -119,7 +119,7 @@ function autoFillWorksheetDemo(scopeCode) {
             { point: '7.50 bar', std: 7.50, r1: 7.504, r2: 7.503, r3: 7.504, unc: 0.007 },
             { point: '10.00 bar', std: 10.00, r1: 10.005, r2: 10.004, r3: 10.005, unc: 0.008 }
         ];
-    } else if (scopeCode === 'S') {
+    } else if (scopeCode === 'T' || scopeCode === 'S') {
         sampleData = [
             { point: '0.00 °C', std: 0.01, r1: 0.03, r2: 0.02, r3: 0.03, unc: 0.03 },
             { point: '50.00 °C', std: 50.00, r1: 50.04, r2: 50.03, r3: 50.04, unc: 0.04 },
@@ -132,7 +132,14 @@ function autoFillWorksheetDemo(scopeCode) {
             { point: '15.000 mm', std: 15.000, r1: 15.003, r2: 15.002, r3: 15.003, unc: 0.002 },
             { point: '25.000 mm', std: 25.000, r1: 25.004, r2: 25.003, r3: 25.004, unc: 0.002 }
         ];
+    } else if (scopeCode === 'E') {
+        sampleData = [
+            { point: '1.0000 V', std: 1.0002, r1: 1.0005, r2: 1.0004, r3: 1.0005, unc: 0.0005 },
+            { point: '5.0000 V', std: 5.0001, r1: 5.0003, r2: 5.0002, r3: 5.0003, unc: 0.0010 },
+            { point: '10.0000 V', std: 10.0004, r1: 10.0008, r2: 10.0007, r3: 10.0008, unc: 0.0020 }
+        ];
     } else {
+        // Default: Scope M (Massa)
         sampleData = [
             { point: '1.0000 g', std: 1.00002, r1: 1.0000, r2: 1.0000, r3: 1.0001, unc: 0.00005 },
             { point: '50.0000 g', std: 50.00012, r1: 50.0002, r2: 50.0001, r3: 50.0002, unc: 0.00011 },

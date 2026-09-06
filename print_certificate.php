@@ -63,6 +63,14 @@ $scopes = getScopeList();
 $scopeInfo = $scopes[$cert['scope_code']] ?? ['name' => $cert['scope_code'], 'desc' => ''];
 $readings = json_decode((string)($cert['readings_json'] ?? '[]'), true) ?: [];
 
+// Cek apakah sertifikat berstatus Akreditasi KAN atau Non-KAN (Awalan N)
+$isKan = true;
+if (isset($cert['is_kan'])) {
+    $isKan = ((int)$cert['is_kan'] === 1 && substr($cert['certificate_number'], 0, 1) !== 'N');
+} else {
+    $isKan = (substr($cert['certificate_number'], 0, 1) !== 'N');
+}
+
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $uri = dirname($_SERVER['PHP_SELF'] ?? '');
@@ -132,6 +140,15 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
             <span class="text-xs font-mono font-black text-[#C81E26] bg-red-50 px-3 py-1 rounded-full border border-red-200">
                 <?= htmlspecialchars($cert['certificate_number']) ?>
             </span>
+            <?php if ($isKan): ?>
+                <span class="text-[10px] font-extrabold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full border border-blue-200">
+                    AKREDITASI KAN
+                </span>
+            <?php else: ?>
+                <span class="text-[10px] font-extrabold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
+                    NON-KAN (TERTELUSUR)
+                </span>
+            <?php endif; ?>
         </div>
 
         <div class="flex items-center gap-3">
@@ -147,10 +164,10 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
         
         <!-- Watermark -->
         <div class="cert-watermark uppercase select-none">
-            KALPINDO
+            <?= $isKan ? 'KALPINDO' : 'KALPINDO TERTELUSUR' ?>
         </div>
 
-        <!-- 1. KOP RESMI LABORATORIUM (Matching official PT Kalpindo & KAN Logo) -->
+        <!-- 1. KOP RESMI LABORATORIUM -->
         <div class="border-b-2 border-slate-900 pb-3 mb-3 flex items-start justify-between gap-4">
             <!-- Left: Official Logo & Company Info -->
             <div class="flex items-center gap-4">
@@ -171,20 +188,37 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
                 </div>
             </div>
 
-            <!-- Right: Official KAN Accreditation Badge -->
-            <div class="text-right flex flex-col items-end">
-                <img src="assets/img/kan.png" alt="Logo KAN" class="h-14 object-contain drop-shadow-sm">
-                <div class="text-[8.5px] font-mono font-extrabold text-slate-900 mt-0.5">LK-088-IDN</div>
-                <span class="text-[7.5px] text-slate-500 font-mono">ISO/IEC 17025:2017</span>
-            </div>
+            <!-- Right: KAN Accreditation or Non-KAN Notice -->
+            <?php if ($isKan): ?>
+                <div class="text-right flex flex-col items-end">
+                    <img src="assets/img/kan.png" alt="Logo KAN" class="h-14 object-contain drop-shadow-sm">
+                    <div class="text-[8.5px] font-mono font-extrabold text-slate-900 mt-0.5">LK-088-IDN</div>
+                    <span class="text-[7.5px] text-slate-500 font-mono">ISO/IEC 17025:2017</span>
+                </div>
+            <?php else: ?>
+                <div class="text-right flex flex-col items-end justify-center h-14">
+                    <div class="border-2 border-dashed border-slate-400 rounded-lg px-3 py-1 bg-slate-50 text-right">
+                        <span class="text-[9px] font-black text-slate-900 uppercase tracking-wider block leading-tight">KALIBRASI TERTELUSUR</span>
+                        <span class="text-[7.5px] font-mono font-bold text-amber-800 uppercase block">NON-AKREDITASI KAN</span>
+                        <span class="text-[7.5px] text-slate-600 font-mono block mt-0.5">Tertelusur SNSU-BSN / SI</span>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- 2. JUDUL DOKUMEN & NOMOR SERTIFIKAT -->
         <div class="text-center my-3">
-            <h2 class="text-sm font-black tracking-wider uppercase underline underline-offset-4 text-slate-900">
-                SERTIFIKAT KALIBRASI
-            </h2>
-            <p class="text-[10px] italic text-slate-600 font-serif">CERTIFICATE OF CALIBRATION</p>
+            <?php if ($isKan): ?>
+                <h2 class="text-sm font-black tracking-wider uppercase underline underline-offset-4 text-slate-900">
+                    SERTIFIKAT KALIBRASI
+                </h2>
+                <p class="text-[10px] italic text-slate-600 font-serif">CERTIFICATE OF CALIBRATION</p>
+            <?php else: ?>
+                <h2 class="text-sm font-black tracking-wider uppercase underline underline-offset-4 text-slate-900">
+                    SERTIFIKAT KALIBRASI TERTELUSUR
+                </h2>
+                <p class="text-[10px] italic text-slate-600 font-serif">TRACEABLE CERTIFICATE OF CALIBRATION (NON-KAN)</p>
+            <?php endif; ?>
             
             <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 border border-slate-900 rounded bg-slate-50">
                 <span class="font-semibold text-slate-700 text-[10px]">Nomor Sertifikat / Certificate No :</span>
@@ -373,7 +407,7 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
                         <div class="absolute right-10 w-20 h-20 rounded-full border-2 border-dashed border-[#C81E26]/50 text-[#C81E26] flex flex-col items-center justify-center text-[7px] font-bold uppercase rotate-[-12deg] pointer-events-none select-none">
                             <span class="text-[6.5px]">PT KALPINDO</span>
                             <span class="font-black text-[9px] tracking-wider">CALIBRATED</span>
-                            <span class="text-[6.5px]">ISO/IEC 17025</span>
+                            <span class="text-[6.5px]"><?= $isKan ? 'ISO/IEC 17025' : 'TERTELUSUR SI' ?></span>
                         </div>
                         
                         <!-- Signature Path -->
@@ -392,9 +426,9 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
             </div>
         </div>
 
-        <!-- 7. FOOTNOTE KAN AKREDITASI -->
+        <!-- 7. FOOTNOTE AKREDITASI -->
         <div class="mt-4 pt-2 border-t border-slate-300 flex items-center justify-between text-[8px] text-slate-500 font-mono">
-            <span>Sertifikat ini tidak boleh digandakan sebagian tanpa persetujuan tertulis dari PT Kalpindo.</span>
+            <span>Sertifikat ini tidak boleh digandakan sebagian tanpa persetujuan tertulis dari PT Kalpindo.<?= $isKan ? ' • Akreditasi KAN LK-088-IDN' : ' • Sertifikat Kalibrasi Tertelusur (Non-Akreditasi KAN)' ?></span>
             <span>Halaman 1 dari 1</span>
         </div>
 
