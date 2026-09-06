@@ -11,6 +11,9 @@ $pageTitle = '2. Lembar Kerja Kalibrasi';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
+// Proteksi Hak Akses: Hanya Tim Teknisi dan Master Admin yang berhak mengakses lembar kerja kalibrasi
+requireRole(['SUPER_ADMIN', 'TECHNICIAN'], 'index.php');
+
 $db = getDbConnection();
 $scopes = getScopeList();
 
@@ -105,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $db->exec("UPDATE instruments SET status = 'DATA_SUBMITTED' WHERE id = {$instId}");
             $db->commit();
             setFlash('success', 'Data mentah lembar kerja BERHASIL diserahkan ke Bagian Sertifikat untuk dibuatkan nomor resmi!');
-            header('Location: certificates.php');
+            header('Location: index.php');
             exit;
         } else {
             $db->exec("UPDATE instruments SET status = 'IN_PROGRESS' WHERE id = {$instId}");

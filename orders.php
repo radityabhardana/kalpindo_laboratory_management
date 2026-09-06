@@ -194,9 +194,15 @@ require_once __DIR__ . '/includes/header.php';
                         </td>
 
                         <td class="py-3 px-3 text-right">
-                            <a href="worksheet.php?order_id=<?= $o['id'] ?>" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1 transition-all">
-                                <span>Pengerjaan &rarr;</span>
-                            </a>
+                            <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                                <a href="worksheet.php?order_id=<?= $o['id'] ?>" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1 transition-all">
+                                    <span>Pengerjaan &rarr;</span>
+                                </a>
+                            <?php else: ?>
+                                <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1 transition-all">
+                                    <span>Lihat Alur &rarr;</span>
+                                </a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

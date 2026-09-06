@@ -158,7 +158,11 @@ $pendingCerts = $db->query("
         </div>
         <div class="mt-3 pt-2.5 border-t border-gray-100 text-xs text-blue-600 font-medium flex items-center justify-between">
             <span>Tahap 2: Pengujian</span>
-            <a href="worksheet.php" class="hover:underline">Buka Worksheet &rarr;</a>
+            <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                <a href="worksheet.php" class="hover:underline">Buka Worksheet &rarr;</a>
+            <?php else: ?>
+                <span class="text-gray-400 font-normal">Khusus Tim Teknisi</span>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -176,7 +180,11 @@ $pendingCerts = $db->query("
         </div>
         <div class="mt-3 pt-2.5 border-t border-red-100 text-xs font-bold text-[#C81E26] flex items-center justify-between">
             <span>Tahap 4: Bagian Sertifikat</span>
-            <a href="certificates.php" class="underline">Buat No. Sertifikat &rarr;</a>
+            <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                <a href="certificates.php" class="underline">Buat No. Sertifikat &rarr;</a>
+            <?php else: ?>
+                <span class="text-gray-400 font-normal">Khusus Bagian Sertifikat</span>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -349,20 +357,34 @@ $pendingCerts = $db->query("
                         <!-- Aksi / Action Button -->
                         <td class="py-3 px-3.5 text-right align-middle whitespace-nowrap">
                             <?php if ($inst['instrument_status'] === 'DATA_SUBMITTED'): ?>
-                                <a href="certificates.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#C81E26] hover:bg-[#A8141B] text-white shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
-                                    <i class="ph-bold ph-plus-circle"></i>
-                                    <span>Buat No. Sertifikat</span>
-                                </a>
+                                <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                                    <a href="certificates.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#C81E26] hover:bg-[#A8141B] text-white shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
+                                        <i class="ph-bold ph-plus-circle"></i>
+                                        <span>Buat No. Sertifikat</span>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
+                                        <i class="ph-bold ph-hourglass text-red-500"></i>
+                                        <span>Menunggu Sertifikat</span>
+                                    </span>
+                                <?php endif; ?>
                             <?php elseif ($inst['instrument_status'] === 'CERTIFIED' && $inst['certificate_number']): ?>
                                 <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-slate-700 hover:bg-gray-50 shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
                                     <i class="ph-bold ph-printer text-[#C81E26]"></i>
                                     <span>Cetak A4</span>
                                 </a>
                             <?php else: ?>
-                                <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
-                                    <i class="ph-bold ph-pencil-simple"></i>
-                                    <span>Worksheet</span>
-                                </a>
+                                <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                                    <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
+                                        <i class="ph-bold ph-pencil-simple"></i>
+                                        <span>Worksheet</span>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1">
+                                        <i class="ph-bold ph-gear text-blue-500"></i>
+                                        <span>Proses Teknisi</span>
+                                    </span>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </td>
                     </tr>

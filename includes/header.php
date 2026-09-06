@@ -33,42 +33,52 @@ $flash = getFlash();
 $pendingWorksheetCount = (int)$dbHeader->query("SELECT COUNT(*) FROM instruments WHERE status = 'ASSIGNED' OR status = 'IN_PROGRESS'")->fetchColumn();
 $pendingCertCount = (int)$dbHeader->query("SELECT COUNT(*) FROM instruments WHERE status = 'DATA_SUBMITTED'")->fetchColumn();
 
-// Clean Operational Navigation Map
+// Strict Role-Based Operational Navigation Map
+$allMenuItems = [
+    [
+        'name' => 'Dashboard',
+        'url' => 'index.php',
+        'icon' => 'ph-squares-four',
+        'badge' => null,
+        'roles' => ['SUPER_ADMIN', 'SALES', 'TECHNICIAN', 'CERT_ADMIN'],
+    ],
+    [
+        'name' => 'Sales Order',
+        'url' => 'orders.php',
+        'icon' => 'ph-clipboard-text',
+        'badge' => null,
+        'roles' => ['SUPER_ADMIN', 'SALES'],
+    ],
+    [
+        'name' => 'Worksheet Teknisi',
+        'url' => 'worksheet.php',
+        'icon' => 'ph-wrench',
+        'badge' => $pendingWorksheetCount > 0 ? [
+            'label' => (string)$pendingWorksheetCount,
+            'class' => 'bg-amber-100 text-amber-800 border border-amber-200'
+        ] : null,
+        'roles' => ['SUPER_ADMIN', 'TECHNICIAN'],
+    ],
+    [
+        'name' => 'Penerbitan Sertifikat',
+        'url' => 'certificates.php',
+        'icon' => 'ph-certificate',
+        'badge' => $pendingCertCount > 0 ? [
+            'label' => (string)$pendingCertCount,
+            'class' => 'bg-[#C81E26] text-white animate-pulse'
+        ] : null,
+        'roles' => ['SUPER_ADMIN', 'CERT_ADMIN'],
+    ],
+];
+
+$accessibleMenuItems = array_values(array_filter($allMenuItems, function($item) {
+    return hasRole($item['roles']);
+}));
+
 $navSections = [
     [
-        'title' => 'MENU UTAMA',
-        'items' => [
-            [
-                'name' => 'Dashboard',
-                'url' => 'index.php',
-                'icon' => 'ph-squares-four',
-                'badge' => null,
-            ],
-            [
-                'name' => 'Sales Order',
-                'url' => 'orders.php',
-                'icon' => 'ph-clipboard-text',
-                'badge' => null,
-            ],
-            [
-                'name' => 'Worksheet Teknisi',
-                'url' => 'worksheet.php',
-                'icon' => 'ph-wrench',
-                'badge' => $pendingWorksheetCount > 0 ? [
-                    'label' => (string)$pendingWorksheetCount,
-                    'class' => 'bg-amber-100 text-amber-800 border border-amber-200'
-                ] : null,
-            ],
-            [
-                'name' => 'Penerbitan Sertifikat',
-                'url' => 'certificates.php',
-                'icon' => 'ph-certificate',
-                'badge' => $pendingCertCount > 0 ? [
-                    'label' => (string)$pendingCertCount,
-                    'class' => 'bg-[#C81E26] text-white animate-pulse'
-                ] : null,
-            ],
-        ]
+        'title' => 'MENU OPERASIONAL',
+        'items' => $accessibleMenuItems
     ]
 ];
 

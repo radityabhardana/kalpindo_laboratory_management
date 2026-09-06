@@ -10,6 +10,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
+requireLogin();
+
 $certNumber = $_GET['cert'] ?? '';
 
 if (!$certNumber) {
@@ -117,9 +119,15 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
     <!-- Web UI Action Bar (Hidden on Print) -->
     <div class="no-print max-w-[210mm] mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-float border border-gray-100">
         <div class="flex items-center gap-3">
-            <a href="certificates.php" class="px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 hover:text-brand-dark flex items-center gap-1.5 transition-colors">
-                <i class="ph-bold ph-arrow-left"></i> Kembali ke Bagian Sertifikat
-            </a>
+            <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                <a href="certificates.php" class="px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 hover:text-brand-dark flex items-center gap-1.5 transition-colors">
+                    <i class="ph-bold ph-arrow-left"></i> Kembali ke Bagian Sertifikat
+                </a>
+            <?php else: ?>
+                <a href="index.php" class="px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 hover:text-brand-dark flex items-center gap-1.5 transition-colors">
+                    <i class="ph-bold ph-arrow-left"></i> Kembali ke Dashboard
+                </a>
+            <?php endif; ?>
             <span class="text-xs text-gray-300">|</span>
             <span class="text-xs font-mono font-black text-[#C81E26] bg-red-50 px-3 py-1 rounded-full border border-red-200">
                 <?= htmlspecialchars($cert['certificate_number']) ?>

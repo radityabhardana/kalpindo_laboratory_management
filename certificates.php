@@ -11,6 +11,9 @@ $pageTitle = '3. Bagian Pengurus Sertifikat';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
+// Proteksi Hak Akses: Hanya Bagian Sertifikat dan Master Admin yang berhak mengakses halaman ini
+requireRole(['SUPER_ADMIN', 'CERT_ADMIN'], 'index.php');
+
 $db = getDbConnection();
 $scopes = getScopeList();
 
