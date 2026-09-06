@@ -278,8 +278,8 @@ $pendingCerts = $db->query("
 
     <!-- Structured Data Table (Spacious & Clean) -->
     <div class="overflow-x-auto rounded-xl border border-gray-200">
-        <table class="w-full text-left text-xs min-w-[980px]">
-            <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 uppercase text-[10px] tracking-wider">
+        <table class="w-full text-left text-xs min-w-[1260px]">
+            <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 uppercase text-[10px] tracking-wider whitespace-nowrap">
                 <tr>
                     <th class="py-3 px-3.5 w-[210px]">No. Order & Pelanggan</th>
                     <th class="py-3 px-3.5 w-[240px]">Nama Alat & Spesifikasi</th>
@@ -307,8 +307,8 @@ $pendingCerts = $db->query("
                     ?>
                     <tr class="hover:bg-slate-50/90 transition-colors">
                         <!-- Order & Pelanggan -->
-                        <td class="py-3 px-3.5 align-middle">
-                            <span class="font-mono text-[11px] font-bold text-slate-900 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                        <td class="py-3 px-3.5 align-middle whitespace-nowrap">
+                            <span class="font-mono text-[11px] font-bold text-slate-900 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 whitespace-nowrap">
                                 <?= htmlspecialchars($inst['order_number']) ?>
                             </span>
                             <p class="font-semibold text-slate-800 mt-1 truncate max-w-[190px]" title="<?= htmlspecialchars($inst['customer_name']) ?>">

@@ -14,23 +14,13 @@ require_once __DIR__ . '/includes/helpers.php';
 $db = getDbConnection();
 $scopes = getScopeList();
 
-// Daftar Teknisi Aktif
-$defaultTechs = [
-    'Ahmad Farhan, A.Md.' => 'Teknisi Tekanan & Massa',
-    'Budi Santoso, S.T.' => 'Teknisi Massa & Dimensi',
-    'Dedi Kurniawan, A.Md.' => 'Teknisi Suhu & Kelistrikan',
-    'Rizky Pratama, S.T.' => 'Teknisi Dimensi & Massa'
-];
-try {
-    $dbTechs = $db->query("SELECT full_name, department FROM users WHERE role = 'TECHNICIAN'")->fetchAll();
-    foreach ($dbTechs as $dt) {
-        if (!isset($defaultTechs[$dt['full_name']])) {
-            $defaultTechs[$dt['full_name']] = $dt['department'] ?: 'Teknisi Kalibrasi';
-        }
-    }
-} catch (Exception $e) {
-    // fallback if table does not exist
-}
+// Ambil daftar akun teknisi resmi yang terdaftar di database sistem (role = 'TECHNICIAN')
+$technicians = $db->query("
+    SELECT full_name, department, username 
+    FROM users 
+    WHERE role = 'TECHNICIAN' 
+    ORDER BY full_name ASC
+")->fetchAll(PDO::FETCH_ASSOC);
 
 // Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -348,17 +338,17 @@ require_once __DIR__ . '/includes/header.php';
         <span class="text-xs font-mono text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full font-bold">Total <?= count($orders) ?> Berkas</span>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs min-w-[850px]">
-            <thead class="bg-gray-50 text-gray-600 font-semibold border-y border-gray-200 uppercase text-[10px] tracking-wider">
+    <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full text-left text-xs min-w-[1180px]">
+            <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 uppercase text-[10px] tracking-wider whitespace-nowrap">
                 <tr>
-                    <th class="py-2.5 px-3">No. Order & Tanggal</th>
-                    <th class="py-2.5 px-3">Pelanggan & Kontak</th>
-                    <th class="py-2.5 px-3">Jenis Layanan</th>
-                    <th class="py-2.5 px-3">Daftar Alat</th>
-                    <th class="py-2.5 px-3">Ruang Lingkup</th>
-                    <th class="py-2.5 px-3">Status Order</th>
-                    <th class="py-2.5 px-3 text-right">Aksi</th>
+                    <th class="py-3 px-3.5 w-[180px]">No. Order & Tanggal</th>
+                    <th class="py-3 px-3.5 w-[230px]">Pelanggan & Kontak</th>
+                    <th class="py-3 px-3 w-[110px]">Jenis Layanan</th>
+                    <th class="py-3 px-3.5 w-[220px]">Daftar Alat</th>
+                    <th class="py-3 px-3 w-[140px]">Ruang Lingkup</th>
+                    <th class="py-3 px-3 w-[140px]">Status Order</th>
+                    <th class="py-3 px-3.5 text-right w-[160px]">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -395,77 +385,86 @@ require_once __DIR__ . '/includes/header.php';
                     ];
                 ?>
                     <tr class="hover:bg-slate-50/80 transition-colors">
-                        <td class="py-3 px-3">
-                            <span class="font-mono text-xs font-bold text-slate-900 bg-gray-100 px-2 py-0.5 rounded">
+                        <td class="py-3.5 px-3.5 whitespace-nowrap align-middle">
+                            <span class="inline-block font-mono text-xs font-bold text-slate-900 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200 tracking-tight whitespace-nowrap">
                                 <?= htmlspecialchars($o['order_number']) ?>
                             </span>
-                            <p class="text-[11px] text-gray-400 mt-0.5"><?= formatIndonesianDate($o['order_date']) ?></p>
-                        </td>
-
-                        <td class="py-3 px-3">
-                            <p class="font-bold text-slate-900"><?= htmlspecialchars($o['customer_name']) ?></p>
-                            <p class="text-[11px] text-gray-500 mt-0.5 max-w-[220px] truncate" title="<?= htmlspecialchars($o['customer_address']) ?>">
-                                <?= htmlspecialchars($o['customer_address']) ?>
+                            <p class="text-[11px] text-gray-500 font-medium mt-1 whitespace-nowrap flex items-center gap-1">
+                                <i class="ph-bold ph-calendar-blank text-gray-400 text-xs"></i>
+                                <span><?= formatIndonesianDate($o['order_date']) ?></span>
                             </p>
-                            <p class="text-[10px] text-gray-400 font-mono"><?= htmlspecialchars($o['customer_contact'] ?: '-') ?></p>
                         </td>
 
-                        <td class="py-3 px-3">
+                        <td class="py-3.5 px-3.5 align-middle">
+                            <p class="font-bold text-slate-900 text-xs truncate max-w-[210px]" title="<?= htmlspecialchars($o['customer_name']) ?>">
+                                <?= htmlspecialchars($o['customer_name']) ?>
+                            </p>
+                            <p class="text-[11px] text-gray-500 mt-0.5 truncate max-w-[210px]" title="<?= htmlspecialchars($o['customer_address']) ?>">
+                                <i class="ph-bold ph-map-pin text-gray-400 text-[10px]"></i>
+                                <?= htmlspecialchars($o['customer_address'] ?: '-') ?>
+                            </p>
+                            <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1">
+                                <i class="ph-bold ph-phone text-gray-400 text-[10px]"></i>
+                                <span><?= htmlspecialchars($o['customer_contact'] ?: '-') ?></span>
+                            </p>
+                        </td>
+
+                        <td class="py-3.5 px-3 whitespace-nowrap align-middle">
                             <?= renderLocationBadge($o['service_type']) ?>
                         </td>
 
-                        <td class="py-3 px-3">
+                        <td class="py-3.5 px-3.5 align-middle">
                             <?php 
                                 $instNames = explode('||', (string)$o['instrument_names']);
                                 $kanList = explode('||', (string)($o['is_kan_list'] ?? ''));
                                 foreach (array_filter($instNames) as $idx => $name): 
                                     $isItemKan = ($kanList[$idx] ?? '1') === '1';
                             ?>
-                                <div class="text-xs text-slate-700 font-medium flex items-center gap-1.5 py-0.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C81E26]"></span>
-                                    <span><?= htmlspecialchars($name) ?></span>
+                                <div class="text-xs text-slate-800 font-semibold flex items-center gap-1.5 py-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C81E26] shrink-0"></span>
+                                    <span class="truncate max-w-[150px]" title="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></span>
                                     <?php if ($isItemKan): ?>
-                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">KAN</span>
+                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 shrink-0 whitespace-nowrap">KAN</span>
                                     <?php else: ?>
-                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">NON-KAN</span>
+                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 whitespace-nowrap">NON-KAN</span>
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </td>
 
-                        <td class="py-3 px-3">
+                        <td class="py-3.5 px-3 whitespace-nowrap align-middle">
                             <div class="flex flex-wrap gap-1">
                                 <?php 
                                     $scCodes = array_unique(array_filter(explode('||', (string)$o['scope_codes'])));
                                     foreach ($scCodes as $sc):
                                         $scInfo = $scopes[$sc] ?? ['name' => $sc, 'badge_class' => 'bg-gray-100 text-gray-700'];
                                 ?>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border <?= $scInfo['badge_class'] ?>">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border <?= $scInfo['badge_class'] ?> whitespace-nowrap shadow-2xs">
                                         <?= htmlspecialchars($sc) ?> - <?= htmlspecialchars(explode(' ', $scInfo['name'])[0]) ?>
                                     </span>
                                 <?php endforeach; ?>
                             </div>
                         </td>
 
-                        <td class="py-3 px-3">
+                        <td class="py-3.5 px-3 whitespace-nowrap align-middle">
                             <?= renderStatusBadge($o['status']) ?>
                         </td>
 
-                        <td class="py-3 px-3 text-right whitespace-nowrap">
+                        <td class="py-3.5 px-3.5 text-right whitespace-nowrap align-middle">
                             <div class="inline-flex items-center justify-end gap-1.5">
                                 <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
                                     <button type="button" 
                                             onclick='openEditOrderModal(<?= json_encode($editData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>)'
-                                            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1 transition-all shadow-2xs"
+                                            class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1 transition-all shadow-2xs"
                                             title="Edit SPK & Data Instrumen">
-                                        <i class="ph-bold ph-pencil-simple"></i>
+                                        <i class="ph-bold ph-pencil-simple text-amber-600"></i>
                                         <span>Edit SPK</span>
                                     </button>
                                     <?php if ($o['status'] !== 'COMPLETED' && ($o['instrument_status'] ?? '') !== 'CERTIFIED'): ?>
                                         <form action="orders.php" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus SPK <?= htmlspecialchars($o['order_number']) ?>?');">
                                             <input type="hidden" name="action" value="delete_order">
                                             <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
-                                            <button type="submit" class="px-2 py-1 rounded-md text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 inline-flex items-center transition-all shadow-2xs" title="Hapus SPK">
+                                            <button type="submit" class="px-2 py-1.5 rounded-lg text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 inline-flex items-center transition-all shadow-2xs" title="Hapus SPK">
                                                 <i class="ph-bold ph-trash"></i>
                                             </button>
                                         </form>
@@ -473,11 +472,11 @@ require_once __DIR__ . '/includes/header.php';
                                 <?php endif; ?>
 
                                 <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                                    <a href="worksheet.php?order_id=<?= $o['id'] ?>" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-800 hover:bg-slate-900 text-white inline-flex items-center gap-1 transition-all shadow-2xs">
+                                    <a href="worksheet.php?order_id=<?= $o['id'] ?>" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white inline-flex items-center gap-1 transition-all shadow-2xs">
                                         <span>Pengerjaan &rarr;</span>
                                     </a>
                                 <?php else: ?>
-                                    <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1 transition-all shadow-2xs">
+                                    <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1 transition-all shadow-2xs">
                                         <span>Alur &rarr;</span>
                                     </a>
                                 <?php endif; ?>
@@ -487,6 +486,12 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
+
+    <!-- Footer of Table -->
+    <div class="mt-4 pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+        <span>Menampilkan <strong><?= count($orders) ?></strong> berkas Surat Perintah Kerja (SPK)</span>
+        <span class="font-mono text-[11px]">Sistem Kalibrasi Terintegrasi ISO/IEC 17025:2017</span>
     </div>
 </div>
 
@@ -617,12 +622,19 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Teknisi Penanggung Jawab</label>
-                    <select name="technician_name" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
-                        <?php foreach ($defaultTechs as $tName => $tRole): ?>
-                            <option value="<?= htmlspecialchars($tName) ?>"><?= htmlspecialchars($tName) ?> (<?= htmlspecialchars($tRole) ?>)</option>
-                        <?php endforeach; ?>
+                    <label class="block font-semibold text-slate-700 mb-1">Teknisi Penanggung Jawab *</label>
+                    <select name="technician_name" required class="w-full bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
+                        <?php if (empty($technicians)): ?>
+                            <option value="">-- Belum ada akun teknisi terdaftar di sistem --</option>
+                        <?php else: ?>
+                            <?php foreach ($technicians as $t): ?>
+                                <option value="<?= htmlspecialchars($t['full_name']) ?>">
+                                    <?= htmlspecialchars($t['full_name']) ?> (<?= htmlspecialchars($t['department'] ?: 'Operasional Laboratorium') ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
+                    <p class="text-[10px] text-gray-400 mt-1">Hanya menampilkan akun karyawan aktif dengan peran Teknisi (Role: TECHNICIAN).</p>
                 </div>
             </div>
 
@@ -754,12 +766,19 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Teknisi Penanggung Jawab</label>
-                    <select name="technician_name" id="edit-technician-name" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
-                        <?php foreach ($defaultTechs as $tName => $tRole): ?>
-                            <option value="<?= htmlspecialchars($tName) ?>"><?= htmlspecialchars($tName) ?> (<?= htmlspecialchars($tRole) ?>)</option>
-                        <?php endforeach; ?>
+                    <label class="block font-semibold text-slate-700 mb-1">Teknisi Penanggung Jawab *</label>
+                    <select name="technician_name" id="edit-technician-name" required class="w-full bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:border-[#C81E26]">
+                        <?php if (empty($technicians)): ?>
+                            <option value="">-- Belum ada akun teknisi terdaftar di sistem --</option>
+                        <?php else: ?>
+                            <?php foreach ($technicians as $t): ?>
+                                <option value="<?= htmlspecialchars($t['full_name']) ?>">
+                                    <?= htmlspecialchars($t['full_name']) ?> (<?= htmlspecialchars($t['department'] ?: 'Operasional Laboratorium') ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
+                    <p class="text-[10px] text-gray-400 mt-1">Sesuai data akun teknisi aktif yang terdaftar di database.</p>
                 </div>
             </div>
 
@@ -799,8 +818,32 @@ function openEditOrderModal(data) {
     document.getElementById('edit-resolution').value = data.resolution || '';
     
     const techSelect = document.getElementById('edit-technician-name');
-    if (techSelect && data.technician_name) {
-        techSelect.value = data.technician_name;
+    if (techSelect) {
+        // Hapus opsi histori data lama yang mungkin ditambahkan sebelumnya
+        const legacyOption = techSelect.querySelector('option[data-legacy="1"]');
+        if (legacyOption) {
+            legacyOption.remove();
+        }
+
+        if (data.technician_name) {
+            let found = false;
+            for (let i = 0; i < techSelect.options.length; i++) {
+                if (techSelect.options[i].value === data.technician_name) {
+                    techSelect.selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            // Jika teknisi pada data lama belum terdaftar di users, tampilkan sementara dengan penanda
+            if (!found && data.technician_name.trim() !== '') {
+                const legacyOpt = document.createElement('option');
+                legacyOpt.value = data.technician_name;
+                legacyOpt.textContent = data.technician_name + ' (Riwayat Penugasan Sebelum Ada Akun)';
+                legacyOpt.setAttribute('data-legacy', '1');
+                techSelect.appendChild(legacyOpt);
+                techSelect.value = data.technician_name;
+            }
+        }
     }
 
     const warningBox = document.getElementById('edit-certified-warning');
@@ -838,6 +881,9 @@ function fillSampleOrder(type) {
     const form = document.getElementById('create-order-form');
     if (!form) return;
 
+    // Ambil akun teknisi terdaftar pertama di dropdown
+    const registeredTech = form.elements['technician_name']?.options[0]?.value || '';
+
     if (type === 'pressure') {
         form.elements['customer_name'].value = 'PT Pertamina Hulu Rokan';
         form.elements['customer_contact'].value = 'Bpk. Hendro (0812-7788-9900)';
@@ -851,7 +897,7 @@ function fillSampleOrder(type) {
         form.elements['serial_number'].value = 'WK-' + Math.floor(100000 + Math.random() * 900000);
         form.elements['capacity_range'].value = '0 - 25 bar';
         form.elements['resolution'].value = '0.01 bar';
-        form.elements['technician_name'].value = 'Ahmad Farhan, A.Md.';
+        if (registeredTech) form.elements['technician_name'].value = registeredTech;
     } else if (type === 'temperature') {
         form.elements['customer_name'].value = 'PT Kalbe Farma Tbk';
         form.elements['customer_contact'].value = 'Ibu Dewi (0813-1122-3344)';
@@ -865,7 +911,7 @@ function fillSampleOrder(type) {
         form.elements['serial_number'].value = 'FLK-' + Math.floor(100000 + Math.random() * 900000);
         form.elements['capacity_range'].value = '-50 °C s/d 200 °C';
         form.elements['resolution'].value = '0.001 °C';
-        form.elements['technician_name'].value = 'Dedi Kurniawan, A.Md.';
+        if (registeredTech) form.elements['technician_name'].value = registeredTech;
     } else if (type === 'mass') {
         form.elements['customer_name'].value = 'PT Mayora Indah Tbk';
         form.elements['customer_contact'].value = 'Bpk. Agus (0815-5566-7788)';
@@ -879,7 +925,7 @@ function fillSampleOrder(type) {
         form.elements['serial_number'].value = 'SAR-' + Math.floor(100000 + Math.random() * 900000);
         form.elements['capacity_range'].value = '0 - 220 g';
         form.elements['resolution'].value = '0.0001 g';
-        form.elements['technician_name'].value = 'Budi Santoso, S.T.';
+        if (registeredTech) form.elements['technician_name'].value = registeredTech;
     } else if (type === 'dimension') {
         form.elements['customer_name'].value = 'PT Komatsu Indonesia';
         form.elements['customer_contact'].value = 'Bpk. Hermawan (0817-8899-0011)';
@@ -893,7 +939,7 @@ function fillSampleOrder(type) {
         form.elements['serial_number'].value = 'MTY-' + Math.floor(100000 + Math.random() * 900000);
         form.elements['capacity_range'].value = '0 - 150 mm';
         form.elements['resolution'].value = '0.01 mm';
-        form.elements['technician_name'].value = 'Budi Santoso, S.T.';
+        if (registeredTech) form.elements['technician_name'].value = registeredTech;
     } else if (type === 'electric_nonkan') {
         form.elements['customer_name'].value = 'PT Schneider Electric Manufacturing';
         form.elements['customer_contact'].value = 'Ibu Lisa (0819-2233-4455)';
@@ -907,7 +953,7 @@ function fillSampleOrder(type) {
         form.elements['serial_number'].value = 'FLK-' + Math.floor(100000 + Math.random() * 900000);
         form.elements['capacity_range'].value = '0 - 1000 V AC/DC';
         form.elements['resolution'].value = '0.0001 V';
-        form.elements['technician_name'].value = 'Dedi Kurniawan, A.Md.';
+        if (registeredTech) form.elements['technician_name'].value = registeredTech;
     }
 }
 

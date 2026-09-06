@@ -255,9 +255,9 @@ require_once __DIR__ . '/includes/header.php';
             Semua lembar kerja teknisi telah selesai diproses dan dibuatkan nomor sertifikat resminya.
         </div>
     <?php else: ?>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] tracking-wider border-y border-gray-200">
+        <div class="overflow-x-auto rounded-xl border border-gray-200">
+            <table class="w-full text-left text-xs min-w-[960px]">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] tracking-wider border-y border-gray-200 whitespace-nowrap">
                     <tr>
                         <th class="py-2.5 px-3">Alat & Pelanggan</th>
                         <th class="py-2.5 px-3">Ruang Lingkup</th>
@@ -399,9 +399,9 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </form>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs min-w-[850px]">
-            <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] tracking-wider border-y border-gray-200">
+    <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full text-left text-xs min-w-[1080px]">
+            <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] tracking-wider border-y border-gray-200 whitespace-nowrap">
                 <tr>
                     <th class="py-2.5 px-3">Nomor Sertifikat</th>
                     <th class="py-2.5 px-3">Alat & No. Seri</th>
@@ -431,15 +431,15 @@ require_once __DIR__ . '/includes/header.php';
                     <tr class="transition-colors <?= $isJustIssued ? 'bg-emerald-50/70 border-l-4 border-l-emerald-600' : 'hover:bg-slate-50/80' ?>">
                         <td class="py-3 px-3">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="font-mono text-xs font-black text-[#C81E26] bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block">
+                                <span class="font-mono text-xs font-black text-[#C81E26] bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block whitespace-nowrap">
                                     <?= htmlspecialchars($cert['certificate_number']) ?>
                                 </span>
                                 <?php if ($isCertKan): ?>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
                                         KAN LK-088
                                     </span>
                                 <?php else: ?>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
                                         NON-KAN (Awalan N)
                                     </span>
                                 <?php endif; ?>
