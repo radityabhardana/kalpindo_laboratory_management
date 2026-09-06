@@ -288,22 +288,50 @@ function initializeDatabase(PDO $pdo): void {
         );
     ");
 
-    // 5. Seed Users for Multi-Role RBAC
+    // 5. Seed Users for Multi-Role RBAC (Personal Employee Accounts + Master Admin)
     $usersData = [
         [
             'admin',
-            password_hash('password123', PASSWORD_DEFAULT),
-            'Ir. Hendra Wijaya, M.T.',
-            'hendra.wijaya@kalpindo.co.id',
+            password_hash('admin', PASSWORD_DEFAULT),
+            'Administrator Utama',
+            'admin@kalpindo.co.id',
             'SUPER_ADMIN',
-            'Manajemen & Mutu ISO 17025',
-            'HW'
+            'Manajemen Sistem & Operasional',
+            'AD'
         ],
+        [
+            'radit',
+            password_hash('password123', PASSWORD_DEFAULT),
+            'Raditya Pratama',
+            'raditya@kalpindo.co.id',
+            'CERT_ADMIN',
+            'Administrasi Sertifikasi & Mutu',
+            'RP'
+        ],
+        [
+            'siti',
+            password_hash('password123', PASSWORD_DEFAULT),
+            'Siti Rahmawati, S.E.',
+            'siti@kalpindo.co.id',
+            'SALES',
+            'Sales & Layanan Pelanggan',
+            'SR'
+        ],
+        [
+            'fauzi',
+            password_hash('password123', PASSWORD_DEFAULT),
+            'Ahmad Fauzi, A.Md.',
+            'fauzi@kalpindo.co.id',
+            'TECHNICIAN',
+            'Laboratorium Kalibrasi Teknis',
+            'AF'
+        ],
+        // Legacy role aliases for backward compatibility
         [
             'sales',
             password_hash('password123', PASSWORD_DEFAULT),
             'Siti Rahmawati, S.E.',
-            'siti.sales@kalpindo.co.id',
+            'sales@kalpindo.co.id',
             'SALES',
             'Sales & Layanan Pelanggan',
             'SR'
@@ -312,7 +340,7 @@ function initializeDatabase(PDO $pdo): void {
             'teknisi',
             password_hash('password123', PASSWORD_DEFAULT),
             'Ahmad Fauzi, A.Md.',
-            'ahmad.fauzi@kalpindo.co.id',
+            'teknisi@kalpindo.co.id',
             'TECHNICIAN',
             'Laboratorium Kalibrasi Teknis',
             'AF'
@@ -321,9 +349,9 @@ function initializeDatabase(PDO $pdo): void {
             'sertifikat',
             password_hash('password123', PASSWORD_DEFAULT),
             'Raditya Pratama',
-            'raditya.cert@kalpindo.co.id',
+            'sertifikat@kalpindo.co.id',
             'CERT_ADMIN',
-            'Administrasi Penerbitan Sertifikat',
+            'Administrasi Sertifikasi & Mutu',
             'RP'
         ]
     ];

@@ -108,72 +108,72 @@ $flash = getFlash();
             <!-- Role Selector Buttons (Compact 4-stack) -->
             <div class="my-3 space-y-2" id="role-buttons-container">
                 
-                <!-- 1. Super Admin -->
-                <button type="button" onclick="selectRole('admin', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-purple-200 bg-white hover:bg-purple-50/60 transition-all flex items-center justify-between text-left group shadow-2xs">
+                <!-- 1. Master Admin -->
+                <button type="button" onclick="selectRole('admin', 'admin', this)" class="role-btn w-full p-2.5 rounded-xl border border-purple-200 bg-white hover:bg-purple-50/60 transition-all flex items-center justify-between text-left group shadow-2xs active-role">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-purple-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            HW
+                        <div class="w-7 h-7 rounded-lg bg-purple-700 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                            AD
                         </div>
                         <div>
                             <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-purple-950 font-bold">Super Admin</strong>
+                                <strong class="text-xs text-purple-950 font-bold">Master Admin</strong>
                                 <span class="font-mono text-[9px] text-purple-700 bg-purple-100 px-1 py-0.2 rounded font-bold">admin</span>
                             </div>
-                            <p class="text-[10px] text-gray-500">Ir. Hendra Wijaya, M.T. (Manajer Teknis)</p>
+                            <p class="text-[10px] text-gray-500">Administrator Utama (Atur Sistem & Karyawan)</p>
                         </div>
                     </div>
                     <i class="ph-bold ph-caret-right text-purple-400 group-hover:text-purple-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
                 </button>
 
-                <!-- 2. Sales -->
-                <button type="button" onclick="selectRole('sales', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100/70 transition-all flex items-center justify-between text-left group shadow-2xs">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-slate-800 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            SR
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-slate-900 font-bold">Divisi Sales</strong>
-                                <span class="font-mono text-[9px] text-slate-700 bg-gray-200 px-1 py-0.2 rounded font-bold">sales</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500">Siti Rahmawati, S.E. (Order & Front Office)</p>
-                        </div>
-                    </div>
-                    <i class="ph-bold ph-caret-right text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
-                </button>
-
-                <!-- 3. Teknisi -->
-                <button type="button" onclick="selectRole('teknisi', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-blue-200 bg-white hover:bg-blue-50/60 transition-all flex items-center justify-between text-left group shadow-2xs">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                            AF
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-blue-950 font-bold">Teknisi Kalibrasi</strong>
-                                <span class="font-mono text-[9px] text-blue-700 bg-blue-100 px-1 py-0.2 rounded font-bold">teknisi</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500">Ahmad Fauzi, A.Md. (Lembar Kerja Worksheet)</p>
-                        </div>
-                    </div>
-                    <i class="ph-bold ph-caret-right text-blue-400 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
-                </button>
-
-                <!-- 4. Pengurus Sertifikat -->
-                <button type="button" onclick="selectRole('sertifikat', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-red-200 bg-white hover:bg-red-50/60 transition-all flex items-center justify-between text-left group shadow-2xs active-role">
+                <!-- 2. Raditya Pratama (Sertifikat) -->
+                <button type="button" onclick="selectRole('radit', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-red-200 bg-white hover:bg-red-50/60 transition-all flex items-center justify-between text-left group shadow-2xs">
                     <div class="flex items-center gap-2.5">
                         <div class="w-7 h-7 rounded-lg bg-[#C81E26] text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
                             RP
                         </div>
                         <div>
                             <div class="flex items-center gap-1.5">
-                                <strong class="text-xs text-[#C81E26] font-bold">Pengurus Sertifikat</strong>
-                                <span class="font-mono text-[9px] text-red-700 bg-red-100 px-1 py-0.2 rounded font-bold">sertifikat</span>
+                                <strong class="text-xs text-[#C81E26] font-bold">Raditya Pratama</strong>
+                                <span class="font-mono text-[9px] text-red-700 bg-red-100 px-1 py-0.2 rounded font-bold">radit</span>
                             </div>
-                            <p class="text-[10px] text-gray-500">Raditya Pratama (Format YYMMSNNNN-RR & Cetak)</p>
+                            <p class="text-[10px] text-gray-500">Pengurus Sertifikat (Format YYMMSNNNN-RR & Cetak)</p>
                         </div>
                     </div>
                     <i class="ph-bold ph-caret-right text-[#C81E26] group-hover:translate-x-0.5 transition-all text-xs"></i>
+                </button>
+
+                <!-- 3. Siti Rahmawati (Sales) -->
+                <button type="button" onclick="selectRole('siti', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100/70 transition-all flex items-center justify-between text-left group shadow-2xs">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-slate-800 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                            SR
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <strong class="text-xs text-slate-900 font-bold">Siti Rahmawati, S.E.</strong>
+                                <span class="font-mono text-[9px] text-slate-700 bg-gray-200 px-1 py-0.2 rounded font-bold">siti</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500">Divisi Sales & Front Office (Order SPK)</p>
+                        </div>
+                    </div>
+                    <i class="ph-bold ph-caret-right text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
+                </button>
+
+                <!-- 4. Ahmad Fauzi (Teknisi) -->
+                <button type="button" onclick="selectRole('fauzi', 'password123', this)" class="role-btn w-full p-2.5 rounded-xl border border-blue-200 bg-white hover:bg-blue-50/60 transition-all flex items-center justify-between text-left group shadow-2xs">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                            AF
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <strong class="text-xs text-blue-950 font-bold">Ahmad Fauzi, A.Md.</strong>
+                                <span class="font-mono text-[9px] text-blue-700 bg-blue-100 px-1 py-0.2 rounded font-bold">fauzi</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500">Teknisi Kalibrasi (Lembar Kerja Worksheet)</p>
+                        </div>
+                    </div>
+                    <i class="ph-bold ph-caret-right text-blue-400 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all text-xs"></i>
                 </button>
 
             </div>
@@ -217,7 +217,7 @@ $flash = getFlash();
                         <label for="username" class="block font-bold text-slate-700 mb-1">Username Pengguna</label>
                         <div class="relative">
                             <i class="ph-bold ph-user absolute left-3.5 top-3 text-gray-400 text-sm"></i>
-                            <input id="username" name="username" type="text" required value="<?= htmlspecialchars($_POST['username'] ?? 'sertifikat') ?>" placeholder="Masukkan username..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-3.5 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
+                            <input id="username" name="username" type="text" required value="<?= htmlspecialchars($_POST['username'] ?? 'admin') ?>" placeholder="Masukkan username..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-3.5 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
                         </div>
                     </div>
 
@@ -225,11 +225,11 @@ $flash = getFlash();
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <label for="password" class="block font-bold text-slate-700">Kata Sandi</label>
-                            <span class="text-[10px] text-gray-400 font-mono">Default: password123</span>
+                            <span class="text-[10px] text-gray-400 font-mono">Master: admin &bull; Karyawan: password123</span>
                         </div>
                         <div class="relative">
                             <i class="ph-bold ph-lock-key absolute left-3.5 top-3 text-gray-400 text-sm"></i>
-                            <input id="password" name="password" type="password" required value="password123" placeholder="Masukkan password..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-10 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
+                            <input id="password" name="password" type="password" required value="admin" placeholder="Masukkan password..." class="w-full bg-gray-50/70 border border-gray-300 rounded-xl pl-10 pr-10 py-2.5 text-slate-900 text-xs font-semibold focus:outline-none focus:border-[#C81E26] focus:bg-white focus:ring-1 focus:ring-[#C81E26] transition-all">
                             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-slate-700 p-0.5 rounded" title="Lihat/Sembunyikan sandi">
                                 <i id="password-toggle-icon" class="ph-bold ph-eye text-sm"></i>
                             </button>

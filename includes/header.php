@@ -70,6 +70,21 @@ $navSections = [
         ]
     ]
 ];
+
+// Add Administrator module for Master Admin
+if (hasRole('SUPER_ADMIN')) {
+    $navSections[] = [
+        'title' => 'ADMINISTRATOR',
+        'items' => [
+            [
+                'name' => 'Kelola Karyawan',
+                'url' => 'users.php',
+                'icon' => 'ph-users-three',
+                'badge' => null,
+            ],
+        ]
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="id" class="h-full">
