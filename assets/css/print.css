@@ -1,0 +1,86 @@
+/*
+ * Print Stylesheet for PT Kalpindo ISO/IEC 17025 Calibration Certificate
+ * Formatted for standard A4 paper (210mm x 297mm)
+ */
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm 12mm 10mm 12mm;
+    }
+
+    /* Hide Web UI Elements */
+    nav, 
+    header, 
+    footer.web-footer, 
+    .no-print, 
+    .action-bar, 
+    .btn, 
+    button,
+    .debug-bar {
+        display: none !important;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 9pt !important;
+        line-height: 1.3 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .certificate-sheet {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    .cert-border-box {
+        border: 1.5pt solid #1e293b !important;
+        padding: 12px 14px !important;
+        background: #ffffff !important;
+    }
+
+    /* Print tables */
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+
+    th, td {
+        border-color: #475569 !important;
+    }
+
+    th {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+
+    /* Watermark for original document */
+    .cert-watermark {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-35deg);
+        font-size: 65pt;
+        color: rgba(15, 23, 42, 0.04) !important;
+        font-weight: 900;
+        letter-spacing: 0.25em;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Avoid page breaks inside crucial blocks */
+    .avoid-break {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}

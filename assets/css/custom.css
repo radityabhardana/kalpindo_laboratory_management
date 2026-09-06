@@ -1,0 +1,60 @@
+/* 
+ * Kalpindo CalibFlow - Enterprise Internal System Stylesheet
+ * PT Kalibrasi Pengujian Indonesia (Kalpindo) - ISO/IEC 17025
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+    --brand-red: #C81E26;
+    --brand-red-dark: #A8141B;
+    --brand-orange: #F59D3F;
+    --brand-slate: #0F172A;
+    --brand-gray: #E2E8F0;
+    --brand-dark: #1E293B;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: #F4F6F9;
+    color: var(--brand-dark);
+}
+
+.font-mono {
+    font-family: var(--font-mono);
+}
+
+/* Custom Micro Shadows for Enterprise UI */
+.shadow-2xs {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-xs {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Smooth Table Hover & Transition */
+table tr {
+    transition: background-color 0.15s ease;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
