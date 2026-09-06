@@ -135,9 +135,9 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
         </div>
 
         <div class="flex items-center gap-3">
-            <button onclick="window.print()" class="px-6 py-2.5 rounded-full text-xs font-bold bg-[#C81E26] hover:bg-red-800 text-white flex items-center gap-2 shadow-lg shadow-red-600/30 transition-all hover:-translate-y-0.5">
-                <i class="ph-bold ph-printer text-base"></i>
-                <span>Cetak Sertifikat Resmi (A4)</span>
+            <button onclick="window.print()" class="px-6 py-2.5 rounded-full text-xs font-bold bg-[#C81E26] hover:bg-red-800 text-white flex items-center gap-2 shadow-lg shadow-red-600/30 transition-all hover:-translate-y-0.5" title="Klik untuk mencetak atau simpan sebagai file PDF">
+                <i class="ph-bold ph-file-pdf text-base"></i>
+                <span>Cetak / Simpan PDF (A4)</span>
             </button>
         </div>
     </div>

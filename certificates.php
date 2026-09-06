@@ -69,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             $db->commit();
 
-            setFlash('success', "Sertifikat Nomor {$certNumber} berhasil diterbitkan dan siap dicetak!");
-            header("Location: print_certificate.php?cert=" . urlencode($certNumber));
+            setFlash('success', "Sertifikat Nomor <strong>{$certNumber}</strong> berhasil diterbitkan dan masuk ke daftar Arsip Sertifikat Resmi!");
+            header("Location: certificates.php?issued=" . urlencode($certNumber) . "#archive-section");
             exit;
 
         } catch (Exception $e) {
@@ -112,8 +112,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             ");
             $stmtRev->execute([$newCertNumber, $nextRevStr, $revNotes, $oldCertId]);
 
-            setFlash('success', "Nomor Sertifikat berhasil direvisi menjadi {$newCertNumber}!");
-            header('Location: certificates.php');
+            setFlash('success', "Nomor Sertifikat berhasil direvisi menjadi <strong>{$newCertNumber}</strong>!");
+            header("Location: certificates.php?issued=" . urlencode($newCertNumber) . "#archive-section");
             exit;
 
         } catch (Exception $e) {
@@ -140,8 +140,13 @@ $incomingQueue = $db->query("
     ORDER BY w.submitted_at ASC
 ")->fetchAll();
 
-// 2. Daftar sertifikat yang sudah terbit
-$issuedCertificates = $db->query("
+// 2. Filter & Sortir Arsip Sertifikat Kalibrasi Resmi Terbit
+$searchQuery = trim($_GET['search'] ?? '');
+$scopeFilter = trim($_GET['scope'] ?? '');
+$sortOption = trim($_GET['sort'] ?? 'newest');
+$newlyIssued = trim($_GET['issued'] ?? '');
+
+$sqlIssued = "
     SELECT 
         c.*,
         i.name as instrument_name,
@@ -154,8 +159,40 @@ $issuedCertificates = $db->query("
     FROM certificates c
     JOIN instruments i ON c.instrument_id = i.id
     JOIN orders o ON i.order_id = o.id
-    ORDER BY c.id DESC
-")->fetchAll();
+    WHERE 1=1
+";
+$paramsIssued = [];
+
+if ($searchQuery !== '') {
+    $sqlIssued .= " AND (c.certificate_number LIKE ? OR i.name LIKE ? OR i.serial_number LIKE ? OR o.customer_name LIKE ? OR o.order_number LIKE ?)";
+    $like = "%{$searchQuery}%";
+    $paramsIssued[] = $like;
+    $paramsIssued[] = $like;
+    $paramsIssued[] = $like;
+    $paramsIssued[] = $like;
+    $paramsIssued[] = $like;
+}
+
+if ($scopeFilter !== '') {
+    $sqlIssued .= " AND c.scope_code = ?";
+    $paramsIssued[] = $scopeFilter;
+}
+
+if ($sortOption === 'oldest') {
+    $sqlIssued .= " ORDER BY c.id ASC";
+} elseif ($sortOption === 'cert_no') {
+    $sqlIssued .= " ORDER BY c.certificate_number ASC";
+} elseif ($sortOption === 'customer') {
+    $sqlIssued .= " ORDER BY o.customer_name ASC";
+} else {
+    $sqlIssued .= " ORDER BY c.id DESC";
+}
+
+$stmtIssued = $db->prepare($sqlIssued);
+$stmtIssued->execute($paramsIssued);
+$issuedCertificates = $stmtIssued->fetchAll();
+
+$totalIssuedCount = (int)$db->query("SELECT COUNT(*) FROM certificates")->fetchColumn();
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -258,16 +295,64 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- SECTION 2: Daftar Sertifikat yang Telah Diterbitkan -->
-<div class="bg-white rounded-2xl border border-gray-200 shadow-2xs p-5 sm:p-6">
+<div id="archive-section" class="bg-white rounded-2xl border border-gray-200 shadow-2xs p-5 sm:p-6 scroll-mt-20">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 border-b border-gray-100 pb-3">
         <div>
-            <h2 class="text-base font-bold text-slate-900">Arsip Sertifikat Kalibrasi Resmi Terbit</h2>
-            <p class="text-xs text-gray-500">Database sertifikat terbit standar ISO/IEC 17025 siap cetak dan terintegrasi QR code</p>
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <h2 class="text-base font-bold text-slate-900">Arsip Sertifikat Kalibrasi Resmi Terbit</h2>
+            </div>
+            <p class="text-xs text-gray-500 mt-0.5">Database sertifikat terbit standar ISO/IEC 17025 siap cetak dan terintegrasi QR code</p>
         </div>
-        <span class="text-xs font-mono font-bold text-[#C81E26] bg-red-50 px-3 py-1 rounded-full border border-red-200">
-            Total: <?= count($issuedCertificates) ?> Sertifikat Terbit
-        </span>
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-mono font-bold text-[#C81E26] bg-red-50 px-3 py-1 rounded-full border border-red-200">
+                Total: <?= $totalIssuedCount ?> Sertifikat Terbit
+            </span>
+        </div>
     </div>
+
+    <!-- Toolbar: Filter, Cari, & Sortir Arsip -->
+    <form action="certificates.php" method="GET" class="mb-4 bg-gray-50/80 p-3 rounded-xl border border-gray-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <input type="hidden" name="section" value="archive">
+        
+        <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+            <!-- Search -->
+            <div class="relative flex-1 min-w-[180px]">
+                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Cari No. Sertifikat, Alat, Pelanggan..." class="w-full bg-white border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#C81E26]">
+            </div>
+
+            <!-- Filter Ruang Lingkup -->
+            <select name="scope" class="bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-[#C81E26]">
+                <option value="">Semua Ruang Lingkup</option>
+                <?php foreach ($scopes as $code => $scInfo): ?>
+                    <option value="<?= $code ?>" <?= $scopeFilter === $code ? 'selected' : '' ?>>
+                        [<?= $code ?>] <?= htmlspecialchars($scInfo['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <!-- Sortir -->
+            <select name="sort" class="bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-[#C81E26]">
+                <option value="newest" <?= $sortOption === 'newest' ? 'selected' : '' ?>>Urutkan: Terbaru</option>
+                <option value="oldest" <?= $sortOption === 'oldest' ? 'selected' : '' ?>>Urutkan: Terlama</option>
+                <option value="cert_no" <?= $sortOption === 'cert_no' ? 'selected' : '' ?>>No. Sertifikat (A-Z)</option>
+                <option value="customer" <?= $sortOption === 'customer' ? 'selected' : '' ?>>Nama Pelanggan (A-Z)</option>
+            </select>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+            <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5">
+                <i class="ph-bold ph-faders"></i>
+                <span>Sortir & Filter</span>
+            </button>
+            <?php if ($searchQuery !== '' || $scopeFilter !== '' || $sortOption !== 'newest'): ?>
+                <a href="certificates.php#archive-section" class="px-2.5 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 font-medium">
+                    Reset
+                </a>
+            <?php endif; ?>
+        </div>
+    </form>
 
     <div class="overflow-x-auto">
         <table class="w-full text-left text-xs min-w-[850px]">
@@ -285,7 +370,9 @@ require_once __DIR__ . '/includes/header.php';
             <tbody class="divide-y divide-gray-100">
                 <?php if (empty($issuedCertificates)): ?>
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-gray-400">Belum ada sertifikat yang diterbitkan.</td>
+                        <td colspan="7" class="py-8 text-center text-gray-400">
+                            <?= ($searchQuery !== '' || $scopeFilter !== '') ? 'Tidak ada sertifikat yang cocok dengan filter sortir pencarian.' : 'Belum ada sertifikat yang diterbitkan.' ?>
+                        </td>
                     </tr>
                 <?php endif; ?>
 
@@ -293,12 +380,20 @@ require_once __DIR__ . '/includes/header.php';
                     <?php 
                         $decoded = decodeCertificateNumber($cert['certificate_number']);
                         $scope = $scopes[$cert['scope_code']] ?? ['name' => $cert['scope_code'], 'badge_class' => ''];
+                        $isJustIssued = ($newlyIssued && $cert['certificate_number'] === $newlyIssued);
                     ?>
-                    <tr class="hover:bg-slate-50/80 transition-colors">
+                    <tr class="transition-colors <?= $isJustIssued ? 'bg-emerald-50/70 border-l-4 border-l-emerald-600' : 'hover:bg-slate-50/80' ?>">
                         <td class="py-3 px-3">
-                            <span class="font-mono text-xs font-black text-[#C81E26] bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block">
-                                <?= htmlspecialchars($cert['certificate_number']) ?>
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-mono text-xs font-black text-[#C81E26] bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block">
+                                    <?= htmlspecialchars($cert['certificate_number']) ?>
+                                </span>
+                                <?php if ($isJustIssued): ?>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse whitespace-nowrap">
+                                        Baru Diterbitkan
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                             <div class="text-[10px] text-gray-500 mt-0.5">
                                 Lingkup: <strong class="text-slate-800"><?= htmlspecialchars($scope['name']) ?></strong>
                             </div>
@@ -339,9 +434,9 @@ require_once __DIR__ . '/includes/header.php';
 
                         <td class="py-3 px-3 text-right whitespace-nowrap">
                             <div class="flex items-center justify-end gap-1.5">
-                                <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-700 hover:bg-gray-50 border border-gray-300 shadow-2xs inline-flex items-center gap-1">
-                                    <i class="ph-bold ph-printer text-[#C81E26]"></i>
-                                    <span>Cetak A4</span>
+                                <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#C81E26] hover:bg-[#A8141B] text-white shadow-2xs inline-flex items-center gap-1.5 transition-all whitespace-nowrap" title="Buka Dokumen Resmi & Cetak / Buat PDF">
+                                    <i class="ph-bold ph-file-pdf text-sm"></i>
+                                    <span>Buat PDF</span>
                                 </a>
 
                                 <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" title="Cek Halaman Verifikasi QR Code" class="p-1.5 rounded-md bg-gray-100 text-gray-600 hover:text-slate-900 hover:bg-gray-200">

@@ -369,9 +369,9 @@ $pendingCerts = $db->query("
                                     </span>
                                 <?php endif; ?>
                             <?php elseif ($inst['instrument_status'] === 'CERTIFIED' && $inst['certificate_number']): ?>
-                                <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-slate-700 hover:bg-gray-50 shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
-                                    <i class="ph-bold ph-printer text-[#C81E26]"></i>
-                                    <span>Cetak A4</span>
+                                <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-slate-700 hover:bg-gray-50 shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all" title="Buka Dokumen & Buat / Cetak PDF">
+                                    <i class="ph-bold ph-file-pdf text-[#C81E26]"></i>
+                                    <span>Buat PDF</span>
                                 </a>
                             <?php else: ?>
                                 <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
