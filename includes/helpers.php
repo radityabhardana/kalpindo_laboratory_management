@@ -22,8 +22,8 @@ function getScopeList(): array {
             'name' => 'Tekanan (Pressure)',
             'code' => 'P',
             'desc' => 'Pressure Gauge, Manometer, Pressure Transmitter, Vacuum Gauge',
-            'color' => 'red',
-            'badge_class' => 'bg-red-50 text-[#C81E26] border-red-200',
+            'color' => 'slate',
+            'badge_class' => 'bg-slate-50 text-slate-700 border-slate-200',
             'units' => 'bar, psi, kPa, MPa',
             'icon' => 'ph-gauge'
         ],
@@ -31,8 +31,8 @@ function getScopeList(): array {
             'name' => 'Massa & Timbangan (Mass)',
             'code' => 'M',
             'desc' => 'Digital Balance (Analitik), Timbangan Elektronik, Anak Timbangan Standar',
-            'color' => 'blue',
-            'badge_class' => 'bg-blue-50 text-blue-700 border-blue-200',
+            'color' => 'slate',
+            'badge_class' => 'bg-slate-50 text-slate-700 border-slate-200',
             'units' => 'g, kg, mg',
             'icon' => 'ph-scales'
         ],
@@ -40,8 +40,8 @@ function getScopeList(): array {
             'name' => 'Suhu & Kelembapan (Temperature)',
             'code' => 'T',
             'desc' => 'Thermometer Digital & Gelas, Thermocouple, Thermohygrometer, Oven, Furnace',
-            'color' => 'orange',
-            'badge_class' => 'bg-amber-50 text-amber-700 border-amber-200',
+            'color' => 'slate',
+            'badge_class' => 'bg-slate-50 text-slate-700 border-slate-200',
             'units' => '°C, %RH, K',
             'icon' => 'ph-thermometer'
         ],
@@ -50,7 +50,7 @@ function getScopeList(): array {
             'code' => 'D',
             'desc' => 'Vernier Caliper, Digital Micrometer, Dial Indicator, Gauge Block',
             'color' => 'slate',
-            'badge_class' => 'bg-slate-100 text-slate-800 border-slate-200',
+            'badge_class' => 'bg-slate-50 text-slate-700 border-slate-200',
             'units' => 'mm, inch, µm',
             'icon' => 'ph-ruler'
         ],
@@ -58,8 +58,8 @@ function getScopeList(): array {
             'name' => 'Kelistrikan (Electric)',
             'code' => 'E',
             'desc' => 'Digital Multimeter, Clamp Meter, Insulation Tester, Calibrator Listrik',
-            'color' => 'indigo',
-            'badge_class' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            'color' => 'slate',
+            'badge_class' => 'bg-slate-50 text-slate-700 border-slate-200',
             'units' => 'V, A, Ohm, Hz',
             'icon' => 'ph-lightning'
         ]
@@ -191,31 +191,34 @@ function renderStatusBadge(string $status): string {
     switch ($status) {
         case 'PENDING':
         case 'ASSIGNED':
-            return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#F59D3F] animate-pulse"></span>
+            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 whitespace-nowrap">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
                 Menunggu Kalibrasi
             </span>';
         case 'IN_PROGRESS':
         case 'CALIBRATING':
-            return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-sky-700 whitespace-nowrap">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0"></span>
                 Sedang Dikalibrasi
             </span>';
         case 'WORKSHEET_DONE':
         case 'DATA_SUBMITTED':
-            return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-[#C81E26] border border-red-200 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#C81E26]"></span>
+            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 whitespace-nowrap">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
                 Siap No. Sertifikat
             </span>';
         case 'COMPLETED':
         case 'CERTIFIED':
         case 'ISSUED':
-            return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 whitespace-nowrap">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                 Sertifikat Terbit
             </span>';
         default:
-            return '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">' . htmlspecialchars($status) . '</span>';
+            return '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 whitespace-nowrap">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                ' . htmlspecialchars($status) . '
+            </span>';
     }
 }
 
@@ -224,14 +227,14 @@ function renderStatusBadge(string $status): string {
  */
 function renderLocationBadge(string $serviceType): string {
     if ($serviceType === 'ON_SITE') {
-        return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
-            <i class="ph-bold ph-buildings"></i>
-            On-Site
+        return '<span class="inline-flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap">
+            <i class="ph-bold ph-buildings text-slate-400 text-[11px]"></i>
+            <span>On-Site</span>
         </span>';
     }
-    return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
-        <i class="ph-bold ph-flask"></i>
-        In-Lab
+    return '<span class="inline-flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap">
+        <i class="ph-bold ph-flask text-slate-400 text-[11px]"></i>
+        <span>In-Lab</span>
     </span>';
 }
 
@@ -260,28 +263,28 @@ function getAllRoles(): array {
             'name' => 'Super Admin (Akses Semuanya)',
             'short' => 'Super Admin',
             'desc' => 'Manajer Teknis / Kepala Lab - Memiliki akses penuh ke semua modul',
-            'badge_class' => 'bg-purple-100 text-purple-800 border-purple-200',
+            'badge_class' => 'bg-slate-100 text-slate-800 border-slate-200',
             'icon' => 'ph-shield-check'
         ],
         'SALES' => [
             'name' => 'Sales & Front Office',
             'short' => 'Sales',
             'desc' => 'Penerimaan permintaan kalibrasi & pembuatan Work Order (SPK)',
-            'badge_class' => 'bg-slate-100 text-slate-700 border-slate-300',
+            'badge_class' => 'bg-slate-100 text-slate-700 border-slate-200',
             'icon' => 'ph-clipboard-text'
         ],
         'TECHNICIAN' => [
             'name' => 'Teknisi Kalibrasi',
             'short' => 'Teknisi',
             'desc' => 'Pengerjaan alat, pencatatan suhu/RH, dan input data ukur mentah (Worksheet)',
-            'badge_class' => 'bg-blue-100 text-blue-800 border-blue-200',
+            'badge_class' => 'bg-slate-100 text-slate-700 border-slate-200',
             'icon' => 'ph-wrench'
         ],
         'CERT_ADMIN' => [
             'name' => 'Pengurus Sertifikat',
             'short' => 'Bagian Sertifikat',
             'desc' => 'Pembuatan nomor sertifikat (YYMMSNNNN-RR), verifikasi hasil, dan cetak',
-            'badge_class' => 'bg-red-100 text-[#C81E26] border-red-200',
+            'badge_class' => 'bg-slate-100 text-slate-700 border-slate-200',
             'icon' => 'ph-certificate'
         ]
     ];

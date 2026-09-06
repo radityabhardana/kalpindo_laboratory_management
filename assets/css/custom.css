@@ -1,60 +1,82 @@
 /* 
- * Kalpindo CalibFlow - Enterprise Internal System Stylesheet
+ * Kalpindo CalibFlow - Modern Enterprise Design System Stylesheet
  * PT Kalibrasi Pengujian Indonesia (Kalpindo) - ISO/IEC 17025
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-    --brand-red: #C81E26;
-    --brand-red-dark: #A8141B;
-    --brand-orange: #F59D3F;
-    --brand-slate: #0F172A;
-    --brand-gray: #E2E8F0;
-    --brand-dark: #1E293B;
+    --brand-primary: #C81E26;
+    --brand-primary-hover: #B2151D;
+    --brand-surface: #FFFFFF;
+    --brand-bg: #F8FAFC;
+    --brand-border: #E2E8F0;
+    --brand-text-primary: #0F172A;
+    --brand-text-secondary: #475569;
+    --brand-text-muted: #94A3B8;
+    
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 }
 
 body {
     font-family: var(--font-sans);
-    background-color: #F4F6F9;
-    color: var(--brand-dark);
+    background-color: var(--brand-bg);
+    color: var(--brand-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .font-mono {
     font-family: var(--font-mono);
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
 }
 
-/* Custom Micro Shadows for Enterprise UI */
-.shadow-2xs {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+/* Subtle Enterprise Shadows */
+.shadow-subtle {
+    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
 }
 
-.shadow-xs {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+.shadow-card {
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
 }
 
-/* Smooth Table Hover & Transition */
+/* Crisp 1px Borders */
+.border-subtle {
+    border-color: #E2E8F0;
+}
+
+/* Smooth Table Transitions */
 table tr {
-    transition: background-color 0.15s ease;
+    transition: background-color 0.12s ease;
 }
 
-/* Custom Scrollbars */
+/* Clean Enterprise Scrollbars */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #F1F5F9;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
     background: #CBD5E1;
-    border-radius: 4px;
+    border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94A3B8;
+}
+
+/* Print Cleanliness */
+@media print {
+    body {
+        background-color: #FFFFFF !important;
+    }
+    .no-print {
+        display: none !important;
+    }
 }

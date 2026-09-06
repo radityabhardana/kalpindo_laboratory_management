@@ -10,11 +10,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
-requireLogin();
+$certNumber = trim($_GET['cert'] ?? '');
 
-$certNumber = $_GET['cert'] ?? '';
-
-if (!$certNumber) {
+// Jika tidak ada parameter cert, wajib login
+if (empty($certNumber)) {
+    requireLogin();
     die('Nomor sertifikat tidak ditentukan.');
 }
 
@@ -56,6 +56,52 @@ $stmt->execute([$certNumber]);
 $cert = $stmt->fetch();
 
 if (!$cert) {
+    // Jika tidak ditemukan secara langsung, periksa apakah revisi
+    if (strlen($certNumber) > 3) {
+        $baseCertNumber = substr($certNumber, 0, -3);
+        $stmtBase = $db->prepare("
+            SELECT 
+                c.*,
+                i.name as instrument_name,
+                i.brand,
+                i.model_type,
+                i.serial_number,
+                i.capacity_range,
+                i.resolution,
+                i.technician_name,
+                i.calibration_date,
+                o.order_number,
+                o.customer_name,
+                o.customer_address,
+                o.service_type,
+                w.temperature,
+                w.temperature_uncertainty,
+                w.humidity,
+                w.humidity_uncertainty,
+                w.standard_calibrator,
+                w.standard_cert_no,
+                w.standard_valid_until,
+                w.calibration_method,
+                w.readings_json,
+                w.visual_inspection,
+                w.technician_notes
+            FROM certificates c
+            JOIN instruments i ON c.instrument_id = i.id
+            JOIN orders o ON i.order_id = o.id
+            LEFT JOIN worksheets w ON w.instrument_id = i.id
+            WHERE c.certificate_number LIKE ?
+            ORDER BY c.revision_number DESC
+            LIMIT 1
+        ");
+        $stmtBase->execute(["{$baseCertNumber}-%"]);
+        $cert = $stmtBase->fetch();
+    }
+}
+
+if (!$cert) {
+    if (!isLoggedIn()) {
+        requireLogin();
+    }
     die('Sertifikat dengan nomor ' . htmlspecialchars($certNumber) . ' tidak ditemukan di database.');
 }
 
@@ -71,10 +117,15 @@ if (isset($cert['is_kan'])) {
     $isKan = (substr($cert['certificate_number'], 0, 1) !== 'N');
 }
 
+// Normalisasi URL untuk QR Code agar terbebas dari backslash di lingkungan Windows
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$uri = dirname($_SERVER['PHP_SELF'] ?? '');
-$verifyUrl = $protocol . $host . $uri . '/verify.php?cert=' . urlencode($cert['certificate_number']);
+$rawUri = dirname($_SERVER['PHP_SELF'] ?? '');
+$uri = str_replace('\\', '/', $rawUri);
+if ($uri === '/' || $uri === '.') {
+    $uri = '';
+}
+$verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlencode($cert['certificate_number']);
 $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . urlencode($verifyUrl);
 ?>
 <!DOCTYPE html>
@@ -125,35 +176,37 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
 <body>
 
     <!-- Web UI Action Bar (Hidden on Print) -->
-    <div class="no-print max-w-[210mm] mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-float border border-gray-100">
+    <div class="no-print max-w-[210mm] mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 bg-white px-5 py-3.5 rounded-xl shadow-xl border border-slate-200/80 text-xs">
         <div class="flex items-center gap-3">
-            <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                <a href="certificates.php" class="px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 hover:text-brand-dark flex items-center gap-1.5 transition-colors">
-                    <i class="ph-bold ph-arrow-left"></i> Kembali ke Bagian Sertifikat
-                </a>
+            <?php if (isLoggedIn()): ?>
+                <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                    <a href="certificates.php" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium flex items-center gap-1.5 transition-colors">
+                        <i class="ph-bold ph-arrow-left"></i> Kembali ke Bagian Sertifikat
+                    </a>
+                <?php else: ?>
+                    <a href="index.php" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium flex items-center gap-1.5 transition-colors">
+                        <i class="ph-bold ph-arrow-left"></i> Kembali ke Dashboard
+                    </a>
+                <?php endif; ?>
             <?php else: ?>
-                <a href="index.php" class="px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 hover:text-brand-dark flex items-center gap-1.5 transition-colors">
-                    <i class="ph-bold ph-arrow-left"></i> Kembali ke Dashboard
+                <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium flex items-center gap-1.5 transition-colors">
+                    <i class="ph-bold ph-shield-check"></i> Verifikasi Keabsahan
                 </a>
             <?php endif; ?>
-            <span class="text-xs text-gray-300">|</span>
-            <span class="text-xs font-mono font-black text-[#C81E26] bg-red-50 px-3 py-1 rounded-full border border-red-200">
+            
+            <span class="text-slate-300">|</span>
+            
+            <span class="font-mono font-semibold text-slate-900 tracking-tight">
                 <?= htmlspecialchars($cert['certificate_number']) ?>
             </span>
-            <?php if ($isKan): ?>
-                <span class="text-[10px] font-extrabold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full border border-blue-200">
-                    AKREDITASI KAN
-                </span>
-            <?php else: ?>
-                <span class="text-[10px] font-extrabold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
-                    NON-KAN (TERTELUSUR)
-                </span>
-            <?php endif; ?>
+            <span class="text-slate-500 font-medium text-[11px]">
+                (<?= $isKan ? 'Akreditasi KAN LK-088' : 'Non-KAN Tertelusur' ?>)
+            </span>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button onclick="window.print()" class="px-6 py-2.5 rounded-full text-xs font-bold bg-[#C81E26] hover:bg-red-800 text-white flex items-center gap-2 shadow-lg shadow-red-600/30 transition-all hover:-translate-y-0.5" title="Klik untuk mencetak atau simpan sebagai file PDF">
-                <i class="ph-bold ph-file-pdf text-base"></i>
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-[#C81E26] hover:bg-[#B2151D] text-white flex items-center gap-1.5 shadow-subtle transition-colors" title="Klik untuk mencetak atau simpan sebagai file PDF">
+                <i class="ph-bold ph-file-pdf text-sm"></i>
                 <span>Cetak / Simpan PDF (A4)</span>
             </button>
         </div>

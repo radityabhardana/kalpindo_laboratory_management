@@ -66,31 +66,31 @@ function addWorksheetRow() {
 
     const rowCount = tbody.querySelectorAll('tr').length + 1;
     const tr = document.createElement('tr');
-    tr.className = 'reading-calc-row hover:bg-white transition-colors';
+    tr.className = 'reading-calc-row hover:bg-slate-50/50 transition-colors';
     tr.innerHTML = `
-        <td class="py-1.5 px-1.5">
-            <input type="text" name="points[]" value="Titik ${rowCount}" class="bg-white border border-gray-300 rounded px-2 py-1 text-[11px] text-slate-900 w-24 focus:border-[#C81E26]">
+        <td class="py-2 px-2.5">
+            <input type="text" name="points[]" value="Titik ${rowCount}" class="bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-24 focus:outline-none focus:border-slate-800">
         </td>
-        <td class="py-1.5 px-1.5">
-            <input type="number" step="any" name="standards[]" value="0.00" class="std-val bg-white border border-gray-300 rounded px-2 py-1 text-[11px] text-slate-900 w-20 text-right focus:border-[#C81E26]">
+        <td class="py-2 px-2.5 text-right">
+            <input type="number" step="any" name="standards[]" value="0.00" class="std-val bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-20 text-right focus:outline-none focus:border-slate-800">
         </td>
-        <td class="py-1.5 px-1">
-            <input type="number" step="any" name="run1[]" value="0.00" class="r1-val bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:border-[#C81E26]">
+        <td class="py-2 px-1 text-right">
+            <input type="number" step="any" name="run1[]" value="0.00" class="r1-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
         </td>
-        <td class="py-1.5 px-1">
-            <input type="number" step="any" name="run2[]" value="0.00" class="r2-val bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:border-[#C81E26]">
+        <td class="py-2 px-1 text-right">
+            <input type="number" step="any" name="run2[]" value="0.00" class="r2-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
         </td>
-        <td class="py-1.5 px-1">
-            <input type="number" step="any" name="run3[]" value="0.00" class="r3-val bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:border-[#C81E26]">
+        <td class="py-2 px-1 text-right">
+            <input type="number" step="any" name="run3[]" value="0.00" class="r3-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
         </td>
-        <td class="py-1.5 px-1">
-            <input type="text" readonly value="0.0000" class="mean-val bg-gray-100 border border-gray-200 rounded px-1.5 py-1 text-[11px] text-slate-900 w-18 text-right font-bold cursor-not-allowed">
+        <td class="py-2 px-1 text-right">
+            <input type="text" readonly value="0.0000" class="mean-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right font-medium cursor-not-allowed">
         </td>
-        <td class="py-1.5 px-1">
-            <input type="text" readonly value="0.0000" class="corr-val bg-gray-100 border border-gray-200 rounded px-1.5 py-1 text-[11px] text-slate-900 w-18 text-right font-bold cursor-not-allowed">
+        <td class="py-2 px-1 text-right">
+            <input type="text" readonly value="0.0000" class="corr-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-800 w-18 text-right font-medium cursor-not-allowed">
         </td>
-        <td class="py-1.5 px-1.5">
-            <input type="number" step="any" name="uncertainties[]" value="0.01" class="bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-amber-800 w-18 text-right focus:border-[#C81E26]">
+        <td class="py-2 px-2.5 text-right">
+            <input type="number" step="any" name="uncertainties[]" value="0.01" class="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right focus:outline-none focus:border-slate-800">
         </td>
     `;
     tbody.appendChild(tr);
@@ -150,31 +150,31 @@ function autoFillWorksheetDemo(scopeCode) {
     tbody.innerHTML = '';
     sampleData.forEach(s => {
         const tr = document.createElement('tr');
-        tr.className = 'reading-calc-row hover:bg-white transition-colors';
+        tr.className = 'reading-calc-row hover:bg-slate-50/50 transition-colors';
         tr.innerHTML = `
-            <td class="py-1.5 px-1.5">
-                <input type="text" name="points[]" value="${s.point}" class="bg-white border border-gray-300 rounded px-2 py-1 text-[11px] text-slate-900 w-24 focus:border-[#C81E26]">
+            <td class="py-2 px-2.5">
+                <input type="text" name="points[]" value="${s.point}" class="bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-24 focus:outline-none focus:border-slate-800">
             </td>
-            <td class="py-1.5 px-1.5">
-                <input type="number" step="any" name="standards[]" value="${s.std}" class="std-val bg-white border border-gray-300 rounded px-2 py-1 text-[11px] text-slate-900 w-20 text-right focus:border-[#C81E26]">
+            <td class="py-2 px-2.5 text-right">
+                <input type="number" step="any" name="standards[]" value="${s.std}" class="std-val bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-20 text-right focus:outline-none focus:border-slate-800">
             </td>
-            <td class="py-1.5 px-1">
-                <input type="number" step="any" name="run1[]" value="${s.r1}" class="r1-val bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:border-[#C81E26]">
+            <td class="py-2 px-1 text-right">
+                <input type="number" step="any" name="run1[]" value="${s.r1}" class="r1-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
             </td>
-            <td class="py-1.5 px-1">
-                <input type="number" step="any" name="run2[]" value="${s.r2}" class="r2-val bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:border-[#C81E26]">
+            <td class="py-2 px-1 text-right">
+                <input type="number" step="any" name="run2[]" value="${s.r2}" class="r2-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
             </td>
-            <td class="py-1.5 px-1">
-                <input type="number" step="any" name="run3[]" value="${s.r3}" class="r3-val bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:border-[#C81E26]">
+            <td class="py-2 px-1 text-right">
+                <input type="number" step="any" name="run3[]" value="${s.r3}" class="r3-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
             </td>
-            <td class="py-1.5 px-1">
-                <input type="text" readonly value="0.0000" class="mean-val bg-gray-100 border border-gray-200 rounded px-1.5 py-1 text-[11px] text-slate-900 w-18 text-right font-bold cursor-not-allowed">
+            <td class="py-2 px-1 text-right">
+                <input type="text" readonly value="0.0000" class="mean-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right font-medium cursor-not-allowed">
             </td>
-            <td class="py-1.5 px-1">
-                <input type="text" readonly value="0.0000" class="corr-val bg-gray-100 border border-gray-200 rounded px-1.5 py-1 text-[11px] text-slate-900 w-18 text-right font-bold cursor-not-allowed">
+            <td class="py-2 px-1 text-right">
+                <input type="text" readonly value="0.0000" class="corr-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-800 w-18 text-right font-medium cursor-not-allowed">
             </td>
-            <td class="py-1.5 px-1.5">
-                <input type="number" step="any" name="uncertainties[]" value="${s.unc}" class="bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-amber-800 w-18 text-right focus:border-[#C81E26]">
+            <td class="py-2 px-2.5 text-right">
+                <input type="number" step="any" name="uncertainties[]" value="${s.unc}" class="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right focus:outline-none focus:border-slate-800">
             </td>
         `;
         tbody.appendChild(tr);

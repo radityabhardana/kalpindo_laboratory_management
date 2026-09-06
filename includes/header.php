@@ -181,17 +181,17 @@ if (hasRole('SUPER_ADMIN')) {
                         <span class="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-1.5 font-mono">
                             <?= $sec['title'] ?>
                         </span>
-                        <div class="space-y-1">
+                        <div class="space-y-0.5">
                             <?php foreach ($sec['items'] as $item): 
                                 $isActive = ($currentPage === $item['url']);
                             ?>
-                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all <?= $isActive ? 'bg-red-50 text-[#C81E26] border border-red-200/80 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' ?>">
+                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors <?= $isActive ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium' ?>">
                                     <div class="flex items-center gap-2.5">
-                                        <i class="ph-bold <?= $item['icon'] ?> text-base <?= $isActive ? 'text-[#C81E26]' : 'text-slate-400' ?>"></i>
+                                        <i class="ph-bold <?= $item['icon'] ?> text-base <?= $isActive ? 'text-slate-900' : 'text-slate-400' ?>"></i>
                                         <span><?= $item['name'] ?></span>
                                     </div>
                                     <?php if ($item['badge']): ?>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?= $item['badge']['class'] ?>">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-200/70 text-slate-700">
                                             <?= $item['badge']['label'] ?>
                                         </span>
                                     <?php endif; ?>
@@ -257,17 +257,17 @@ if (hasRole('SUPER_ADMIN')) {
                         <span class="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-1.5 font-mono">
                             <?= $sec['title'] ?>
                         </span>
-                        <div class="space-y-1">
+                        <div class="space-y-0.5">
                             <?php foreach ($sec['items'] as $item): 
                                 $isActive = ($currentPage === $item['url']);
                             ?>
-                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all <?= $isActive ? 'bg-red-50 text-[#C81E26] font-bold border border-red-200/80 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium' ?>">
+                                <a href="<?= $item['url'] ?>" class="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors <?= $isActive ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium' ?>">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <i class="ph-bold <?= $item['icon'] ?> text-base shrink-0 <?= $isActive ? 'text-[#C81E26]' : 'text-slate-400' ?>"></i>
+                                        <i class="ph-bold <?= $item['icon'] ?> text-base shrink-0 <?= $isActive ? 'text-slate-900' : 'text-slate-400' ?>"></i>
                                         <span class="truncate"><?= $item['name'] ?></span>
                                     </div>
                                     <?php if ($item['badge']): ?>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 <?= $item['badge']['class'] ?>">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium shrink-0 bg-slate-200/70 text-slate-700">
                                             <?= $item['badge']['label'] ?>
                                         </span>
                                     <?php endif; ?>
@@ -326,31 +326,32 @@ if (hasRole('SUPER_ADMIN')) {
             </div>
 
             <!-- Right: System Indicators & Quick Actions -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <div class="flex items-center gap-2.5 sm:gap-3">
                 
-                <!-- KAN Status Badge -->
-                <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Live LK-088-IDN</span>
-                </span>
-
-                <!-- Role Badge -->
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border <?= $activeRoleInfo['badge_class'] ?> whitespace-nowrap shadow-2xs font-semibold">
+                <!-- KAN Accreditation Subtle Indicator -->
+                <div class="hidden md:inline-flex items-center gap-1.5 text-xs text-slate-500 font-mono">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span>LK-088-IDN</span>
+                </div>
+
+                <span class="hidden md:inline text-slate-200">|</span>
+
+                <!-- User Role Indicator -->
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap font-medium">
                     <span class="hidden sm:inline"><?= htmlspecialchars($activeRoleInfo['name']) ?></span>
                     <span class="sm:hidden font-mono"><?= htmlspecialchars($activeRoleInfo['short']) ?></span>
                 </div>
 
                 <!-- Quick Action "+ Input Order" (Visible if authorized) -->
                 <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-                    <a href="orders.php?action=create" class="bg-[#C81E26] hover:bg-[#A8141B] active:scale-[0.98] text-white px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition-all whitespace-nowrap shrink-0">
-                        <i class="ph-bold ph-plus"></i>
-                        <span class="hidden sm:inline">Input Order</span>
+                    <a href="orders.php?action=create" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 shadow-subtle">
+                        <i class="ph-bold ph-plus text-xs"></i>
+                        <span class="hidden sm:inline">Input SPK</span>
                     </a>
                 <?php endif; ?>
 
                 <!-- Direct Logout Icon Button -->
-                <a href="logout.php" title="Keluar / Logout" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors shrink-0" aria-label="Logout">
+                <a href="logout.php" title="Keluar / Logout Akun" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors shrink-0" aria-label="Logout">
                     <i class="ph-bold ph-sign-out text-base"></i>
                 </a>
 
@@ -363,15 +364,15 @@ if (hasRole('SUPER_ADMIN')) {
 
             <!-- Flash Message Notification -->
             <?php if ($flash): ?>
-                <div id="flash-alert" class="mb-5 p-3.5 rounded-2xl border flex items-center justify-between gap-3 shadow-xs transition-all <?= $flash['type'] === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : ($flash['type'] === 'error' ? 'bg-red-50 border-red-200 text-red-900' : 'bg-blue-50 border-blue-200 text-blue-900') ?>">
+                <div id="flash-alert" class="mb-5 p-3 rounded-xl border flex items-center justify-between gap-3 shadow-subtle transition-all <?= $flash['type'] === 'success' ? 'bg-white border-emerald-300 text-emerald-950' : ($flash['type'] === 'error' ? 'bg-white border-red-300 text-red-950' : 'bg-white border-slate-200 text-slate-900') ?>">
                     <div class="flex items-center gap-2.5">
                         <?php if ($flash['type'] === 'success'): ?>
-                            <i class="ph-fill ph-check-circle text-lg text-emerald-600"></i>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                         <?php else: ?>
-                            <i class="ph-fill ph-warning-circle text-lg text-[#C81E26]"></i>
+                            <span class="w-2 h-2 rounded-full bg-[#C81E26] shrink-0"></span>
                         <?php endif; ?>
-                        <p class="font-medium text-xs sm:text-sm"><?= htmlspecialchars($flash['message']) ?></p>
+                        <p class="font-medium text-xs sm:text-sm text-slate-800"><?= $flash['message'] ?></p>
                     </div>
-                    <button onclick="document.getElementById('flash-alert').remove()" class="text-gray-400 hover:text-gray-700 font-bold p-1">&times;</button>
+                    <button onclick="document.getElementById('flash-alert').remove()" class="text-slate-400 hover:text-slate-700 p-1 text-base leading-none">&times;</button>
                 </div>
             <?php endif; ?>

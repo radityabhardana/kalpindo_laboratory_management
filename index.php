@@ -1,8 +1,8 @@
 <?php
 /**
- * Dashboard Operasional Utama - Enterprise Internal System
+ * Dashboard Operasional Utama - Modern Enterprise System
  * PT Kalpindo Kalibrasi - Sistem Informasi Alur Kerja & Sertifikasi
- * Styled according to https://radityaproject.vercel.app/
+ * Designed according to Enterprise SaaS Standards
  */
 
 declare(strict_types=1);
@@ -67,379 +67,328 @@ if ($scopeFilter) {
     $query .= " AND i.scope_code = " . $db->quote($scopeFilter);
 }
 
+// BUG FIX: Tambahkan o.order_number ke filter pencarian
 if ($search) {
     $searchEscaped = '%' . str_replace(['%', '_'], ['\%', '\_'], $search) . '%';
     $query .= " AND (i.name LIKE " . $db->quote($searchEscaped) . " 
                  OR i.serial_number LIKE " . $db->quote($searchEscaped) . " 
                  OR o.customer_name LIKE " . $db->quote($searchEscaped) . " 
+                 OR o.order_number LIKE " . $db->quote($searchEscaped) . "
                  OR c.certificate_number LIKE " . $db->quote($searchEscaped) . ")";
 }
 
 $query .= " ORDER BY i.id DESC";
 $instruments = $db->query($query)->fetchAll();
 $scopes = getScopeList();
-
-// Berkas yang menunggu sertifikat (untuk quick action di sidebar kanan)
-$pendingCerts = $db->query("
-    SELECT i.id, i.name, i.serial_number, i.scope_code, o.customer_name, w.submitted_at
-    FROM instruments i
-    JOIN orders o ON i.order_id = o.id
-    JOIN worksheets w ON w.instrument_id = i.id
-    WHERE i.status = 'DATA_SUBMITTED'
-    ORDER BY w.submitted_at ASC
-")->fetchAll();
 ?>
 
 <!-- 1. Top Enterprise Control Bar -->
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
-        <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
-            <span>Portal Karyawan</span>
-            <span>/</span>
-            <span>Operasional Kalibrasi</span>
-            <span>/</span>
-            <span class="text-slate-800 font-semibold">Monitoring Alur</span>
-        </div>
-        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Dashboard Alur Kalibrasi & Sertifikasi</h1>
-        <p class="text-xs text-gray-500 mt-1 flex items-center gap-2">
-            <span>Selamat bertugas, <strong class="text-slate-800 font-bold"><?= htmlspecialchars($currentUser['full_name']) ?></strong></span>
-            <span>•</span>
-            <span class="inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded text-[10px] border <?= $activeRoleInfo['badge_class'] ?>">
-                <i class="ph-bold <?= $activeRoleInfo['icon'] ?> text-xs"></i>
-                <?= htmlspecialchars($activeRoleInfo['name']) ?>
-            </span>
+        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Monitoring Alur Kalibrasi</h1>
+        <p class="text-xs text-slate-500 mt-0.5">
+            Pelacakan posisi berkas operasional kalibrasi, lembar kerja teknisi, dan penerbitan sertifikat resmi ISO/IEC 17025.
         </p>
     </div>
 
-    <!-- Toolbar Buttons -->
-    <div class="flex items-center gap-2.5">
-        <a href="index.php" class="px-3.5 py-2 rounded-lg bg-white border border-gray-200 text-xs font-semibold text-slate-700 hover:bg-gray-50 flex items-center gap-1.5 shadow-2xs transition-all">
-            <i class="ph-bold ph-arrows-clockwise text-sm text-gray-500"></i>
+    <!-- Top Action Buttons -->
+    <div class="flex items-center gap-2 shrink-0">
+        <a href="index.php" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5 shadow-subtle">
+            <i class="ph-bold ph-arrows-clockwise text-slate-400"></i>
             <span>Refresh</span>
         </a>
         <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-            <a href="orders.php?action=create" class="px-4 py-2 rounded-lg bg-[#C81E26] hover:bg-[#A8141B] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all whitespace-nowrap">
-                <i class="ph-bold ph-plus text-sm"></i>
-                <span>+ Buat Work Order Baru</span>
+            <a href="orders.php?action=create" class="px-3.5 py-1.5 rounded-lg bg-[#C81E26] hover:bg-[#B2151D] text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-subtle whitespace-nowrap">
+                <i class="ph-bold ph-plus text-xs"></i>
+                <span>+ Buat SPK Baru</span>
             </a>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- 2. Structured Operational Metric Cards (High Data Density) -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    
-    <!-- Card 1: Total Orders -->
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Work Order</span>
-            <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-base">
-                <i class="ph-bold ph-clipboard-text"></i>
-            </span>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <h3 class="text-2xl font-black text-slate-900"><?= $totalOrders ?></h3>
-            <span class="text-xs text-gray-400 font-medium">Berkas SPK</span>
-        </div>
-        <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
-            <span>In-Lab: <strong class="text-slate-800"><?= $inLabCount ?></strong></span>
-            <span>•</span>
-            <span>On-Site: <strong class="text-slate-800"><?= $onSiteCount ?></strong></span>
-        </div>
-    </div>
-
-    <!-- Card 2: Teknisi Pengerjaan -->
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sedang Dikalibrasi</span>
-            <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-base">
-                <i class="ph-bold ph-wrench"></i>
-            </span>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <h3 class="text-2xl font-black text-blue-600"><?= $inProgressCount ?></h3>
-            <span class="text-xs text-gray-400 font-medium">Alat di Lab/Site</span>
-        </div>
-        <div class="mt-3 pt-2.5 border-t border-gray-100 text-xs text-blue-600 font-medium flex items-center justify-between">
-            <span>Tahap 2: Pengujian</span>
-            <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                <a href="worksheet.php" class="hover:underline">Buka Worksheet &rarr;</a>
-            <?php else: ?>
-                <span class="text-gray-400 font-normal">Khusus Tim Teknisi</span>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Card 3: Priority Bagian Sertifikat -->
-    <div class="bg-white p-5 rounded-2xl border-2 border-red-200 bg-red-50/20 shadow-2xs">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-[#C81E26] uppercase tracking-wider">Siap Buat Sertifikat</span>
-            <span class="w-8 h-8 rounded-lg bg-red-100 text-[#C81E26] flex items-center justify-center text-base">
-                <i class="ph-bold ph-bell-ringing"></i>
-            </span>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <h3 class="text-2xl font-black text-[#C81E26]"><?= $readyForCertCount ?></h3>
-            <span class="text-xs text-red-500 font-medium">Data Masuk</span>
-        </div>
-        <div class="mt-3 pt-2.5 border-t border-red-100 text-xs font-bold text-[#C81E26] flex items-center justify-between">
-            <span>Tahap 4: Bagian Sertifikat</span>
-            <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                <a href="certificates.php" class="underline">Buat No. Sertifikat &rarr;</a>
-            <?php else: ?>
-                <span class="text-gray-400 font-normal">Khusus Bagian Sertifikat</span>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Card 4: Sertifikat Terbit -->
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sertifikat Selesai</span>
-            <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">
-                <i class="ph-bold ph-certificate"></i>
-            </span>
-        </div>
-        <div class="flex items-baseline gap-2">
-            <h3 class="text-2xl font-black text-emerald-600"><?= $certifiedCount ?></h3>
-            <span class="text-xs text-gray-400 font-medium">Dokumen Terbit</span>
-        </div>
-        <div class="mt-3 pt-2.5 border-t border-gray-100 text-xs text-gray-600 font-medium flex items-center justify-between">
-            <span class="text-blue-700 font-bold">KAN: <?= $certifiedKanCount ?></span>
-            <span>•</span>
-            <span class="text-amber-800 font-bold">Non-KAN: <?= $certifiedNonKanCount ?></span>
-        </div>
-    </div>
-
-</div>
-
-
-<!-- Fast Status Filter Tabs -->
-<div class="flex items-center gap-2 overflow-x-auto pb-1 mb-4 text-xs">
-    <a href="index.php?filter=all<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" class="px-3.5 py-2 rounded-xl font-bold transition-all whitespace-nowrap <?= $filter === 'all' ? 'bg-slate-900 text-white shadow-2xs' : 'bg-white border border-gray-200 text-slate-600 hover:bg-gray-50' ?>">
-        Semua Instrumen (<?= $totalOrders ?>)
-    </a>
-    <a href="index.php?filter=pending_worksheet<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" class="px-3.5 py-2 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 <?= $filter === 'pending_worksheet' ? 'bg-blue-600 text-white shadow-2xs' : 'bg-white border border-gray-200 text-slate-600 hover:bg-gray-50' ?>">
-        <span class="w-2 h-2 rounded-full <?= $filter === 'pending_worksheet' ? 'bg-white' : 'bg-blue-600' ?>"></span>
-        Dalam Pengujian (<?= $inProgressCount ?>)
-    </a>
-    <a href="index.php?filter=ready_for_cert<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" class="px-3.5 py-2 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 <?= $filter === 'ready_for_cert' ? 'bg-[#C81E26] text-white shadow-2xs' : 'bg-white border border-gray-200 text-slate-600 hover:bg-gray-50' ?>">
-        <span class="w-2 h-2 rounded-full <?= $filter === 'ready_for_cert' ? 'bg-white' : 'bg-[#C81E26]' ?>"></span>
-        Menunggu Sertifikat (<?= $readyForCertCount ?>)
-    </a>
-    <a href="index.php?filter=certified<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" class="px-3.5 py-2 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 <?= $filter === 'certified' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-white border border-gray-200 text-slate-600 hover:bg-gray-50' ?>">
-        <span class="w-2 h-2 rounded-full <?= $filter === 'certified' ? 'bg-white' : 'bg-emerald-600' ?>"></span>
-        Sertifikat Terbit (<?= $certifiedCount ?>)
-    </a>
-</div>
-
-
-<!-- 5. Full-Width Main Tracking Table (Structured & High Breathing Room) -->
-<div class="bg-white rounded-2xl border border-gray-200 shadow-2xs p-5 sm:p-6 mb-6">
-    
-    <!-- Table Header Controls: Search & Scope Filter -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-gray-100">
-        <div>
-            <div class="flex items-center gap-2">
-                <h2 class="text-base font-bold text-slate-900">Monitoring Berkas & Status Alat</h2>
-                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 font-mono">
-                    <?= count($instruments) ?> Instrumen
-                </span>
+<!-- 2. Modern Enterprise Metric Strip (Clean, Flat, Calm) -->
+<div class="bg-white rounded-xl border border-slate-200/80 shadow-subtle mb-6 overflow-hidden">
+    <div class="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+        
+        <!-- Metric 1: Total Orders -->
+        <div class="p-4 sm:p-5">
+            <p class="text-xs font-medium text-slate-500">Total Work Order</p>
+            <div class="flex items-baseline gap-2 mt-1">
+                <span class="text-2xl font-bold text-slate-900 tracking-tight font-mono"><?= $totalOrders ?></span>
+                <span class="text-xs text-slate-400">SPK</span>
             </div>
-            <p class="text-xs text-gray-500 mt-0.5">Daftar instrumen aktif dan posisi alur kerja dari SPK, worksheet teknisi, hingga sertifikat terbit</p>
+            <p class="text-[11px] text-slate-500 mt-1.5 font-medium">
+                <span><?= $inLabCount ?> In-Lab</span>
+                <span class="text-slate-300 mx-1">·</span>
+                <span><?= $onSiteCount ?> On-Site</span>
+            </p>
         </div>
 
-        <!-- Search Input -->
-        <form action="index.php" method="GET" class="flex items-center gap-2 shrink-0">
+        <!-- Metric 2: In Progress -->
+        <div class="p-4 sm:p-5">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-medium text-slate-500">Sedang Dikalibrasi</p>
+                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+                <span class="text-2xl font-bold text-slate-900 tracking-tight font-mono"><?= $inProgressCount ?></span>
+                <span class="text-xs text-slate-400">Alat</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1.5">
+                <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                    <a href="worksheet.php" class="text-sky-700 hover:text-sky-800 font-medium inline-flex items-center gap-1">
+                        Buka Worksheet <i class="ph-bold ph-arrow-right text-[10px]"></i>
+                    </a>
+                <?php else: ?>
+                    <span>Tahap pengujian teknisi</span>
+                <?php endif; ?>
+            </p>
+        </div>
+
+        <!-- Metric 3: Ready for Cert -->
+        <div class="p-4 sm:p-5">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-medium text-slate-500">Menunggu Sertifikat</p>
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+                <span class="text-2xl font-bold text-slate-900 tracking-tight font-mono"><?= $readyForCertCount ?></span>
+                <span class="text-xs text-slate-400">Data Masuk</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1.5">
+                <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                    <a href="certificates.php" class="text-indigo-700 hover:text-indigo-800 font-medium inline-flex items-center gap-1">
+                        Proses Penerbitan <i class="ph-bold ph-arrow-right text-[10px]"></i>
+                    </a>
+                <?php else: ?>
+                    <span>Siap dibuatkan nomor resmi</span>
+                <?php endif; ?>
+            </p>
+        </div>
+
+        <!-- Metric 4: Certified -->
+        <div class="p-4 sm:p-5">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-medium text-slate-500">Sertifikat Terbit</p>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+                <span class="text-2xl font-bold text-slate-900 tracking-tight font-mono"><?= $certifiedCount ?></span>
+                <span class="text-xs text-slate-400">Dokumen</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1.5 font-medium">
+                <span><?= $certifiedKanCount ?> KAN</span>
+                <span class="text-slate-300 mx-1">·</span>
+                <span><?= $certifiedNonKanCount ?> Non-KAN</span>
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- 3. Status Tabs (Modern Minimalist Filter Bar) -->
+<div class="border-b border-slate-200 mb-4 flex items-center justify-between gap-4 overflow-x-auto">
+    <nav class="flex items-center gap-1 sm:gap-2 -mb-px text-xs">
+        <a href="index.php?filter=all<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" 
+           class="py-2.5 px-3 border-b-2 font-medium whitespace-nowrap transition-colors <?= $filter === 'all' ? 'border-[#C81E26] text-slate-900 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' ?>">
+            Semua Data (<?= $totalOrders ?>)
+        </a>
+        <a href="index.php?filter=pending_worksheet<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" 
+           class="py-2.5 px-3 border-b-2 font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 <?= $filter === 'pending_worksheet' ? 'border-[#C81E26] text-slate-900 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' ?>">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+            Dalam Pengujian (<?= $inProgressCount ?>)
+        </a>
+        <a href="index.php?filter=ready_for_cert<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" 
+           class="py-2.5 px-3 border-b-2 font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 <?= $filter === 'ready_for_cert' ? 'border-[#C81E26] text-slate-900 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' ?>">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+            Siap Sertifikat (<?= $readyForCertCount ?>)
+        </a>
+        <a href="index.php?filter=certified<?= $scopeFilter ? '&scope=' . urlencode($scopeFilter) : '' ?>" 
+           class="py-2.5 px-3 border-b-2 font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 <?= $filter === 'certified' ? 'border-[#C81E26] text-slate-900 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' ?>">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Sertifikat Terbit (<?= $certifiedCount ?>)
+        </a>
+    </nav>
+</div>
+
+<!-- 4. Table Container & Integrated Toolbar -->
+<div class="bg-white rounded-xl border border-slate-200/80 shadow-subtle overflow-hidden">
+    
+    <!-- Table Controls Bar -->
+    <div class="p-3.5 sm:p-4 border-b border-slate-200/80 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        
+        <!-- Search & Filter Form -->
+        <form action="index.php" method="GET" class="flex flex-wrap items-center gap-2 flex-1">
             <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
-            <?php if ($scopeFilter): ?>
-                <input type="hidden" name="scope" value="<?= htmlspecialchars($scopeFilter) ?>">
-            <?php endif; ?>
-            <div class="relative">
-                <i class="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
-                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari alat / SN / customer..." class="bg-gray-50 border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 w-52 sm:w-64 focus:outline-none focus:border-[#C81E26]">
+
+            <!-- Search Input -->
+            <div class="relative flex-1 min-w-[200px] max-w-sm">
+                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari nomor order, alat, customer, SN..." 
+                       class="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-colors">
             </div>
+
+            <!-- Scope Filter Dropdown -->
+            <select name="scope" onchange="this.form.submit()" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-slate-400 transition-colors">
+                <option value="">Semua Ruang Lingkup</option>
+                <?php foreach ($scopes as $code => $sc): ?>
+                    <option value="<?= $code ?>" <?= $scopeFilter === $code ? 'selected' : '' ?>>
+                        [<?= $code ?>] <?= htmlspecialchars(explode(' ', $sc['name'])[0]) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-colors">
+                Cari
+            </button>
+
             <?php if ($search || $scopeFilter): ?>
-                <a href="index.php?filter=<?= htmlspecialchars($filter) ?>" class="text-xs text-gray-400 hover:text-gray-700 px-1 py-1" title="Reset Filter">&times; Reset</a>
+                <a href="index.php?filter=<?= htmlspecialchars($filter) ?>" class="text-xs text-slate-500 hover:text-slate-800 px-2 py-1 transition-colors">
+                    Reset
+                </a>
             <?php endif; ?>
         </form>
+
+        <!-- Count Indicator -->
+        <div class="text-xs text-slate-500 shrink-0 font-medium">
+            <span><?= count($instruments) ?> data ditemukan</span>
+        </div>
+
     </div>
 
-    <!-- Scope Filter Pills -->
-    <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-3 text-xs">
-        <span class="text-gray-400 text-[11px] font-semibold whitespace-nowrap mr-1">Lingkup KAN:</span>
-        <a href="index.php?filter=<?= htmlspecialchars($filter) ?>" class="px-2.5 py-1 rounded-lg whitespace-nowrap font-medium transition-all <?= empty($scopeFilter) ? 'bg-slate-900 text-white font-bold shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' ?>">Semua Ruang Lingkup</a>
-        <?php foreach ($scopes as $code => $sc): ?>
-            <a href="index.php?filter=<?= htmlspecialchars($filter) ?>&scope=<?= $code ?>" class="px-2.5 py-1 rounded-lg whitespace-nowrap font-medium transition-all <?= $scopeFilter === $code ? 'bg-[#C81E26] text-white font-bold shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' ?>">
-                [<?= $code ?>] <?= htmlspecialchars(explode(' ', $sc['name'])[0]) ?>
-            </a>
-        <?php endforeach; ?>
-    </div>
-
-    <!-- Structured Data Table (Spacious & Clean) -->
-    <div class="overflow-x-auto rounded-xl border border-gray-200">
-        <table class="w-full text-left text-xs min-w-[1260px]">
-            <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 uppercase text-[10px] tracking-wider whitespace-nowrap">
+    <!-- Structured Data Table (Spacious, Crisp & Scannable) -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs min-w-[1200px]">
+            <thead class="bg-slate-50/75 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider whitespace-nowrap">
                 <tr>
-                    <th class="py-3 px-3.5 w-[210px]">No. Order & Pelanggan</th>
-                    <th class="py-3 px-3.5 w-[240px]">Nama Alat & Spesifikasi</th>
-                    <th class="py-3 px-2.5 w-[110px]">Ruang Lingkup</th>
-                    <th class="py-3 px-2.5 w-[95px]">Lokasi</th>
-                    <th class="py-3 px-3.5 w-[140px]">Teknisi</th>
-                    <th class="py-3 px-3.5 w-[160px]">Status Alur</th>
-                    <th class="py-3 px-3.5 w-[160px]">No. Sertifikat</th>
-                    <th class="py-3 px-3.5 text-right w-[150px]">Aksi / Tindak Lanjut</th>
+                    <th class="py-3 px-4 w-[190px]">No. Order & Pelanggan</th>
+                    <th class="py-3 px-4 w-[230px]">Nama Alat & Spesifikasi</th>
+                    <th class="py-3 px-3 w-[120px]">Ruang Lingkup</th>
+                    <th class="py-3 px-3 w-[90px]">Lokasi</th>
+                    <th class="py-3 px-4 w-[140px]">Teknisi</th>
+                    <th class="py-3 px-4 w-[160px]">Status Alur</th>
+                    <th class="py-3 px-4 w-[160px]">No. Sertifikat</th>
+                    <th class="py-3 px-4 text-right w-[150px]">Tindak Lanjut</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-slate-100">
                 <?php if (empty($instruments)): ?>
                     <tr>
-                        <td colspan="8" class="py-12 text-center text-gray-400">
-                            <i class="ph-bold ph-folder-open text-3xl mb-2 inline-block text-gray-300"></i>
-                            <p>Tidak ada data alat yang sesuai kriteria pencarian atau filter yang dipilih.</p>
+                        <td colspan="8" class="py-12 text-center text-slate-400">
+                            <i class="ph-bold ph-folder-open text-3xl mb-2 inline-block text-slate-300"></i>
+                            <p class="text-xs">Tidak ada data alat yang sesuai kriteria pencarian atau filter yang dipilih.</p>
                         </td>
                     </tr>
                 <?php endif; ?>
 
                 <?php foreach ($instruments as $inst): ?>
                     <?php 
-                        $scInfo = $scopes[$inst['scope_code']] ?? ['name' => $inst['scope_code'], 'badge_class' => 'bg-gray-100 text-gray-700'];
+                        $scInfo = $scopes[$inst['scope_code']] ?? ['name' => $inst['scope_code']];
+                        $isInstKan = (isset($inst['inst_is_kan']) && (int)$inst['inst_is_kan'] === 0) ? false : true;
                     ?>
-                    <tr class="hover:bg-slate-50/90 transition-colors">
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        
                         <!-- Order & Pelanggan -->
-                        <td class="py-3 px-3.5 align-middle whitespace-nowrap">
-                            <span class="font-mono text-[11px] font-bold text-slate-900 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 whitespace-nowrap">
+                        <td class="py-3.5 px-4 align-middle whitespace-nowrap">
+                            <span class="font-mono text-xs font-semibold text-slate-900 tracking-tight">
                                 <?= htmlspecialchars($inst['order_number']) ?>
                             </span>
-                            <p class="font-semibold text-slate-800 mt-1 truncate max-w-[190px]" title="<?= htmlspecialchars($inst['customer_name']) ?>">
+                            <p class="text-xs text-slate-600 mt-0.5 truncate max-w-[180px]" title="<?= htmlspecialchars($inst['customer_name']) ?>">
                                 <?= htmlspecialchars($inst['customer_name']) ?>
                             </p>
                         </td>
 
                         <!-- Alat & Identifikasi -->
-                        <td class="py-3 px-3.5 align-middle">
-                            <p class="font-bold text-slate-900 text-xs"><?= htmlspecialchars($inst['instrument_name']) ?></p>
-                            <p class="text-[11px] text-gray-500 mt-0.5"><?= htmlspecialchars($inst['brand']) ?> • <?= htmlspecialchars($inst['model_type']) ?></p>
-                            <p class="font-mono text-[10px] text-gray-400 mt-0.5">SN: <?= htmlspecialchars($inst['serial_number']) ?></p>
+                        <td class="py-3.5 px-4 align-middle">
+                            <p class="font-semibold text-slate-900 text-xs truncate max-w-[210px]" title="<?= htmlspecialchars($inst['instrument_name']) ?>">
+                                <?= htmlspecialchars($inst['instrument_name']) ?>
+                            </p>
+                            <p class="text-[11px] text-slate-500 mt-0.5 truncate max-w-[210px]">
+                                <?= htmlspecialchars($inst['brand']) ?> · <?= htmlspecialchars($inst['model_type']) ?>
+                            </p>
+                            <p class="font-mono text-[10px] text-slate-400 mt-0.5">SN: <?= htmlspecialchars($inst['serial_number']) ?></p>
                         </td>
 
                         <!-- Ruang Lingkup -->
-                        <td class="py-3 px-2.5 align-middle">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border <?= $scInfo['badge_class'] ?> whitespace-nowrap">
+                        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
+                            <p class="font-mono text-xs text-slate-800 font-medium">
                                 [<?= htmlspecialchars($inst['scope_code']) ?>] <?= htmlspecialchars(explode(' ', $scInfo['name'])[0]) ?>
-                            </span>
-                            <?php $isInstKan = (isset($inst['inst_is_kan']) && (int)$inst['inst_is_kan'] === 0) ? false : true; ?>
-                            <div class="mt-0.5">
-                                <?php if ($isInstKan): ?>
-                                    <span class="text-[9px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">KAN</span>
-                                <?php else: ?>
-                                    <span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">NON-KAN</span>
-                                <?php endif; ?>
-                            </div>
+                            </p>
+                            <p class="text-[10px] mt-0.5 font-medium <?= $isInstKan ? 'text-slate-500' : 'text-amber-700' ?>">
+                                <?= $isInstKan ? 'Akreditasi KAN' : 'Non-KAN (Awalan N)' ?>
+                            </p>
                         </td>
 
                         <!-- Lokasi Layanan -->
-                        <td class="py-3 px-2.5 align-middle">
+                        <td class="py-3.5 px-3 align-middle whitespace-nowrap">
                             <?= renderLocationBadge($inst['service_type']) ?>
                         </td>
 
                         <!-- Teknisi Pelaksana -->
-                        <td class="py-3 px-3.5 align-middle">
-                            <div class="flex items-center gap-1.5 text-slate-700">
-                                <i class="ph-bold ph-user text-gray-400 text-xs"></i>
-                                <span class="font-medium whitespace-nowrap"><?= htmlspecialchars($inst['technician_name'] ?: '-') ?></span>
-                            </div>
+                        <td class="py-3.5 px-4 align-middle whitespace-nowrap">
+                            <span class="text-xs text-slate-700 font-medium"><?= htmlspecialchars($inst['technician_name'] ?: '-') ?></span>
                         </td>
 
                         <!-- Status Alur Kerja -->
-                        <td class="py-3 px-3.5 align-middle">
+                        <td class="py-3.5 px-4 align-middle whitespace-nowrap">
                             <?= renderStatusBadge($inst['instrument_status']) ?>
                         </td>
 
                         <!-- Nomor Sertifikat -->
-                        <td class="py-3 px-3.5 align-middle">
+                        <td class="py-3.5 px-4 align-middle whitespace-nowrap">
                             <?php if ($inst['certificate_number']): ?>
-                                <span class="font-mono text-[11px] font-bold text-[#C81E26] bg-red-50 px-2 py-0.5 rounded border border-red-200 whitespace-nowrap">
+                                <span class="font-mono text-xs font-semibold text-slate-900">
                                     <?= htmlspecialchars($inst['certificate_number']) ?>
                                 </span>
                                 <?php $isCertKan = (substr($inst['certificate_number'], 0, 1) !== 'N'); ?>
-                                <div class="mt-0.5">
-                                    <?php if ($isCertKan): ?>
-                                        <span class="text-[9px] font-bold text-blue-700">Akreditasi KAN</span>
-                                    <?php else: ?>
-                                        <span class="text-[9px] font-bold text-amber-800">Non-KAN (Awalan N)</span>
-                                    <?php endif; ?>
-                                </div>
+                                <p class="text-[10px] text-slate-400 mt-0.5">
+                                    <?= $isCertKan ? 'KAN LK-088' : 'Non-KAN' ?>
+                                </p>
                             <?php else: ?>
-                                <span class="text-gray-400 italic text-[11px] whitespace-nowrap">Belum terbit</span>
+                                <span class="text-slate-400 text-xs">-</span>
                             <?php endif; ?>
                         </td>
 
                         <!-- Aksi / Action Button -->
-                        <td class="py-3 px-3.5 text-right align-middle whitespace-nowrap">
+                        <td class="py-3.5 px-4 text-right align-middle whitespace-nowrap">
                             <?php if ($inst['instrument_status'] === 'DATA_SUBMITTED'): ?>
                                 <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                                    <a href="certificates.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#C81E26] hover:bg-[#A8141B] text-white shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
-                                        <i class="ph-bold ph-plus-circle"></i>
-                                        <span>Buat No. Sertifikat</span>
+                                    <a href="certificates.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white inline-flex items-center gap-1 transition-colors">
+                                        <span>Terbitkan Sertifikat</span>
                                     </a>
                                 <?php else: ?>
-                                    <div class="inline-flex items-center gap-1.5">
-                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
-                                            <i class="ph-bold ph-hourglass text-red-500"></i>
-                                            <span>Menunggu Sertifikat</span>
-                                        </span>
-                                        <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-                                            <a href="orders.php?edit_order=<?= urlencode($inst['order_number']) ?>" class="px-2 py-1 rounded-md text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1 transition-all" title="Edit SPK">
-                                                <i class="ph-bold ph-pencil-simple"></i>
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
+                                    <span class="text-xs text-indigo-700 font-medium">Siap Diterbitkan</span>
                                 <?php endif; ?>
                             <?php elseif ($inst['instrument_status'] === 'CERTIFIED' && $inst['certificate_number']): ?>
-                                <div class="inline-flex items-center gap-1.5">
-                                    <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-300 text-slate-700 hover:bg-gray-50 shadow-2xs inline-flex items-center gap-1.5 whitespace-nowrap transition-all" title="Buka Dokumen & Buat / Cetak PDF">
-                                        <i class="ph-bold ph-file-pdf text-[#C81E26]"></i>
-                                        <span>Buat PDF</span>
+                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                    <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1 transition-colors shadow-subtle" title="Buka Dokumen PDF">
+                                        <i class="ph-bold ph-printer text-slate-500"></i>
+                                        <span>Cetak PDF</span>
                                     </a>
-                                    <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-                                        <a href="orders.php?edit_order=<?= urlencode($inst['order_number']) ?>" class="px-2 py-1 rounded-md text-xs font-semibold bg-gray-50 hover:bg-amber-50 text-gray-600 hover:text-amber-800 border border-gray-200 inline-flex items-center transition-all" title="Edit Data SPK">
-                                            <i class="ph-bold ph-pencil-simple"></i>
-                                        </a>
-                                    <?php endif; ?>
                                 </div>
                             <?php else: ?>
-                                <div class="inline-flex items-center gap-1.5">
+                                <div class="inline-flex items-center gap-1.5 justify-end">
                                     <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                                        <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-slate-700 inline-flex items-center gap-1.5 whitespace-nowrap transition-all">
-                                            <i class="ph-bold ph-pencil-simple"></i>
+                                        <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1 transition-colors shadow-subtle">
                                             <span>Worksheet</span>
                                         </a>
                                     <?php else: ?>
-                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1">
-                                            <i class="ph-bold ph-gear text-blue-500"></i>
-                                            <span>Proses Teknisi</span>
-                                        </span>
-                                    <?php endif; ?>
-                                    <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-                                        <a href="orders.php?edit_order=<?= urlencode($inst['order_number']) ?>" class="px-2 py-1 rounded-md text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1 transition-all" title="Edit Data SPK">
-                                            <i class="ph-bold ph-pencil-simple"></i>
-                                            <span>Edit SPK</span>
-                                        </a>
+                                        <span class="text-xs text-slate-500 font-medium">Dalam Pengujian</span>
                                     <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         </td>
+
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 
-    <!-- Footer of Table -->
-    <div class="mt-4 pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-        <span>Menampilkan <strong><?= count($instruments) ?></strong> data instrumen kalibrasi</span>
-        <span class="font-mono text-[11px]">Sistem Kalibrasi Terintegrasi ISO/IEC 17025:2017</span>
+    <!-- Table Footer Summary -->
+    <div class="p-3.5 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <span>Menampilkan <strong><?= count($instruments) ?></strong> instrumen kalibrasi</span>
+        <span class="font-mono text-[11px] text-slate-400">ISO/IEC 17025:2017 Laboratory Information System</span>
     </div>
 
 </div>
