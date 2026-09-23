@@ -54,17 +54,17 @@ Sistem menerapkan pembatasan hak akses berbasis peran pada tingkat server dan an
    - Catatan: Akun ini dipisahkan khusus untuk setup sistem dan tidak tercatat sebagai data karyawan laboratorium.
 
 2. <b>Divisi Sales & Front Office (SALES)</b>
-   - Akun Uji: april / password123
+   - Akun Uji: april / april
    - Menu: Dashboard dan Sales Order (SPK).
    - Pembatasan: Tidak memiliki akses ke worksheet teknisi maupun modul administrasi sertifikat.
 
 3. <b>Teknisi Kalibrasi (TECHNICIAN)</b>
-   - Akun Uji: radit / password123
+   - Akun Uji: radit / radit
    - Menu: Dashboard dan Worksheet Lembar Kerja.
    - Pembatasan: Tidak dapat menerbitkan atau mengubah nomor sertifikat.
 
 4. <b>Bagian Pengurus Sertifikat (CERT_ADMIN)</b>
-   - Akun Uji: adi / password123
+   - Akun Uji: adi / adiadi
    - Menu: Dashboard dan Penerbitan Sertifikat.
    - Wewenang: Menetapkan nomor sertifikat resmi, mengesahkan penerbitan, dan mengajukan revisi sertifikat.
 
