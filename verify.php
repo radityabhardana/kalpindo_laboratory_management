@@ -80,33 +80,29 @@ if ($cert) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verifikasi Keaslian Sertifikat | PT Kalpindo Kalibrasi</title>
     
-    <!-- Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
-    </script>
-    <!-- Anti-flicker Theme Script -->
+    <!-- Anti-flicker Theme Script (Synchronized with Bootstrap 5) -->
     <script>
         (function() {
             try {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                var savedTheme = localStorage.getItem('theme');
+                var prefersDark = (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (savedTheme === 'dark' || prefersDark) {
                     document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
                 } else {
                     document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-bs-theme', 'light');
                 }
             } catch (e) {}
         })();
     </script>
+
+    <!-- 100% Full Local Stylesheets -->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/phosphor.css">
     <link rel="stylesheet" href="assets/css/custom.css">
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between py-12 px-4 antialiased">
+<body class="d-flex flex-column justify-content-between min-vh-100 py-5 px-3">
 
     <!-- Theme Toggle Button -->
     <div class="fixed top-4 right-4 z-50">
@@ -243,6 +239,7 @@ if ($cert) {
         </div>
     </div>
 
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>

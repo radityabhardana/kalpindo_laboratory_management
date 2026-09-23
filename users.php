@@ -511,7 +511,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- MODAL 1: TAMBAH KARYAWAN BARU -->
 <div id="modal-add-user" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
+    <div class="ent-modal rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
         
         <!-- Header -->
         <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -589,7 +589,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- MODAL 2: UBAH DATA & PERAN KARYAWAN (EDIT USER) -->
 <div id="modal-edit-user" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
+    <div class="ent-modal rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
         
         <!-- Header -->
         <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -673,7 +673,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- MODAL 3: KONFIRMASI HAPUS KARYAWAN -->
 <div id="modal-delete-user" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
+    <div class="ent-modal rounded-xl max-w-md w-full shadow-2xl overflow-hidden">
         <div class="p-6 text-center">
             <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto mb-3 border border-rose-200/80 dark:border-rose-900/50">
                 <i class="ph-bold ph-warning"></i>

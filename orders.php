@@ -576,42 +576,42 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
 </div>
 
 <!-- Modal: Tambah Order Baru -->
-<div id="create-order-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-xl text-xs">
+<div id="create-order-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="ent-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-xl text-xs">
         
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
+        <div class="flex items-center justify-between border-b pb-3 mb-4" style="border-color: var(--border-subtle);">
             <div>
-                <h3 class="text-base font-bold text-slate-900 tracking-tight">Input Work Order Kalibrasi Baru</h3>
-                <p class="text-slate-500 text-[11px] mt-0.5">Registrasi data order pelanggan, spesifikasi alat, dan penugasan teknisi.</p>
+                <h3 class="text-base font-bold tracking-tight mb-0" style="color: var(--text-primary);">Input Work Order Kalibrasi Baru</h3>
+                <p class="text-muted text-[11px] mt-0.5 mb-0">Registrasi data order pelanggan, spesifikasi alat, dan penugasan teknisi.</p>
             </div>
-            <button type="button" onclick="closeModal('create-order-modal')" class="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors">
+            <button type="button" onclick="closeModal('create-order-modal')" class="btn-icon">
                 <i class="ph-bold ph-x text-base"></i>
             </button>
         </div>
 
-        <form id="create-order-form" action="orders.php" method="POST" class="space-y-5">
+        <form id="create-order-form" action="orders.php" method="POST" class="space-y-4">
             <input type="hidden" name="action" value="save_order">
 
             <!-- Quick Sample Autofill Strip -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
-                <span class="text-[11px] font-medium text-slate-600 flex items-center gap-1.5">
-                    <i class="ph-bold ph-lightning text-slate-400"></i>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 rounded-lg border" style="background-color: var(--surface-subtle); border-color: var(--border-subtle);">
+                <span class="text-[11px] font-medium text-secondary flex items-center gap-1.5">
+                    <i class="ph-bold ph-lightning text-muted"></i>
                     Contoh Standar:
                 </span>
                 <div class="flex items-center gap-1.5 flex-wrap">
-                    <button type="button" onclick="fillSampleOrder('pressure')" class="px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium text-[11px] transition-colors">
+                    <button type="button" onclick="fillSampleOrder('pressure')" class="btn-surface py-1 px-2 text-[11px]">
                         [P] Tekanan
                     </button>
-                    <button type="button" onclick="fillSampleOrder('temperature')" class="px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium text-[11px] transition-colors">
+                    <button type="button" onclick="fillSampleOrder('temperature')" class="btn-surface py-1 px-2 text-[11px]">
                         [T] Suhu
                     </button>
-                    <button type="button" onclick="fillSampleOrder('mass')" class="px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium text-[11px] transition-colors">
+                    <button type="button" onclick="fillSampleOrder('mass')" class="btn-surface py-1 px-2 text-[11px]">
                         [M] Massa
                     </button>
-                    <button type="button" onclick="fillSampleOrder('dimension')" class="px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium text-[11px] transition-colors">
+                    <button type="button" onclick="fillSampleOrder('dimension')" class="btn-surface py-1 px-2 text-[11px]">
                         [D] Dimensi
                     </button>
-                    <button type="button" onclick="fillSampleOrder('electric_nonkan')" class="px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium text-[11px] transition-colors">
+                    <button type="button" onclick="fillSampleOrder('electric_nonkan')" class="btn-surface py-1 px-2 text-[11px]">
                         [E] Listrik (Non-KAN)
                     </button>
                 </div>
@@ -619,27 +619,27 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
 
             <!-- Section 1: Customer Info -->
             <div class="space-y-3 pt-1">
-                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <span class="text-[11px] font-semibold text-slate-900 uppercase tracking-wider">A. Data Pelanggan</span>
+                <div class="flex items-center gap-2 border-b pb-2" style="border-color: var(--border-subtle);">
+                    <span class="text-[11px] font-semibold text-uppercase tracking-wider" style="color: var(--text-primary);">A. Data Pelanggan</span>
                 </div>
                 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Nama Perusahaan / Pelanggan <span class="text-rose-500">*</span></label>
-                    <input type="text" name="customer_name" required placeholder="Contoh: PT Astra Otoparts Tbk" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Nama Perusahaan / Pelanggan <span class="text-danger">*</span></label>
+                    <input type="text" name="customer_name" required placeholder="Contoh: PT Astra Otoparts Tbk" class="ent-input">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Tanggal SPK <span class="text-rose-500">*</span></label>
-                        <input type="date" name="order_date" value="<?= date('Y-m-d') ?>" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Tanggal SPK <span class="text-danger">*</span></label>
+                        <input type="date" name="order_date" value="<?= date('Y-m-d') ?>" required class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Kontak Person / PIC</label>
-                        <input type="text" name="customer_contact" placeholder="Contoh: Bpk. Bambang (0812-xxxx)" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Kontak Person / PIC</label>
+                        <input type="text" name="customer_contact" placeholder="Contoh: Bpk. Bambang (0812-xxxx)" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Lokasi Layanan <span class="text-rose-500">*</span></label>
-                        <select name="service_type" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Lokasi Layanan <span class="text-danger">*</span></label>
+                        <select name="service_type" required class="ent-select">
                             <option value="IN_LAB">In-Lab (Laboratorium PT Kalpindo)</option>
                             <option value="ON_SITE">On-Site (Pabrik / Lokasi Klien)</option>
                         </select>
@@ -647,34 +647,34 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
                 </div>
 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Alamat Pabrik / Site</label>
-                    <textarea name="customer_address" rows="2" placeholder="Contoh: Kawasan Industri KIIC, Karawang Barat" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors"></textarea>
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Alamat Pabrik / Site</label>
+                    <textarea name="customer_address" rows="2" placeholder="Contoh: Kawasan Industri KIIC, Karawang Barat" class="ent-input"></textarea>
                 </div>
             </div>
 
-            <!-- Section 2: Instrument Info & Assignment -->
+            <!-- Section 2: Instrument Specs -->
             <div class="space-y-3 pt-2">
-                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <span class="text-[11px] font-semibold text-slate-900 uppercase tracking-wider">B. Spesifikasi Instrumen & Penugasan</span>
+                <div class="flex items-center gap-2 border-b pb-2" style="border-color: var(--border-subtle);">
+                    <span class="text-[11px] font-semibold text-uppercase tracking-wider" style="color: var(--text-primary);">B. Spesifikasi Instrumen & Penugasan</span>
                 </div>
                 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Nama Alat <span class="text-rose-500">*</span></label>
-                    <input type="text" name="instrument_name" required placeholder="Contoh: Digital Pressure Gauge" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Nama Alat <span class="text-danger">*</span></label>
+                    <input type="text" name="instrument_name" required placeholder="Contoh: Digital Pressure Gauge" class="ent-input">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Ruang Lingkup (Scope) <span class="text-rose-500">*</span></label>
-                        <select name="scope_code" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Ruang Lingkup (Scope) <span class="text-danger">*</span></label>
+                        <select name="scope_code" required class="ent-select font-mono">
                             <?php foreach ($scopes as $code => $sc): ?>
                                 <option value="<?= $code ?>">[<?= $code ?>] <?= htmlspecialchars($sc['name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Status Akreditasi <span class="text-rose-500">*</span></label>
-                        <select name="is_kan" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-medium focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Status Akreditasi <span class="text-danger">*</span></label>
+                        <select name="is_kan" required class="ent-select font-medium">
                             <option value="1">Akreditasi KAN (Standar ISO/IEC 17025)</option>
                             <option value="0">Non-KAN (Kalibrasi Tertelusur / Awalan N)</option>
                         </select>
@@ -683,33 +683,33 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Merk / Brand</label>
-                        <input type="text" name="brand" placeholder="Contoh: Fluke / Mitutoyo" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Merk / Brand</label>
+                        <input type="text" name="brand" placeholder="Contoh: Fluke / Mitutoyo" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Model / Tipe</label>
-                        <input type="text" name="model_type" placeholder="Contoh: 700G07" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Model / Tipe</label>
+                        <input type="text" name="model_type" placeholder="Contoh: 700G07" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Nomor Seri (SN) <span class="text-rose-500">*</span></label>
-                        <input type="text" name="serial_number" required placeholder="Contoh: SN-829104" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Nomor Seri (SN) <span class="text-danger">*</span></label>
+                        <input type="text" name="serial_number" required placeholder="Contoh: SN-829104" class="ent-input font-mono">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Rentang Ukur (Range)</label>
-                        <input type="text" name="capacity_range" placeholder="Contoh: 0 - 25 bar / 0 - 150 mm" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Rentang Ukur (Range)</label>
+                        <input type="text" name="capacity_range" placeholder="Contoh: 0 - 25 bar / 0 - 150 mm" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Resolusi</label>
-                        <input type="text" name="resolution" placeholder="Contoh: 0.001 bar / 0.01 mm" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Resolusi</label>
+                        <input type="text" name="resolution" placeholder="Contoh: 0.001 bar / 0.01 mm" class="ent-input">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Teknisi Penanggung Jawab <span class="text-rose-500">*</span></label>
-                    <select name="technician_name" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Teknisi Penanggung Jawab <span class="text-danger">*</span></label>
+                    <select name="technician_name" required class="ent-select">
                         <?php if (empty($technicians)): ?>
                             <option value="">-- Belum ada akun teknisi terdaftar di sistem --</option>
                         <?php else: ?>
@@ -720,15 +720,16 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
-                    <p class="text-[11px] text-slate-400 mt-1">Daftar staf teknisi laboratorium yang terdaftar di sistem.</p>
+                    <p class="text-[11px] text-muted mt-1">Daftar staf teknisi laboratorium yang terdaftar di sistem.</p>
                 </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
-                <button type="button" onclick="closeModal('create-order-modal')" class="px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors">Batal</button>
-                <button type="submit" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-4 py-2 rounded-lg font-semibold shadow-subtle transition-colors">
-                    Simpan & Terbitkan SPK
+            <div class="flex items-center justify-end gap-2 pt-4 border-t" style="border-color: var(--border-subtle);">
+                <button type="button" onclick="closeModal('create-order-modal')" class="btn-surface">Batal</button>
+                <button type="submit" class="btn-brand-primary">
+                    <i class="ph-bold ph-plus text-xs"></i>
+                    <span>Simpan & Terbitkan SPK</span>
                 </button>
             </div>
         </form>
@@ -737,59 +738,59 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
 </div>
 
 <!-- Modal: Edit Surat Perintah Kerja (SPK) -->
-<div id="edit-order-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-xl border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-xl text-xs">
+<div id="edit-order-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="ent-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-xl text-xs">
         
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
+        <div class="flex items-center justify-between border-b pb-3 mb-4" style="border-color: var(--border-subtle);">
             <div>
                 <div class="flex items-center gap-2">
-                    <h3 class="text-base font-bold text-slate-900 tracking-tight">Edit Surat Perintah Kerja (SPK)</h3>
-                    <span id="edit-order-badge" class="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200"></span>
+                    <h3 class="text-base font-bold tracking-tight mb-0" style="color: var(--text-primary);">Edit Surat Perintah Kerja (SPK)</h3>
+                    <span id="edit-order-badge" class="font-mono text-xs font-semibold px-2 py-0.5 rounded border" style="background-color: var(--surface-subtle); border-color: var(--border-subtle); color: var(--text-primary);"></span>
                 </div>
-                <p class="text-slate-500 text-[11px] mt-0.5">Perbarui data pelanggan, informasi alat, atau penugasan teknisi.</p>
+                <p class="text-muted text-[11px] mt-0.5 mb-0">Perbarui data pelanggan, informasi alat, atau penugasan teknisi.</p>
             </div>
-            <button type="button" onclick="closeModal('edit-order-modal')" class="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors">
+            <button type="button" onclick="closeModal('edit-order-modal')" class="btn-icon">
                 <i class="ph-bold ph-x text-base"></i>
             </button>
         </div>
 
         <!-- Notice jika sertifikat sudah terbit -->
-        <div id="edit-certified-warning" class="hidden bg-slate-50 border border-slate-200 text-slate-700 p-3 rounded-lg text-xs flex items-start gap-2.5 mb-4">
-            <i class="ph-bold ph-info text-base text-slate-600 shrink-0 mt-0.5"></i>
+        <div id="edit-certified-warning" class="hidden p-3 rounded-lg border text-xs flex items-start gap-2.5 mb-4" style="background-color: var(--surface-subtle); border-color: var(--border-subtle); color: var(--text-primary);">
+            <i class="ph-bold ph-info text-base text-warning shrink-0 mt-0.5"></i>
             <div>
-                <p class="font-semibold text-slate-900">Sertifikat Terbit: <span id="edit-cert-no" class="font-mono"></span></p>
-                <p class="text-[11px] text-slate-500 mt-0.5">Sesuai standar ISO/IEC 17025, Ruang Lingkup dan Status KAN dikunci karena nomor sertifikat telah diterbitkan. Data pelanggan dan spesifikasi fisik alat tetap dapat diperbarui.</p>
+                <p class="font-semibold mb-0">Sertifikat Terbit: <span id="edit-cert-no" class="font-mono"></span></p>
+                <p class="text-[11px] text-muted mt-0.5 mb-0">Sesuai standar ISO/IEC 17025, Ruang Lingkup dan Status KAN dikunci karena nomor sertifikat telah diterbitkan. Data pelanggan dan spesifikasi fisik alat tetap dapat diperbarui.</p>
             </div>
         </div>
 
-        <form id="edit-order-form" action="orders.php" method="POST" class="space-y-5">
+        <form id="edit-order-form" action="orders.php" method="POST" class="space-y-4">
             <input type="hidden" name="action" value="update_order">
             <input type="hidden" name="order_id" id="edit-order-id">
             <input type="hidden" name="instrument_id" id="edit-instrument-id">
 
             <!-- Section 1 -->
             <div class="space-y-3 pt-1">
-                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <span class="text-[11px] font-semibold text-slate-900 uppercase tracking-wider">A. Data Pelanggan</span>
+                <div class="flex items-center gap-2 border-b pb-2" style="border-color: var(--border-subtle);">
+                    <span class="text-[11px] font-semibold text-uppercase tracking-wider" style="color: var(--text-primary);">A. Data Pelanggan</span>
                 </div>
                 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Nama Perusahaan / Pelanggan <span class="text-rose-500">*</span></label>
-                    <input type="text" name="customer_name" id="edit-customer-name" required placeholder="Contoh: PT Astra Otoparts Tbk" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Nama Perusahaan / Pelanggan <span class="text-danger">*</span></label>
+                    <input type="text" name="customer_name" id="edit-customer-name" required placeholder="Contoh: PT Astra Otoparts Tbk" class="ent-input">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Tanggal SPK <span class="text-rose-500">*</span></label>
-                        <input type="date" name="order_date" id="edit-order-date" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Tanggal SPK <span class="text-danger">*</span></label>
+                        <input type="date" name="order_date" id="edit-order-date" required class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Kontak Person / PIC</label>
-                        <input type="text" name="customer_contact" id="edit-customer-contact" placeholder="Contoh: Bpk. Bambang (0812-xxxx)" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Kontak Person / PIC</label>
+                        <input type="text" name="customer_contact" id="edit-customer-contact" placeholder="Contoh: Bpk. Bambang (0812-xxxx)" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Lokasi Layanan <span class="text-rose-500">*</span></label>
-                        <select name="service_type" id="edit-service-type" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Lokasi Layanan <span class="text-danger">*</span></label>
+                        <select name="service_type" id="edit-service-type" required class="ent-select">
                             <option value="IN_LAB">In-Lab (Laboratorium PT Kalpindo)</option>
                             <option value="ON_SITE">On-Site (Pabrik / Lokasi Klien)</option>
                         </select>
@@ -797,34 +798,34 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
                 </div>
 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Alamat Pabrik / Site</label>
-                    <textarea name="customer_address" id="edit-customer-address" rows="2" placeholder="Contoh: Kawasan Industri KIIC, Karawang Barat" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors"></textarea>
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Alamat Pabrik / Site</label>
+                    <textarea name="customer_address" id="edit-customer-address" rows="2" placeholder="Contoh: Kawasan Industri KIIC, Karawang Barat" class="ent-input"></textarea>
                 </div>
             </div>
 
             <!-- Section 2 -->
             <div class="space-y-3 pt-2">
-                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <span class="text-[11px] font-semibold text-slate-900 uppercase tracking-wider">B. Spesifikasi Instrumen & Penugasan</span>
+                <div class="flex items-center gap-2 border-b pb-2" style="border-color: var(--border-subtle);">
+                    <span class="text-[11px] font-semibold text-uppercase tracking-wider" style="color: var(--text-primary);">B. Spesifikasi Instrumen & Penugasan</span>
                 </div>
                 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Nama Alat <span class="text-rose-500">*</span></label>
-                    <input type="text" name="instrument_name" id="edit-instrument-name" required placeholder="Contoh: Digital Pressure Gauge" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Nama Alat <span class="text-danger">*</span></label>
+                    <input type="text" name="instrument_name" id="edit-instrument-name" required placeholder="Contoh: Digital Pressure Gauge" class="ent-input">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Ruang Lingkup (Scope) <span class="text-rose-500">*</span></label>
-                        <select name="scope_code" id="edit-scope-code" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Ruang Lingkup (Scope) <span class="text-danger">*</span></label>
+                        <select name="scope_code" id="edit-scope-code" required class="ent-select font-mono">
                             <?php foreach ($scopes as $code => $sc): ?>
                                 <option value="<?= $code ?>">[<?= $code ?>] <?= htmlspecialchars($sc['name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Status Akreditasi <span class="text-rose-500">*</span></label>
-                        <select name="is_kan" id="edit-is-kan" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-medium focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Status Akreditasi <span class="text-danger">*</span></label>
+                        <select name="is_kan" id="edit-is-kan" required class="ent-select font-medium">
                             <option value="1">Akreditasi KAN (Standar ISO/IEC 17025)</option>
                             <option value="0">Non-KAN (Kalibrasi Tertelusur / Awalan N)</option>
                         </select>
@@ -833,33 +834,33 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Merk / Brand</label>
-                        <input type="text" name="brand" id="edit-brand" placeholder="Contoh: Fluke / Mitutoyo" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Merk / Brand</label>
+                        <input type="text" name="brand" id="edit-brand" placeholder="Contoh: Fluke / Mitutoyo" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Model / Tipe</label>
-                        <input type="text" name="model_type" id="edit-model-type" placeholder="Contoh: 700G07" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Model / Tipe</label>
+                        <input type="text" name="model_type" id="edit-model-type" placeholder="Contoh: 700G07" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Nomor Seri (SN) <span class="text-rose-500">*</span></label>
-                        <input type="text" name="serial_number" id="edit-serial-number" required placeholder="Contoh: SN-829104" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Nomor Seri (SN) <span class="text-danger">*</span></label>
+                        <input type="text" name="serial_number" id="edit-serial-number" required placeholder="Contoh: SN-829104" class="ent-input font-mono">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Rentang Ukur (Range)</label>
-                        <input type="text" name="capacity_range" id="edit-capacity-range" placeholder="Contoh: 0 - 25 bar / 0 - 150 mm" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Rentang Ukur (Range)</label>
+                        <input type="text" name="capacity_range" id="edit-capacity-range" placeholder="Contoh: 0 - 25 bar / 0 - 150 mm" class="ent-input">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Resolusi</label>
-                        <input type="text" name="resolution" id="edit-resolution" placeholder="Contoh: 0.001 bar / 0.01 mm" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                        <label class="block font-medium mb-1" style="color: var(--text-secondary);">Resolusi</label>
+                        <input type="text" name="resolution" id="edit-resolution" placeholder="Contoh: 0.001 bar / 0.01 mm" class="ent-input">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-medium text-slate-700 mb-1">Teknisi Penanggung Jawab <span class="text-rose-500">*</span></label>
-                    <select name="technician_name" id="edit-technician-name" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 transition-colors">
+                    <label class="block font-medium mb-1" style="color: var(--text-secondary);">Teknisi Penanggung Jawab <span class="text-danger">*</span></label>
+                    <select name="technician_name" id="edit-technician-name" required class="ent-select">
                         <?php if (empty($technicians)): ?>
                             <option value="">-- Belum ada akun teknisi terdaftar di sistem --</option>
                         <?php else: ?>
@@ -870,14 +871,14 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
-                    <p class="text-[11px] text-slate-400 mt-1">Daftar staf teknisi laboratorium yang terdaftar di sistem.</p>
+                    <p class="text-[11px] text-muted mt-1">Daftar staf teknisi laboratorium yang terdaftar di sistem.</p>
                 </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
-                <button type="button" onclick="closeModal('edit-order-modal')" class="px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors">Batal</button>
-                <button type="submit" class="bg-[#C81E26] hover:bg-[#B2151D] text-white px-4 py-2 rounded-lg font-semibold shadow-subtle inline-flex items-center gap-1.5 transition-colors">
+            <div class="flex items-center justify-end gap-2 pt-4 border-t" style="border-color: var(--border-subtle);">
+                <button type="button" onclick="closeModal('edit-order-modal')" class="btn-surface">Batal</button>
+                <button type="submit" class="btn-brand-primary">
                     <i class="ph-bold ph-floppy-disk"></i>
                     <span>Simpan Perubahan SPK</span>
                 </button>

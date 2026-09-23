@@ -624,7 +624,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- MODAL 1: Generator Nomor Sertifikat Otomatis -->
 <div id="generate-cert-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg p-6 shadow-2xl text-xs">
+    <div class="ent-modal rounded-xl w-full max-w-lg p-6 shadow-2xl text-xs">
         
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-5">
             <div>
@@ -709,7 +709,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- MODAL 2: Revisi Sertifikat -->
 <div id="revision-cert-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-700 w-full max-w-md p-6 shadow-2xl text-xs">
+    <div class="ent-modal rounded-xl w-full max-w-md p-6 shadow-2xl text-xs">
         
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
             <div>

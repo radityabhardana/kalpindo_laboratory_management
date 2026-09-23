@@ -1,5 +1,6 @@
 /**
  * Kalpindo CalibFlow - Frontend Interactions & Dynamic Calculators
+ * PT Kalibrasi Pengujian Indonesia - ISO/IEC 17025
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,11 +43,9 @@ function setupWorksheetCalculators() {
             if (corrInput) {
                 corrInput.value = (corr >= 0 ? '+' : '') + corr.toFixed(4);
                 if (corr >= 0) {
-                    corrInput.classList.remove('text-[#C81E26]');
-                    corrInput.classList.add('text-emerald-700');
+                    corrInput.style.color = '#10B981';
                 } else {
-                    corrInput.classList.remove('text-emerald-700');
-                    corrInput.classList.add('text-[#C81E26]');
+                    corrInput.style.color = '#EF4444';
                 }
             }
         }
@@ -66,31 +65,31 @@ function addWorksheetRow() {
 
     const rowCount = tbody.querySelectorAll('tr').length + 1;
     const tr = document.createElement('tr');
-    tr.className = 'reading-calc-row hover:bg-slate-50/50 transition-colors';
+    tr.className = 'reading-calc-row';
     tr.innerHTML = `
         <td class="py-2 px-2.5">
-            <input type="text" name="points[]" value="Titik ${rowCount}" class="bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-24 focus:outline-none focus:border-slate-800">
+            <input type="text" name="points[]" value="Titik ${rowCount}" class="ent-input py-1 px-2 text-[11px] w-24">
         </td>
         <td class="py-2 px-2.5 text-right">
-            <input type="number" step="any" name="standards[]" value="0.00" class="std-val bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-20 text-right focus:outline-none focus:border-slate-800">
+            <input type="number" step="any" name="standards[]" value="0.00" class="std-val ent-input py-1 px-2 text-[11px] w-20 text-right">
         </td>
         <td class="py-2 px-1 text-right">
-            <input type="number" step="any" name="run1[]" value="0.00" class="r1-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
+            <input type="number" step="any" name="run1[]" value="0.00" class="r1-val ent-input py-1 px-1.5 text-[11px] w-16 text-right">
         </td>
         <td class="py-2 px-1 text-right">
-            <input type="number" step="any" name="run2[]" value="0.00" class="r2-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
+            <input type="number" step="any" name="run2[]" value="0.00" class="r2-val ent-input py-1 px-1.5 text-[11px] w-16 text-right">
         </td>
         <td class="py-2 px-1 text-right">
-            <input type="number" step="any" name="run3[]" value="0.00" class="r3-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
+            <input type="number" step="any" name="run3[]" value="0.00" class="r3-val ent-input py-1 px-1.5 text-[11px] w-16 text-right">
         </td>
         <td class="py-2 px-1 text-right">
-            <input type="text" readonly value="0.0000" class="mean-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right font-medium cursor-not-allowed">
+            <input type="text" readonly value="0.0000" class="mean-val ent-input py-1 px-1.5 text-[11px] w-18 text-right font-semibold cursor-not-allowed">
         </td>
         <td class="py-2 px-1 text-right">
-            <input type="text" readonly value="0.0000" class="corr-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-800 w-18 text-right font-medium cursor-not-allowed">
+            <input type="text" readonly value="0.0000" class="corr-val ent-input py-1 px-1.5 text-[11px] w-18 text-right font-semibold cursor-not-allowed">
         </td>
         <td class="py-2 px-2.5 text-right">
-            <input type="number" step="any" name="uncertainties[]" value="0.01" class="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right focus:outline-none focus:border-slate-800">
+            <input type="number" step="any" name="uncertainties[]" value="0.01" class="ent-input py-1 px-1.5 text-[11px] w-18 text-right">
         </td>
     `;
     tbody.appendChild(tr);
@@ -150,31 +149,31 @@ function autoFillWorksheetDemo(scopeCode) {
     tbody.innerHTML = '';
     sampleData.forEach(s => {
         const tr = document.createElement('tr');
-        tr.className = 'reading-calc-row hover:bg-slate-50/50 transition-colors';
+        tr.className = 'reading-calc-row';
         tr.innerHTML = `
             <td class="py-2 px-2.5">
-                <input type="text" name="points[]" value="${s.point}" class="bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-24 focus:outline-none focus:border-slate-800">
+                <input type="text" name="points[]" value="${s.point}" class="ent-input py-1 px-2 text-[11px] w-24">
             </td>
             <td class="py-2 px-2.5 text-right">
-                <input type="number" step="any" name="standards[]" value="${s.std}" class="std-val bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-900 w-20 text-right focus:outline-none focus:border-slate-800">
+                <input type="number" step="any" name="standards[]" value="${s.std}" class="std-val ent-input py-1 px-2 text-[11px] w-20 text-right">
             </td>
             <td class="py-2 px-1 text-right">
-                <input type="number" step="any" name="run1[]" value="${s.r1}" class="r1-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
+                <input type="number" step="any" name="run1[]" value="${s.r1}" class="r1-val ent-input py-1 px-1.5 text-[11px] w-16 text-right">
             </td>
             <td class="py-2 px-1 text-right">
-                <input type="number" step="any" name="run2[]" value="${s.r2}" class="r2-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
+                <input type="number" step="any" name="run2[]" value="${s.r2}" class="r2-val ent-input py-1 px-1.5 text-[11px] w-16 text-right">
             </td>
             <td class="py-2 px-1 text-right">
-                <input type="number" step="any" name="run3[]" value="${s.r3}" class="r3-val bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-900 w-16 text-right focus:outline-none focus:border-slate-800">
+                <input type="number" step="any" name="run3[]" value="${s.r3}" class="r3-val ent-input py-1 px-1.5 text-[11px] w-16 text-right">
             </td>
             <td class="py-2 px-1 text-right">
-                <input type="text" readonly value="0.0000" class="mean-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right font-medium cursor-not-allowed">
+                <input type="text" readonly value="0.0000" class="mean-val ent-input py-1 px-1.5 text-[11px] w-18 text-right font-semibold cursor-not-allowed">
             </td>
             <td class="py-2 px-1 text-right">
-                <input type="text" readonly value="0.0000" class="corr-val bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[11px] text-slate-800 w-18 text-right font-medium cursor-not-allowed">
+                <input type="text" readonly value="0.0000" class="corr-val ent-input py-1 px-1.5 text-[11px] w-18 text-right font-semibold cursor-not-allowed">
             </td>
             <td class="py-2 px-2.5 text-right">
-                <input type="number" step="any" name="uncertainties[]" value="${s.unc}" class="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] text-slate-700 w-18 text-right focus:outline-none focus:border-slate-800">
+                <input type="number" step="any" name="uncertainties[]" value="${s.unc}" class="ent-input py-1 px-1.5 text-[11px] w-18 text-right">
             </td>
         `;
         tbody.appendChild(tr);
@@ -191,7 +190,7 @@ function openModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
         modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 }
@@ -200,8 +199,8 @@ function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
         modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = 'auto';
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
     }
 }
 
@@ -213,16 +212,16 @@ function toggleMobileSidebar() {
     const backdrop = document.getElementById('mobile-sidebar-backdrop');
     if (!sidebar || !backdrop) return;
 
-    if (sidebar.classList.contains('-translate-x-full')) {
-        backdrop.classList.remove('hidden');
-        setTimeout(() => {
-            backdrop.classList.add('opacity-100');
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.classList.add('translate-x-0');
-        }, 10);
-        document.body.style.overflow = 'hidden';
-    } else {
+    if (sidebar.classList.contains('show-drawer')) {
         closeMobileSidebar();
+    } else {
+        sidebar.style.display = 'flex';
+        backdrop.style.display = 'block';
+        requestAnimationFrame(() => {
+            sidebar.classList.add('show-drawer');
+            sidebar.style.transform = 'translateX(0px)';
+        });
+        document.body.style.overflow = 'hidden';
     }
 }
 
@@ -231,23 +230,38 @@ function closeMobileSidebar() {
     const backdrop = document.getElementById('mobile-sidebar-backdrop');
     if (!sidebar || !backdrop) return;
 
-    sidebar.classList.remove('translate-x-0');
-    sidebar.classList.add('-translate-x-full');
-    backdrop.classList.remove('opacity-100');
+    sidebar.classList.remove('show-drawer');
+    sidebar.style.transform = 'translateX(-100%)';
+    backdrop.style.display = 'none';
     setTimeout(() => {
-        backdrop.classList.add('hidden');
-        document.body.style.overflow = '';
-    }, 300);
+        if (!sidebar.classList.contains('show-drawer')) {
+            sidebar.style.display = 'none';
+        }
+    }, 250);
+    document.body.style.overflow = '';
 }
 
 /**
- * Dark Mode Theme Controller
+ * Dark Mode Theme Controller (Dual HTML Class & Bootstrap 5 Data Attribute)
  */
 function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
+    applyThemeState(isDark);
     try {
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
     } catch (e) {}
+}
+
+function applyThemeState(isDark) {
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        if (document.body) document.body.setAttribute('data-bs-theme', 'dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-bs-theme', 'light');
+        if (document.body) document.body.setAttribute('data-bs-theme', 'light');
+    }
     updateThemeToggleButtons(isDark);
 }
 
@@ -266,12 +280,7 @@ function initTheme() {
         isDark = (savedTheme === 'dark' || (!savedTheme && prefersDark));
     } catch (e) {}
 
-    if (isDark) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
-    updateThemeToggleButtons(isDark);
+    applyThemeState(isDark);
 }
 
 initTheme();

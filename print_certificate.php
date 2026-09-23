@@ -126,7 +126,6 @@ if ($uri === '/' || $uri === '.') {
     $uri = '';
 }
 $verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlencode($cert['certificate_number']);
-$qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . urlencode($verifyUrl);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -135,14 +134,10 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sertifikat Kalibrasi No. <?= htmlspecialchars($cert['certificate_number']) ?> - PT Kalpindo</title>
     
-    <!-- Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 100% Full Local Stylesheets -->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/phosphor.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
     <link rel="stylesheet" href="assets/css/print.css">
 
     <style>
@@ -437,8 +432,8 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
                 
                 <!-- Left: QR Code & Verification Notice -->
                 <div class="flex items-center gap-3">
-                    <div class="w-20 h-20 border border-slate-400 p-0.5 bg-white rounded flex items-center justify-center shrink-0">
-                        <img src="<?= $qrApiUrl ?>" alt="QR Code Verifikasi" class="w-full h-full object-contain">
+                    <div id="qrcode-box" class="w-20 h-20 border border-slate-400 p-1 bg-white rounded flex items-center justify-center shrink-0">
+                        <div id="cert-qrcode"></div>
                     </div>
                     <div class="text-[9px] text-slate-600 max-w-[240px]">
                         <span class="font-bold text-slate-900 block">VERIFIKASI KEASLIAN DOKUMEN:</span>
@@ -487,5 +482,22 @@ $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . u
 
     </div>
 
+    <!-- Local Offline QR Code Generator -->
+    <script src="assets/js/qrcode.min.js"></script>
+    <script>
+        (function() {
+            var qrContainer = document.getElementById("cert-qrcode");
+            if (qrContainer) {
+                new QRCode(qrContainer, {
+                    text: <?= json_encode($verifyUrl) ?>,
+                    width: 72,
+                    height: 72,
+                    colorDark: "#0F172A",
+                    colorLight: "#FFFFFF",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
