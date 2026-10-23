@@ -675,21 +675,25 @@ require_once __DIR__ . '/includes/header.php';
 <div id="modal-delete-user" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
     <div class="ent-modal rounded-xl max-w-md w-full shadow-2xl overflow-hidden text-xs">
         <div class="p-6 text-center">
-            <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto mb-3 border border-rose-200 dark:border-rose-900/50">
+            <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto mb-3 border border-rose-200 dark:border-rose-900/50" style="width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; font-size: 26px;">
                 <i class="ph-bold ph-warning"></i>
             </div>
-            <h3 class="font-bold text-base text-slate-900 dark:text-white">Hapus Akun Karyawan?</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Apakah Anda yakin ingin menghapus akun karyawan <strong id="delete-user-name" class="text-slate-900 dark:text-white"></strong> (<span id="delete-user-username" class="font-mono text-slate-700 dark:text-slate-300"></span>)? Tindakan ini tidak dapat dibatalkan.</p>
+            <h3 class="font-bold text-base text-slate-900 dark:text-white mb-1.5">Hapus Akun Karyawan?</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+                Apakah Anda yakin ingin menghapus akun karyawan <strong id="delete-user-name" class="text-slate-900 dark:text-white"></strong> (<span id="delete-user-username" class="font-mono text-slate-700 dark:text-slate-300"></span>)?<br>
+                <span class="text-rose-600 dark:text-rose-400 font-medium">Tindakan ini bersifat permanen dan tidak dapat dibatalkan.</span>
+            </p>
             
-            <form action="users.php" method="POST" class="mt-6 flex items-center justify-center gap-2">
+            <form action="users.php" method="POST" class="mt-6 flex items-center justify-center gap-3">
                 <input type="hidden" name="action" value="delete_user">
                 <input type="hidden" id="delete_user_id" name="user_id" value="">
                 
-                <button type="button" onclick="closeModal('modal-delete-user')" class="btn-surface w-full py-2">
-                    Batal
+                <button type="button" onclick="closeModal('modal-delete-user')" class="btn-surface flex-1 py-2" style="height: 38px; border-radius: 8px; font-weight: 600;">
+                    <span>Batal</span>
                 </button>
-                <button type="submit" class="w-full py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-sm transition-colors border-0">
-                    Ya, Hapus Akun
+                <button type="submit" class="btn-danger flex-1 py-2" style="height: 38px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="ph-bold ph-trash"></i>
+                    <span>Ya, Hapus Akun</span>
                 </button>
             </form>
         </div>

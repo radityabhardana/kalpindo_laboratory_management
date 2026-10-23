@@ -565,6 +565,38 @@ html.dark .modal-content .bg-slate-50,
     transform: translateY(1px);
 }
 
+.btn-danger,
+.btn-brand-danger {
+    background-color: #DC2626 !important;
+    border: 1px solid #B91C1C !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.4375rem 0.875rem;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    white-space: nowrap !important;
+    transition: background-color 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
+    box-shadow: 0 1px 2px 0 rgba(220, 38, 38, 0.25);
+    cursor: pointer;
+}
+
+.btn-danger:hover,
+.btn-brand-danger:hover {
+    background-color: #B91C1C !important;
+    border-color: #991B1B !important;
+    box-shadow: 0 2px 4px 0 rgba(220, 38, 38, 0.35);
+    color: #FFFFFF !important;
+}
+
+.btn-danger:active,
+.btn-brand-danger:active {
+    transform: translateY(1px);
+}
+
 .btn-surface {
     background-color: var(--surface-card);
     border: 1px solid var(--border-strong);
@@ -1983,4 +2015,57 @@ html.dark .master-admin-badge-root,
     line-height: 1.5 !important;
     max-width: 48rem !important;
 }
+
+/* ========================================================== */
+/* DANGER & ROSE UTILITY CLASSES (OFFLINE COMPATIBILITY)      */
+/* ========================================================== */
+.bg-rose-50 { background-color: #FFF1F2 !important; }
+.bg-rose-100 { background-color: #FFE4E6 !important; }
+.bg-rose-500 { background-color: #F43F5E !important; }
+.bg-rose-600 { background-color: #DC2626 !important; }
+.bg-rose-700 { background-color: #B91C1C !important; }
+
+.text-rose-400 { color: #FB7185 !important; }
+.text-rose-500 { color: #F43F5E !important; }
+.text-rose-600 { color: #DC2626 !important; }
+.text-rose-700 { color: #B91C1C !important; }
+
+.border-rose-200 { border-color: #FECDD3 !important; }
+.border-rose-300 { border-color: #FDA4AF !important; }
+.border-rose-800 { border-color: #9F1239 !important; }
+
+.hover\:bg-rose-50:hover { background-color: #FFF1F2 !important; }
+.hover\:bg-rose-700:hover { background-color: #B91C1C !important; }
+.hover\:border-rose-200:hover { border-color: #FECDD3 !important; }
+
+html.dark .bg-rose-50,
+[data-bs-theme="dark"] .bg-rose-50,
+html.dark .dark\:bg-rose-950\/50,
+[data-bs-theme="dark"] .dark\:bg-rose-950\/50 {
+    background-color: rgba(76, 5, 25, 0.45) !important;
+}
+
+html.dark .text-rose-600,
+[data-bs-theme="dark"] .text-rose-600,
+html.dark .dark\:text-rose-400,
+[data-bs-theme="dark"] .dark\:text-rose-400 {
+    color: #FB7185 !important;
+}
+
+html.dark .border-rose-200,
+[data-bs-theme="dark"] .border-rose-200,
+html.dark .dark\:border-rose-800,
+[data-bs-theme="dark"] .dark\:border-rose-800,
+html.dark .dark\:border-rose-900\/50,
+[data-bs-theme="dark"] .dark\:border-rose-900\/50 {
+    border-color: rgba(159, 18, 57, 0.5) !important;
+}
+
+html.dark .hover\:bg-rose-50:hover,
+[data-bs-theme="dark"] .hover\:bg-rose-50:hover,
+html.dark .dark\:hover\:bg-rose-950\/50:hover,
+[data-bs-theme="dark"] .dark\:hover\:bg-rose-950\/50:hover {
+    background-color: rgba(76, 5, 25, 0.6) !important;
+}
+
 
