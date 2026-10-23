@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmtStatus->execute([$instId]);
             $db->commit();
             setFlash('success', 'Draf lembar kerja kalibrasi berhasil disimpan.');
-            header("Location: worksheet.php?instrument_id={$instId}");
+            header("Location: worksheet.php?instrument_id={$instId}&tab=draft");
             exit;
         }
 
@@ -241,9 +241,13 @@ if (empty($readings)) {
 
 $countTotal = count($instrumentList);
 $countPending = 0;
+$countDraft = 0;
 $countCertified = 0;
+
 foreach ($instrumentList as $item) {
-    if (in_array($item['status'], ['ASSIGNED', 'IN_PROGRESS'])) {
+    if (in_array($item['status'], ['IN_PROGRESS', 'CALIBRATING'])) {
+        $countDraft++;
+    } elseif (in_array($item['status'], ['ASSIGNED', 'PENDING'])) {
         $countPending++;
     } else {
         $countCertified++;
@@ -304,14 +308,20 @@ require_once __DIR__ . '/includes/header.php';
     }
     .ws-queue-tabs {
         display: flex;
-        padding: 0.375rem 0.625rem;
-        gap: 0.375rem;
+        padding: 0.375rem 0.5rem;
+        gap: 0.25rem;
         background-color: var(--surface-subtle);
         border-bottom: 1px solid var(--border-subtle);
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .ws-queue-tabs::-webkit-scrollbar {
+        display: none;
     }
     .ws-tab-btn {
         flex: 1;
-        padding: 0.3125rem 0.375rem;
+        padding: 0.3125rem 0.25rem;
         font-size: 0.6875rem;
         font-weight: 600;
         border-radius: 0.375rem;
@@ -588,11 +598,15 @@ require_once __DIR__ . '/includes/header.php';
                     Semua (<?= $countTotal ?>)
                 </button>
                 <button type="button" class="ws-tab-btn" data-tab="pending" onclick="filterQueue('pending')">
-                    <span class="badge-dot bg-warning" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background-color: #F59E0B;"></span>
+                    <span class="badge-dot" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background-color: #F59E0B;"></span>
                     Perlu Uji (<?= $countPending ?>)
                 </button>
+                <button type="button" class="ws-tab-btn" data-tab="draft" onclick="filterQueue('draft')">
+                    <span class="badge-dot" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background-color: #3B82F6;"></span>
+                    Draf (<?= $countDraft ?>)
+                </button>
                 <button type="button" class="ws-tab-btn" data-tab="certified" onclick="filterQueue('certified')">
-                    <span class="badge-dot bg-success" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background-color: #10B981;"></span>
+                    <span class="badge-dot" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background-color: #10B981;"></span>
                     Selesai (<?= $countCertified ?>)
                 </button>
             </div>
@@ -1073,9 +1087,11 @@ require_once __DIR__ . '/includes/header.php';
             
             let matchesTab = true;
             if (activeTab === 'pending') {
-                matchesTab = (itemStatus === 'ASSIGNED' || itemStatus === 'IN_PROGRESS');
+                matchesTab = (itemStatus === 'ASSIGNED' || itemStatus === 'PENDING');
+            } else if (activeTab === 'draft') {
+                matchesTab = (itemStatus === 'IN_PROGRESS' || itemStatus === 'CALIBRATING');
             } else if (activeTab === 'certified') {
-                matchesTab = (itemStatus === 'CERTIFIED' || itemStatus === 'DATA_SUBMITTED');
+                matchesTab = (itemStatus === 'CERTIFIED' || itemStatus === 'DATA_SUBMITTED' || itemStatus === 'COMPLETED');
             }
 
             const matchesSearch = !searchVal || searchData.includes(searchVal);
@@ -1098,6 +1114,15 @@ require_once __DIR__ . '/includes/header.php';
             emptyNotice.style.display = visibleCount === 0 ? 'block' : 'none';
         }
     }
+
+    // Auto-activate tab from URL query param if present (?tab=draft, etc.)
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam && ['all', 'pending', 'draft', 'certified'].includes(tabParam)) {
+            filterQueue(tabParam);
+        }
+    });
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
