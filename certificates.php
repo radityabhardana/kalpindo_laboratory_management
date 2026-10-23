@@ -151,6 +151,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             setFlash('error', 'Gagal revisi sertifikat: ' . $e->getMessage());
         }
     }
+
+    // 3. Batalkan & Hapus Sertifikat Terbit (Rollback status ke antrean penerbitan)
+    if ($_POST['action'] === 'delete_certificate') {
+        requireRole(['SUPER_ADMIN', 'CERT_ADMIN'], 'certificates.php');
+        try {
+            $certId = (int)($_POST['certificate_id'] ?? 0);
+
+            $stmtCert = $db->prepare("SELECT * FROM certificates WHERE id = ?");
+            $stmtCert->execute([$certId]);
+            $certToDelete = $stmtCert->fetch();
+
+            if (!$certToDelete) {
+                throw new Exception('Sertifikat tidak ditemukan.');
+            }
+
+            $instId = (int)$certToDelete['instrument_id'];
+            $certNum = $certToDelete['certificate_number'];
+
+            $db->beginTransaction();
+
+            // 1. Hapus sertifikat dari tabel certificates
+            $stmtDel = $db->prepare("DELETE FROM certificates WHERE id = ?");
+            $stmtDel->execute([$certId]);
+
+            // 2. Kembalikan status instrumen ke 'DATA_SUBMITTED' (kembali ke antrean penerbitan sertifikat)
+            $stmtUpdInst = $db->prepare("UPDATE instruments SET status = 'DATA_SUBMITTED' WHERE id = ?");
+            $stmtUpdInst->execute([$instId]);
+
+            // 3. Kembalikan status order ke 'IN_PROGRESS' jika sebelumnya 'COMPLETED'
+            $stmtInst = $db->prepare("SELECT order_id FROM instruments WHERE id = ?");
+            $stmtInst->execute([$instId]);
+            $orderId = (int)$stmtInst->fetchColumn();
+
+            if ($orderId > 0) {
+                $stmtCheckOrder = $db->prepare("SELECT status FROM orders WHERE id = ?");
+                $stmtCheckOrder->execute([$orderId]);
+                $orderStatus = $stmtCheckOrder->fetchColumn();
+
+                if ($orderStatus === 'COMPLETED') {
+                    $stmtUpdOrder = $db->prepare("UPDATE orders SET status = 'IN_PROGRESS' WHERE id = ?");
+                    $stmtUpdOrder->execute([$orderId]);
+                }
+            }
+
+            $db->commit();
+
+            setFlash('success', "Sertifikat <strong>{$certNum}</strong> berhasil dihapus. Status alat dikembalikan ke antrean penerbitan.");
+            header("Location: certificates.php?tab=archive");
+            exit;
+
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            setFlash('error', 'Gagal menghapus sertifikat: ' . $e->getMessage());
+            header("Location: certificates.php?tab=archive");
+            exit;
+        }
+    }
 }
 
 // 1. Antrean berkas masuk dari teknisi (status = DATA_SUBMITTED)
@@ -823,6 +882,14 @@ require_once __DIR__ . '/includes/header.php';
                                                 <i class="ph-bold ph-pencil-simple text-slate-500"></i>
                                                 <span>Ajukan Revisi (-01)</span>
                                             </button>
+                                            <form action="certificates.php" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus sertifikat <?= htmlspecialchars($cert['certificate_number']) ?>?\n\nAlat akan dikembalikan ke antrean siap terbit.');" class="m-0 p-0">
+                                                <input type="hidden" name="action" value="delete_certificate">
+                                                <input type="hidden" name="certificate_id" value="<?= $cert['id'] ?>">
+                                                <button type="submit" class="action-menu-item danger">
+                                                    <i class="ph-bold ph-trash"></i>
+                                                    <span>Hapus Sertifikat</span>
+                                                </button>
+                                            </form>
                                         <?php endif; ?>
                                     </div>
                                 </div>
