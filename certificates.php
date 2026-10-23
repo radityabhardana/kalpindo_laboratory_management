@@ -806,10 +806,6 @@ require_once __DIR__ . '/includes/header.php';
                                             <i class="ph-bold ph-file-text text-slate-500"></i>
                                             <span>Buka Berkas SPK</span>
                                         </a>
-                                        <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="action-menu-item">
-                                            <i class="ph-bold ph-qr-code text-slate-500"></i>
-                                            <span>Verifikasi QR Code</span>
-                                        </a>
 
                                         <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
                                             <div class="action-menu-divider"></div>
