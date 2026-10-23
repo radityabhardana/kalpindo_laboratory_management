@@ -965,11 +965,11 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- MODAL 3: Tinjau Lengkap Data SPK & Lembar Kerja Teknisi (ISO/IEC 17025 Reviewer Modal) -->
-<div id="review-data-modal" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="ent-modal rounded-xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl text-xs overflow-hidden">
+<div id="review-data-modal" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-4" style="overflow-y: auto;">
+    <div class="ent-modal review-modal-card rounded-xl shadow-2xl text-xs" style="max-height: 86vh; display: flex; flex-direction: column; width: 100%; max-width: 860px; overflow: hidden;">
         
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-4 shrink-0 bg-slate-50 dark:bg-slate-900/80">
+        <!-- Modal Header (Fixed at top) -->
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 shrink-0 bg-slate-50 dark:bg-slate-900/80">
             <div>
                 <div class="flex items-center gap-2 mb-0.5">
                     <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
@@ -978,26 +978,26 @@ require_once __DIR__ . '/includes/header.php';
                     <span class="text-xs text-slate-400">·</span>
                     <span class="text-xs text-slate-500 font-mono">ISO/IEC 17025 Data Verification</span>
                 </div>
-                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tinjau Detail Data SPK & Lembar Kerja Teknisi</h3>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tinjau Detail Data SPK & Lembar Kerja Teknisi</h3>
             </div>
-            <button onclick="closeModal('review-data-modal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md transition-colors">
+            <button onclick="closeModal('review-data-modal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md transition-colors" title="Tutup">
                 <i class="ph-bold ph-x text-lg"></i>
             </button>
         </div>
 
-        <!-- Modal Body (Scrollable) -->
-        <div class="p-5 overflow-y-auto space-y-5 flex-1">
+        <!-- Modal Body (Smoothly Scrollable & Compact) -->
+        <div class="review-modal-body p-3.5 sm:p-4 space-y-3 flex-1" style="flex: 1 1 auto; min-height: 0; overflow-y: auto;">
             
             <!-- Instrument Summary Banner -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="space-y-1">
+            <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="space-y-0.5">
                     <div class="flex items-center gap-2 flex-wrap">
                         <span id="review-scope-badge" class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200"></span>
                         <span id="review-kan-badge"></span>
                         <span id="review-service-badge"></span>
                     </div>
-                    <h4 id="review-inst-name" class="text-base font-bold text-slate-900 dark:text-slate-100"></h4>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                    <h4 id="review-inst-name" class="text-sm font-bold text-slate-900 dark:text-slate-100"></h4>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-0">
                         Merek / Tipe: <strong id="review-brand-model" class="text-slate-800 dark:text-slate-200"></strong> · 
                         No. Seri: <strong id="review-serial-number" class="font-mono text-slate-900 dark:text-slate-100"></strong>
                     </p>
@@ -1005,20 +1005,20 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="text-left md:text-right shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-100 dark:border-slate-700">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Status Alur Sertifikasi</span>
                     <div id="review-status-pill"></div>
-                    <div id="review-cert-no-box" class="mt-1 font-mono text-xs font-bold text-[#C81E26] dark:text-red-400"></div>
+                    <div id="review-cert-no-box" class="mt-0.5 font-mono text-xs font-bold text-[#C81E26] dark:text-red-400"></div>
                 </div>
             </div>
 
             <!-- Bagian 1: Data Registrasi SPK & Pelanggan -->
             <div class="ent-card overflow-hidden">
-                <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-xs text-slate-800 dark:text-slate-200">
                         <i class="ph-bold ph-clipboard-text text-sky-600"></i>
                         <span>1. Data Registrasi SPK & Informasi Pelanggan</span>
                     </div>
                     <span id="review-order-number-badge" class="font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-400"></span>
                 </div>
-                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     <div>
                         <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Nama Perusahaan / Pelanggan</span>
                         <div id="review-customer-name" class="text-xs font-semibold text-slate-900 dark:text-slate-100"></div>
@@ -1052,14 +1052,14 @@ require_once __DIR__ . '/includes/header.php';
 
             <!-- Bagian 2: Parameter Pengujian & Standar Teknisi -->
             <div class="ent-card overflow-hidden">
-                <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-xs text-slate-800 dark:text-slate-200">
                         <i class="ph-bold ph-wrench text-amber-600"></i>
                         <span>2. Parameter Teknis & Alat Standar Acuan</span>
                     </div>
                     <span id="review-tech-badge" class="text-[11px] text-slate-500"></span>
                 </div>
-                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     <div>
                         <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Teknisi Penguji</span>
                         <div id="review-technician-name" class="text-xs font-semibold text-slate-900 dark:text-slate-100"></div>
@@ -1074,20 +1074,20 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
 
                     <!-- Kondisi Lingkungan -->
-                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-1">
-                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Suhu Ruangan Lab</span>
-                        <div class="font-mono text-sm font-bold text-slate-900 dark:text-slate-100">
-                            <span id="review-temp"></span> °C <span class="text-slate-400 font-normal text-xs">± <span id="review-temp-u"></span> °C</span>
+                    <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-1">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Suhu Ruangan Lab</span>
+                        <div class="font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
+                            <span id="review-temp"></span> °C <span class="text-slate-400 font-normal text-[11px]">± <span id="review-temp-u"></span> °C</span>
                         </div>
                     </div>
-                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-1">
-                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Kelembaban Relatif (RH)</span>
-                        <div class="font-mono text-sm font-bold text-slate-900 dark:text-slate-100">
-                            <span id="review-humidity"></span> % <span class="text-slate-400 font-normal text-xs">± <span id="review-humidity-u"></span> %</span>
+                    <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-1">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Kelembaban Relatif (RH)</span>
+                        <div class="font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
+                            <span id="review-humidity"></span> % <span class="text-slate-400 font-normal text-[11px]">± <span id="review-humidity-u"></span> %</span>
                         </div>
                     </div>
-                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-2 lg:col-span-1">
-                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Metode & Instruksi Kerja</span>
+                    <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-2 lg:col-span-1">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Metode & Instruksi Kerja</span>
                         <div id="review-method" class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate"></div>
                     </div>
 
@@ -1116,25 +1116,25 @@ require_once __DIR__ . '/includes/header.php';
 
             <!-- Bagian 3: Rekapitulasi Data Mentah Titik Ukur (Readings) -->
             <div class="ent-card overflow-hidden">
-                <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-xs text-slate-800 dark:text-slate-200">
                         <i class="ph-bold ph-table text-emerald-600"></i>
                         <span>3. Rekapitulasi Data Titik Ukur & Ketidakpastian (Readings)</span>
                     </div>
                     <span id="review-readings-count" class="text-[11px] text-slate-500 font-mono"></span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="ent-table min-w-[700px]">
+                    <table class="ent-table min-w-[650px]">
                         <thead>
                             <tr>
-                                <th class="w-[140px]">Titik Uji / Nominal</th>
-                                <th class="text-right w-[110px]">Nilai Standar</th>
-                                <th class="text-right w-[80px]">Run 1</th>
-                                <th class="text-right w-[80px]">Run 2</th>
-                                <th class="text-right w-[80px]">Run 3</th>
-                                <th class="text-right w-[100px]">Rata-rata (Mean)</th>
-                                <th class="text-right w-[100px]">Koreksi</th>
-                                <th class="text-right w-[110px]">Ketidakpastian (U95)</th>
+                                <th class="w-[130px] py-1.5 text-xs">Titik Uji / Nominal</th>
+                                <th class="text-right w-[100px] py-1.5 text-xs">Nilai Standar</th>
+                                <th class="text-right w-[75px] py-1.5 text-xs">Run 1</th>
+                                <th class="text-right w-[75px] py-1.5 text-xs">Run 2</th>
+                                <th class="text-right w-[75px] py-1.5 text-xs">Run 3</th>
+                                <th class="text-right w-[95px] py-1.5 text-xs">Rata-rata</th>
+                                <th class="text-right w-[95px] py-1.5 text-xs">Koreksi</th>
+                                <th class="text-right w-[105px] py-1.5 text-xs">Ketidakpastian (U95)</th>
                             </tr>
                         </thead>
                         <tbody id="review-readings-tbody">
@@ -1146,21 +1146,21 @@ require_once __DIR__ . '/includes/header.php';
 
         </div>
 
-        <!-- Modal Footer Actions -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800 p-4 shrink-0 bg-slate-50 dark:bg-slate-900/80">
+        <!-- Modal Footer Actions (Fixed at bottom) -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-slate-200 dark:border-slate-800 px-4 py-2.5 shrink-0 bg-slate-50 dark:bg-slate-900/80">
             <div class="flex items-center gap-2 w-full sm:w-auto">
-                <a id="review-link-spk" href="#" class="btn-surface text-xs" title="Buka SPK di halaman Sales Order">
+                <a id="review-link-spk" href="#" class="btn-surface text-xs" style="height: 32px; padding: 0 10px;" title="Buka SPK di halaman Sales Order">
                     <i class="ph-bold ph-arrow-square-out text-slate-400"></i>
                     <span>Buka SPK</span>
                 </a>
-                <a id="review-link-ws" href="#" class="btn-surface text-xs" title="Buka Lembar Kerja Teknisi secara lengkap">
+                <a id="review-link-ws" href="#" class="btn-surface text-xs" style="height: 32px; padding: 0 10px;" title="Buka Lembar Kerja Teknisi secara lengkap">
                     <i class="ph-bold ph-wrench text-slate-400"></i>
                     <span>Buka Worksheet Penuh</span>
                 </a>
             </div>
 
             <div class="flex items-center gap-2 justify-end w-full sm:w-auto">
-                <button type="button" onclick="closeModal('review-data-modal')" class="btn-surface">Tutup</button>
+                <button type="button" onclick="closeModal('review-data-modal')" class="btn-surface" style="height: 32px; padding: 0 12px;">Tutup</button>
                 <div id="review-dynamic-action"></div>
             </div>
         </div>
