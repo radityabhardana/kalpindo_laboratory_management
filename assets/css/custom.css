@@ -1294,6 +1294,14 @@ html.dark .bg-slate-100,
 .rounded-md { border-radius: 0.375rem !important; }
 .shadow-subtle { box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.08) !important; }
 
+/* Brand utility fallbacks (for 100% offline reliability) */
+.bg-brand, .bg-brand-primary, .bg-\[\#C81E26\] { background-color: #C81E26 !important; }
+.hover\:bg-\[\#B2151D\]:hover { background-color: #B2151D !important; }
+.text-brand, .text-brand-primary, .text-\[\#C81E26\] { color: #C81E26 !important; }
+.border-brand, .border-brand-primary, .border-\[\#C81E26\] { border-color: #C81E26 !important; }
+.border-\[\#C81E26\]\/50 { border-color: rgba(200, 30, 38, 0.5) !important; }
+.max-w-\[210mm\] { max-width: 210mm !important; }
+
 /* Dark mode specific class mappings (for template backward compatibility) */
 html.dark .dark\:bg-slate-900, [data-bs-theme="dark"] .dark\:bg-slate-900 { background-color: #111827 !important; }
 html.dark .dark\:bg-slate-950, [data-bs-theme="dark"] .dark\:bg-slate-950 { background-color: #070B12 !important; }

@@ -3,6 +3,22 @@
  * Formatted for standard A4 paper (210mm x 297mm)
  */
 
+/* Screen & Print Base Watermark (Ensures it is never rendered as plain text at top of sheet) */
+.cert-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-35deg);
+    font-size: 65pt;
+    color: rgba(15, 23, 42, 0.035) !important;
+    font-weight: 900;
+    letter-spacing: 0.25em;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    white-space: nowrap;
+}
+
 @media print {
     @page {
         size: A4 portrait;

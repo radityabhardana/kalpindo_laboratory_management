@@ -154,7 +154,68 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
         @media screen {
             body {
                 background-color: #0F172A;
-                padding: 24px;
+                padding: 24px 16px;
+                margin: 0;
+            }
+            .cert-action-bar {
+                max-width: 210mm;
+                width: 100%;
+                margin: 0 auto 24px auto;
+                background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+                border: 1px solid #334155;
+                color: #F8FAFC;
+                border-radius: 12px;
+                padding: 12px 20px;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.5);
+            }
+            .cert-btn-back {
+                background-color: #1E293B !important;
+                color: #F1F5F9 !important;
+                border: 1px solid #475569 !important;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                text-decoration: none !important;
+                transition: all 0.15s ease;
+            }
+            .cert-btn-back:hover {
+                background-color: #334155 !important;
+                border-color: #64748B !important;
+                color: #FFFFFF !important;
+            }
+            .cert-btn-print {
+                background-color: #C81E26 !important;
+                color: #FFFFFF !important;
+                border: 1px solid #B2151D !important;
+                padding: 10px 22px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 700;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(200, 30, 38, 0.4);
+                transition: all 0.15s ease;
+                letter-spacing: 0.3px;
+            }
+            .cert-btn-print:hover {
+                background-color: #A8181F !important;
+                border-color: #8E1319 !important;
+                box-shadow: 0 6px 18px rgba(200, 30, 38, 0.55);
+                transform: translateY(-1px);
+            }
+            .cert-btn-print:active {
+                transform: translateY(0);
             }
             .certificate-sheet {
                 background: #ffffff;
@@ -163,9 +224,23 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
                 min-height: 297mm;
                 margin: 0 auto 30px auto;
                 padding: 14mm 16mm 14mm 16mm;
-                box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
+                box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
                 border-radius: 6px;
                 position: relative;
+            }
+            .cert-watermark {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-35deg);
+                font-size: 65pt;
+                color: rgba(15, 23, 42, 0.035) !important;
+                font-weight: 900;
+                letter-spacing: 0.25em;
+                pointer-events: none;
+                user-select: none;
+                z-index: 0;
+                white-space: nowrap;
             }
         }
         .cert-table th, .cert-table td {
@@ -181,37 +256,40 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
 <body>
 
     <!-- Web UI Action Bar (Hidden on Print) -->
-    <div class="no-print max-w-[210mm] mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 bg-slate-900/90 text-slate-200 border border-slate-700/80 px-5 py-3.5 rounded-xl shadow-2xl backdrop-blur text-xs">
-        <div class="flex items-center gap-3">
+    <div class="no-print cert-action-bar">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
             <?php if (isLoggedIn()): ?>
                 <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                    <a href="certificates.php" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center gap-1.5 transition-colors border border-slate-700">
-                        <i class="ph-bold ph-arrow-left"></i> Kembali ke Bagian Sertifikat
+                    <a href="certificates.php" class="cert-btn-back">
+                        <i class="ph-bold ph-arrow-left"></i>
+                        <span>Kembali ke Bagian Sertifikat</span>
                     </a>
                 <?php else: ?>
-                    <a href="index.php" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center gap-1.5 transition-colors border border-slate-700">
-                        <i class="ph-bold ph-arrow-left"></i> Kembali ke Dashboard
+                    <a href="index.php" class="cert-btn-back">
+                        <i class="ph-bold ph-arrow-left"></i>
+                        <span>Kembali ke Dashboard</span>
                     </a>
                 <?php endif; ?>
             <?php else: ?>
-                <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium flex items-center gap-1.5 transition-colors border border-slate-700">
-                    <i class="ph-bold ph-shield-check"></i> Verifikasi Keabsahan
+                <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" class="cert-btn-back">
+                    <i class="ph-bold ph-shield-check"></i>
+                    <span>Verifikasi Keabsahan</span>
                 </a>
             <?php endif; ?>
             
-            <span class="text-slate-600">|</span>
+            <span style="color: #64748B; font-size: 15px;">|</span>
             
-            <span class="font-mono font-semibold text-white tracking-tight">
+            <span style="font-family: monospace; font-weight: 800; color: #FFFFFF; font-size: 13px; letter-spacing: 0.5px;">
                 <?= htmlspecialchars($cert['certificate_number']) ?>
             </span>
-            <span class="text-slate-400 font-medium text-[11px]">
-                (<?= $isKan ? 'Akreditasi KAN LK-088' : 'Non-KAN Tertelusur' ?>)
+            <span style="color: #94A3B8; font-weight: 500; font-size: 11px;">
+                (<?= $isKan ? 'Akreditasi KAN LK-366-IDN' : 'Non-KAN Tertelusur' ?>)
             </span>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button onclick="window.print()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-[#C81E26] hover:bg-[#B2151D] text-white flex items-center gap-1.5 shadow-subtle transition-colors" title="Klik untuk mencetak atau simpan sebagai file PDF">
-                <i class="ph-bold ph-file-pdf text-sm"></i>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" onclick="window.print()" class="cert-btn-print" title="Klik untuk mencetak atau simpan sebagai file PDF">
+                <i class="ph-bold ph-printer" style="font-size: 16px;"></i>
                 <span>Cetak / Simpan PDF (A4)</span>
             </button>
         </div>
@@ -234,7 +312,7 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
                     <h1 class="text-sm font-extrabold text-slate-950 uppercase tracking-tight leading-tight">
                         PT. KALIBRASI PENGUJIAN INDONESIA
                     </h1>
-                    <p class="text-[9.5px] font-bold text-[#C81E26] tracking-wide uppercase">
+                    <p class="text-[9.5px] font-bold uppercase" style="color: #C81E26 !important; letter-spacing: 0.5px;">
                         LABORATORIUM KALIBRASI & PENGUJIAN INDUSTRI
                     </p>
                     <p class="text-[9px] text-slate-600 mt-0.5">
@@ -249,9 +327,8 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
             <!-- Right: KAN Accreditation or Non-KAN Notice -->
             <?php if ($isKan): ?>
                 <div class="text-right flex flex-col items-end">
-                    <img src="assets/img/kan.png" alt="Logo KAN" class="h-14 object-contain drop-shadow-sm">
-                    <div class="text-[8.5px] font-mono font-extrabold text-slate-900 mt-0.5">LK-088-IDN</div>
-                    <span class="text-[7.5px] text-slate-500 font-mono">ISO/IEC 17025:2017</span>
+                    <img src="assets/img/kan.png" alt="Logo KAN LK-366-IDN" class="h-14 object-contain" style="max-height: 56px;">
+                    <span class="text-[8px] text-slate-600 font-mono mt-0.5 font-semibold">ISO/IEC 17025:2017</span>
                 </div>
             <?php else: ?>
                 <div class="text-right flex flex-col items-end justify-center h-14">
@@ -280,7 +357,7 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
             
             <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 border border-slate-900 rounded bg-slate-50">
                 <span class="font-semibold text-slate-700 text-[10px]">Nomor Sertifikat / Certificate No :</span>
-                <span class="font-mono font-black text-sm text-[#C81E26] tracking-wider">
+                <span class="font-mono font-black text-sm tracking-wider" style="color: #C81E26 !important;">
                     <?= htmlspecialchars($cert['certificate_number']) ?>
                 </span>
                 <?php if ($cert['revision_number'] !== '00'): ?>
@@ -467,7 +544,7 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
 
                     <div class="h-20 flex items-center justify-end relative my-1">
                         <!-- Stempel Kalibrasi Bulat Kalpindo -->
-                        <div class="absolute right-10 w-20 h-20 rounded-full border-2 border-dashed border-[#C81E26]/50 text-[#C81E26] flex flex-col items-center justify-center text-[7px] font-bold uppercase rotate-[-12deg] pointer-events-none select-none">
+                        <div class="absolute right-10 w-20 h-20 rounded-full border-2 border-dashed flex flex-col items-center justify-center text-[7px] font-bold uppercase rotate-[-12deg] pointer-events-none select-none" style="border-color: rgba(200, 30, 38, 0.5) !important; color: #C81E26 !important;">
                             <span class="text-[6.5px]">PT KALPINDO</span>
                             <span class="font-black text-[9px] tracking-wider">CALIBRATED</span>
                             <span class="text-[6.5px]"><?= $isKan ? 'ISO/IEC 17025' : 'TERTELUSUR SI' ?></span>
@@ -491,7 +568,7 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
 
         <!-- 7. FOOTNOTE AKREDITASI -->
         <div class="mt-4 pt-2 border-t border-slate-300 flex items-center justify-between text-[8px] text-slate-500 font-mono">
-            <span>Sertifikat ini tidak boleh digandakan sebagian tanpa persetujuan tertulis dari PT Kalpindo.<?= $isKan ? ' • Akreditasi KAN LK-088-IDN' : ' • Sertifikat Kalibrasi Tertelusur (Non-Akreditasi KAN)' ?></span>
+            <span>Sertifikat ini tidak boleh digandakan sebagian tanpa persetujuan tertulis dari PT Kalpindo.<?= $isKan ? ' • Akreditasi KAN LK-366-IDN' : ' • Sertifikat Kalibrasi Tertelusur (Non-Akreditasi KAN)' ?></span>
             <span>Halaman 1 dari 1</span>
         </div>
 
