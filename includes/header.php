@@ -415,13 +415,6 @@ if (hasRole('SUPER_ADMIN')) {
                     <span class="d-sm-none font-mono"><?= htmlspecialchars($activeRoleInfo['short']) ?></span>
                 </div>
 
-                <!-- Quick Action "+ Input SPK" (Visible if authorized) -->
-                <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
-                    <a href="orders.php?action=create" class="btn-brand-primary">
-                        <i class="ph-bold ph-plus text-xs"></i>
-                        <span class="d-none d-sm-inline">SPK Baru</span>
-                    </a>
-                <?php endif; ?>
 
                 <!-- Dark / Light Mode Toggle Button -->
                 <button type="button" onclick="toggleTheme()" class="theme-toggle-btn btn-icon" title="Mode Gelap / Terang" aria-label="Toggle dark mode">
