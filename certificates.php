@@ -674,7 +674,7 @@ require_once __DIR__ . '/includes/header.php';
                         $scope = $scopes[$cert['scope_code']] ?? ['name' => $cert['scope_code']];
                         $isJustIssued = ($newlyIssued && $cert['certificate_number'] === $newlyIssued);
                         $isCertKan = (isset($cert['is_kan']) && (int)$cert['is_kan'] === 1 && substr($cert['certificate_number'], 0, 1) !== 'N');
-                        $menuId = "action-menu-" . $cert['id'];
+                        $menuId = "action-menu-cert-" . $cert['id'];
                         $certReviewData = [
                             'instrument_id' => (int)$cert['instrument_id'],
                             'order_id' => (int)$cert['order_id'],
@@ -794,7 +794,7 @@ require_once __DIR__ . '/includes/header.php';
                                     </button>
                                     
                                     <div id="<?= $menuId ?>" class="action-menu-dropdown">
-                                        <button type="button" onclick='openReviewModal(<?= json_encode($certReviewData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>); toggleActionMenu("<?= $menuId ?>", event);' class="action-menu-item">
+                                        <button type="button" onclick='openReviewModal(<?= json_encode($certReviewData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>); closeAllActionMenus();' class="action-menu-item">
                                             <i class="ph-bold ph-clipboard-text text-slate-500"></i>
                                             <span>Tinjau SPK & Worksheet</span>
                                         </button>
@@ -813,7 +813,7 @@ require_once __DIR__ . '/includes/header.php';
 
                                         <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
                                             <div class="action-menu-divider"></div>
-                                            <button type="button" onclick="openRevisionModal(<?= $cert['id'] ?>, '<?= htmlspecialchars(addslashes($cert['certificate_number'])) ?>')" class="action-menu-item">
+                                            <button type="button" onclick="openRevisionModal(<?= $cert['id'] ?>, '<?= htmlspecialchars(addslashes($cert['certificate_number'])) ?>'); closeAllActionMenus();" class="action-menu-item">
                                                 <i class="ph-bold ph-pencil-simple text-slate-500"></i>
                                                 <span>Ajukan Revisi (-01)</span>
                                             </button>

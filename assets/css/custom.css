@@ -697,6 +697,11 @@ html.dark .btn-surface:hover,
     border-color: var(--border-strong);
 }
 
+.btn-icon i,
+.btn-icon svg {
+    pointer-events: none;
+}
+
 /* ========================================================== */
 /* 10. CONTEXTUAL ACTION MENU (••• DROPDOWN)                 */
 /* ========================================================== */
@@ -723,14 +728,6 @@ html.dark .btn-surface:hover,
 .action-menu-dropdown.show {
     display: block;
     animation: menuFadeIn 0.12s ease-out;
-}
-
-/* Proteksi Overflow Tabel: Baris terakhir otomatis buka menu ke ATAS (Dropup) */
-.ent-table tbody tr:last-child .action-menu-dropdown,
-.ent-table tbody tr:nth-last-child(2) .action-menu-dropdown {
-    top: auto !important;
-    bottom: calc(100% + 4px) !important;
-    transform-origin: bottom right !important;
 }
 
 @keyframes menuFadeIn {

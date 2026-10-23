@@ -308,8 +308,18 @@ function toggleActionMenu(id, event) {
         return;
     }
 
-    // Identify trigger button
-    const triggerBtn = (event && event.currentTarget) ? event.currentTarget : targetMenu.previousElementSibling;
+    // Identify trigger button reliably
+    let triggerBtn = null;
+    if (event) {
+        if (event.currentTarget && event.currentTarget.getBoundingClientRect) {
+            triggerBtn = event.currentTarget;
+        } else if (event.target && event.target.closest) {
+            triggerBtn = event.target.closest('.btn-icon') || event.target.closest('button');
+        }
+    }
+    if (!triggerBtn) {
+        triggerBtn = targetMenu.previousElementSibling || targetMenu.closest('.action-menu-container')?.querySelector('.btn-icon');
+    }
 
     // Show menu
     targetMenu.classList.add('show');
@@ -317,12 +327,12 @@ function toggleActionMenu(id, event) {
     // Calculate smart fixed coordinates so it never gets clipped by table overflow
     if (triggerBtn) {
         const btnRect = triggerBtn.getBoundingClientRect();
-        targetMenu.style.position = 'fixed';
-        targetMenu.style.zIndex = '9999';
+        targetMenu.style.setProperty('position', 'fixed', 'important');
+        targetMenu.style.setProperty('z-index', '9999', 'important');
 
         // Measure menu dimensions
         const menuWidth = targetMenu.offsetWidth || 190;
-        const menuHeight = targetMenu.offsetHeight || 90;
+        const menuHeight = targetMenu.offsetHeight || 180;
 
         // Align right of menu to right of trigger button
         let leftPos = btnRect.right - menuWidth;
@@ -331,8 +341,8 @@ function toggleActionMenu(id, event) {
             leftPos = window.innerWidth - menuWidth - 12;
         }
 
-        targetMenu.style.left = `${leftPos}px`;
-        targetMenu.style.right = 'auto';
+        targetMenu.style.setProperty('left', `${leftPos}px`, 'important');
+        targetMenu.style.setProperty('right', 'auto', 'important');
 
         // Check if there is enough space below
         const spaceBelow = window.innerHeight - btnRect.bottom;
@@ -340,14 +350,14 @@ function toggleActionMenu(id, event) {
 
         if (spaceBelow < (menuHeight + 16) && spaceAbove > spaceBelow) {
             // Open upwards (dropup)
-            targetMenu.style.top = 'auto';
-            targetMenu.style.bottom = `${window.innerHeight - btnRect.top + 4}px`;
-            targetMenu.style.transformOrigin = 'bottom right';
+            targetMenu.style.setProperty('top', 'auto', 'important');
+            targetMenu.style.setProperty('bottom', `${window.innerHeight - btnRect.top + 4}px`, 'important');
+            targetMenu.style.setProperty('transform-origin', 'bottom right', 'important');
         } else {
             // Open downwards
-            targetMenu.style.top = `${btnRect.bottom + 4}px`;
-            targetMenu.style.bottom = 'auto';
-            targetMenu.style.transformOrigin = 'top right';
+            targetMenu.style.setProperty('top', `${btnRect.bottom + 4}px`, 'important');
+            targetMenu.style.setProperty('bottom', 'auto', 'important');
+            targetMenu.style.setProperty('transform-origin', 'top right', 'important');
         }
     }
 }
@@ -355,13 +365,13 @@ function toggleActionMenu(id, event) {
 function closeAllActionMenus() {
     document.querySelectorAll('.action-menu-dropdown.show').forEach(menu => {
         menu.classList.remove('show');
-        menu.style.position = '';
-        menu.style.top = '';
-        menu.style.bottom = '';
-        menu.style.left = '';
-        menu.style.right = '';
-        menu.style.zIndex = '';
-        menu.style.transformOrigin = '';
+        menu.style.removeProperty('position');
+        menu.style.removeProperty('top');
+        menu.style.removeProperty('bottom');
+        menu.style.removeProperty('left');
+        menu.style.removeProperty('right');
+        menu.style.removeProperty('z-index');
+        menu.style.removeProperty('transform-origin');
     });
 }
 
@@ -372,6 +382,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Close when scrolling or resizing
-window.addEventListener('scroll', closeAllActionMenus, { passive: true });
+// Close when scrolling (capturing window and table overflow scrolls) or resizing
+window.addEventListener('scroll', closeAllActionMenus, { passive: true, capture: true });
 window.addEventListener('resize', closeAllActionMenus, { passive: true });
