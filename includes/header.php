@@ -65,7 +65,7 @@ $technicalItems = array_values(array_filter([
         'roles' => ['SUPER_ADMIN', 'TECHNICIAN'],
     ],
     [
-        'name' => 'Penerbitan Sertifikat',
+        'name' => 'Penerbitan & Arsip',
         'url' => 'certificates.php',
         'icon' => 'ph-certificate',
         'badge' => $pendingCertCount > 0 ? [

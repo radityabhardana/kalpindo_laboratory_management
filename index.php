@@ -368,20 +368,6 @@ $scopes = getScopeList();
                                          <i class="ph-bold ph-qr-code text-emerald-600 dark:text-emerald-400"></i>
                                          <span>Verifikasi QR</span>
                                      </a>
-
-                                     <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                                         <div class="action-menu-container">
-                                             <button type="button" onclick="toggleActionMenu('<?= $menuIdInst ?>', event)" class="btn-icon" style="height: 1.75rem; width: 1.75rem;" title="Opsi Tindak Lanjut" aria-label="Menu Opsi">
-                                                 <i class="ph-bold ph-dots-three-vertical text-sm"></i>
-                                             </button>
-                                             <div id="<?= $menuIdInst ?>" class="action-menu-dropdown">
-                                                 <a href="certificates.php?search=<?= urlencode($inst['certificate_number']) ?>#archive-section" class="action-menu-item">
-                                                     <i class="ph-bold ph-folder-open text-slate-500"></i>
-                                                     <span>Lihat di Arsip</span>
-                                                 </a>
-                                             </div>
-                                         </div>
-                                     <?php endif; ?>
                                  </div>
                             <?php else: ?>
                                 <div class="inline-flex items-center gap-1.5 justify-end whitespace-nowrap">

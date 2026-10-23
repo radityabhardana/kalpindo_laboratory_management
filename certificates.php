@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-$pageTitle = 'Bagian Pengurus Sertifikat';
+$pageTitle = 'Penerbitan & Arsip Sertifikat';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
@@ -199,6 +199,20 @@ $kanFilter = trim($_GET['kan'] ?? '');
 $sortOption = trim($_GET['sort'] ?? 'newest');
 $newlyIssued = trim($_GET['issued'] ?? '');
 
+// Tab Aktif: 'queue' (Antrean Penerbitan) atau 'archive' (Database Arsip)
+$activeTab = $_GET['tab'] ?? '';
+if (!$activeTab) {
+    if ($searchQuery !== '' || $scopeFilter !== '' || $kanFilter !== '' || $sortOption !== 'newest' || $newlyIssued !== '') {
+        $activeTab = 'archive';
+    } elseif ($autoTargetInstId > 0) {
+        $activeTab = 'queue';
+    } elseif (count($incomingQueue) > 0) {
+        $activeTab = 'queue';
+    } else {
+        $activeTab = 'archive';
+    }
+}
+
 $sqlIssued = "
     SELECT 
         c.*,
@@ -263,34 +277,30 @@ require_once __DIR__ . '/includes/header.php';
     <div>
         <div class="flex items-center gap-2 mb-1">
             <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60">
-                MODUL PENERBITAN
+                MODUL SERTIFIKASI
             </span>
             <span class="text-xs text-slate-400">·</span>
             <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">ISO/IEC 17025 (LK-088-IDN)</span>
         </div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Administrasi & Penerbitan Sertifikat</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Penerbitan & Arsip Sertifikat</h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
-            Kelola verifikasi data mentah teknisi, pembentukan nomor sertifikat standar ISO/IEC 17025, penandatanganan manajer teknis, dan pengarsipan resmi.
+            Kelola verifikasi data mentah teknisi, pembentukan nomor sertifikat standar ISO/IEC 17025, penandatanganan manajer teknis, serta pangkalan data arsip resmi sertifikat terbit.
         </p>
     </div>
 
     <div class="flex items-center gap-2 shrink-0">
-        <a href="#incoming-queue-section" class="btn-surface text-xs">
-            <i class="ph-bold ph-tray text-amber-500"></i>
-            <span>Antrean Berkas (<?= count($incomingQueue) ?>)</span>
-        </a>
-        <a href="certificates.php" class="btn-surface text-xs">
+        <a href="certificates.php?tab=<?= urlencode($activeTab) ?>" class="btn-surface text-xs">
             <i class="ph-bold ph-arrows-clockwise text-slate-400"></i>
             <span>Refresh Data</span>
         </a>
     </div>
 </div>
 
-<!-- 2. OPERATIONAL SUMMARY (4 Structured KPI Cards) -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+<!-- 2. OPERATIONAL SUMMARY (4 Structured KPI Cards - Interactive) -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     
-    <!-- KPI 1: Total Issued -->
-    <div class="kpi-widget accent-success">
+    <!-- KPI 1: Total Issued (Click to open Archive) -->
+    <div class="kpi-widget accent-success cursor-pointer hover:shadow-md transition-shadow" onclick="switchCertTab('archive')" title="Klik untuk membuka Database Arsip Sertifikat">
         <div class="flex items-center justify-between">
             <span class="kpi-label">Sertifikat Terbit</span>
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -302,8 +312,8 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <!-- KPI 2: Waiting Queue -->
-    <div class="kpi-widget <?= count($incomingQueue) > 0 ? 'accent-primary' : 'accent-warning' ?>">
+    <!-- KPI 2: Waiting Queue (Click to open Queue) -->
+    <div class="kpi-widget <?= count($incomingQueue) > 0 ? 'accent-primary' : 'accent-warning' ?> cursor-pointer hover:shadow-md transition-shadow" onclick="switchCertTab('queue')" title="Klik untuk membuka Antrean Penerbitan">
         <div class="flex items-center justify-between">
             <span class="kpi-label">Menunggu Nomor</span>
             <span class="w-2 h-2 rounded-full <?= count($incomingQueue) > 0 ? 'bg-[#C81E26] animate-pulse' : 'bg-slate-300' ?>"></span>
@@ -345,7 +355,39 @@ require_once __DIR__ . '/includes/header.php';
 
 </div>
 
-<!-- 3. WORKFLOW QUEUE (Antrean Berkas Masuk Teknisi) -->
+<!-- 3. TAB NAVIGATION (Antrean Penerbitan Baru vs Database Arsip) -->
+<div class="border-b border-slate-200 dark:border-slate-800 mb-6 flex items-center justify-between gap-4 overflow-x-auto">
+    <nav class="flex items-center gap-2 -mb-px text-xs font-semibold">
+        <button 
+            type="button" 
+            onclick="switchCertTab('queue')" 
+            id="tab-btn-queue" 
+            class="tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 <?= $activeTab === 'queue' ? 'border-[#C81E26] text-[#C81E26] dark:border-red-500 dark:text-red-400' : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200' ?>"
+        >
+            <i class="ph-bold ph-tray text-sm <?= $activeTab === 'queue' ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-400' ?>"></i>
+            <span>Antrean Penerbitan Baru</span>
+            <span class="badge-status <?= count($incomingQueue) > 0 ? 'danger' : 'neutral' ?>" style="font-size: 10px; padding: 1px 6px;">
+                <?= count($incomingQueue) ?>
+            </span>
+        </button>
+
+        <button 
+            type="button" 
+            onclick="switchCertTab('archive')" 
+            id="tab-btn-archive" 
+            class="tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 <?= $activeTab === 'archive' ? 'border-[#C81E26] text-[#C81E26] dark:border-red-500 dark:text-red-400' : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200' ?>"
+        >
+            <i class="ph-bold ph-archive text-sm <?= $activeTab === 'archive' ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-400' ?>"></i>
+            <span>Database Arsip Sertifikat Terbit</span>
+            <span class="badge-status success" style="font-size: 10px; padding: 1px 6px;">
+                <?= $totalIssuedCount ?>
+            </span>
+        </button>
+    </nav>
+</div>
+
+<!-- TAB PANE 1: ANTREAN PENERBITAN BARU -->
+<div id="pane-queue" class="<?= $activeTab === 'queue' ? '' : 'hidden' ?>">
 <div id="incoming-queue-section" class="ent-card mb-7 scroll-mt-20">
     <div class="ent-card-header">
         <div class="flex items-center gap-2.5">
@@ -446,7 +488,10 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     <?php endif; ?>
 </div>
+</div>
 
+<!-- TAB PANE 2: DATABASE ARSIP SERTIFIKAT TERBIT -->
+<div id="pane-archive" class="<?= $activeTab === 'archive' ? '' : 'hidden' ?>">
 <!-- 4. CERTIFICATE DATABASE / ARCHIVE (Arsip Sertifikat Kalibrasi Resmi Terbit) -->
 <div id="archive-section" class="ent-card scroll-mt-20">
     
@@ -471,7 +516,7 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Integrated Operational Filter Bar -->
     <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40">
         <form action="certificates.php" method="GET" class="flex flex-wrap items-center justify-between gap-3 text-xs">
-            <input type="hidden" name="section" value="archive">
+            <input type="hidden" name="tab" value="archive">
             
             <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
                 <!-- Search Input -->
@@ -512,7 +557,7 @@ require_once __DIR__ . '/includes/header.php';
                     <span>Terapkan</span>
                 </button>
                 <?php if ($searchQuery !== '' || $scopeFilter !== '' || $kanFilter !== '' || $sortOption !== 'newest'): ?>
-                    <a href="certificates.php#archive-section" class="btn-surface">
+                    <a href="certificates.php?tab=archive" class="btn-surface">
                         Reset
                     </a>
                 <?php endif; ?>
@@ -656,6 +701,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
 </div>
+</div>
 
 <!-- MODAL 1: Generator Nomor Sertifikat Otomatis -->
 <div id="generate-cert-modal" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
@@ -784,6 +830,56 @@ require_once __DIR__ . '/includes/header.php';
 
 <script>
 let currentModalScopeCode = 'P';
+
+function switchCertTab(tabName) {
+    const queuePane = document.getElementById('pane-queue');
+    const archivePane = document.getElementById('pane-archive');
+    const queueBtn = document.getElementById('tab-btn-queue');
+    const archiveBtn = document.getElementById('tab-btn-archive');
+    
+    if (!queuePane || !archivePane) return;
+
+    const activeClasses = 'tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 border-[#C81E26] text-[#C81E26] dark:border-red-500 dark:text-red-400';
+    const inactiveClasses = 'tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200';
+
+    if (tabName === 'archive') {
+        queuePane.classList.add('hidden');
+        archivePane.classList.remove('hidden');
+
+        if (archiveBtn) archiveBtn.className = activeClasses;
+        if (queueBtn) queueBtn.className = inactiveClasses;
+
+        const queueIcon = queueBtn ? queueBtn.querySelector('i') : null;
+        const archiveIcon = archiveBtn ? archiveBtn.querySelector('i') : null;
+        if (queueIcon) queueIcon.className = 'ph-bold ph-tray text-sm text-slate-400';
+        if (archiveIcon) archiveIcon.className = 'ph-bold ph-archive text-sm text-[#C81E26] dark:text-red-400';
+
+        const url = new URL(window.location);
+        url.searchParams.set('tab', 'archive');
+        window.history.replaceState({}, '', url);
+    } else {
+        archivePane.classList.add('hidden');
+        queuePane.classList.remove('hidden');
+
+        if (queueBtn) queueBtn.className = activeClasses;
+        if (archiveBtn) archiveBtn.className = inactiveClasses;
+
+        const queueIcon = queueBtn ? queueBtn.querySelector('i') : null;
+        const archiveIcon = archiveBtn ? archiveBtn.querySelector('i') : null;
+        if (queueIcon) queueIcon.className = 'ph-bold ph-tray text-sm text-[#C81E26] dark:text-red-400';
+        if (archiveIcon) archiveIcon.className = 'ph-bold ph-archive text-sm text-slate-400';
+
+        const url = new URL(window.location);
+        url.searchParams.set('tab', 'queue');
+        window.history.replaceState({}, '', url);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#archive' || window.location.hash === '#archive-section') {
+        switchCertTab('archive');
+    }
+});
 
 function refreshModalCertPreview() {
     const isKan = document.getElementById('modal-is-kan').value;
