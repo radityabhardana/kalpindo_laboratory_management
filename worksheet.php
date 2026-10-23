@@ -11,8 +11,8 @@ $pageTitle = 'Lembar Kerja Kalibrasi';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
-// Proteksi Hak Akses: Hanya Tim Teknisi dan Master Admin yang berhak mengakses lembar kerja kalibrasi
-requireRole(['SUPER_ADMIN', 'TECHNICIAN'], 'index.php');
+// Proteksi Hak Akses: Tim Teknisi, Pengurus Sertifikat (Reviewer), dan Master Admin
+requireRole(['SUPER_ADMIN', 'TECHNICIAN', 'CERT_ADMIN'], 'index.php');
 
 $db = getDbConnection();
 $scopes = getScopeList();
@@ -210,7 +210,9 @@ if ($selectedInstId > 0) {
     }
 }
 
+$isCertAdmin = hasRole('CERT_ADMIN');
 $isCertified = ($currentInst && ($currentInst['status'] === 'CERTIFIED' || !empty($currentInst['certificate_number'])));
+$isReadOnly = ($isCertified || $isCertAdmin);
 
 $readings = [];
 if ($currentWs && !empty($currentWs['readings_json'])) {
@@ -499,7 +501,12 @@ require_once __DIR__ . '/includes/header.php';
     </div>
     
     <div class="d-flex align-items-center gap-2 shrink-0">
-        <?php if ($isCertified): ?>
+        <?php if ($isCertAdmin): ?>
+            <span class="badge-status info">
+                <i class="ph-bold ph-shield-check"></i>
+                <span>Mode Tinjau Pengurus Sertifikat</span>
+            </span>
+        <?php elseif ($isCertified): ?>
             <span class="badge-status success">
                 <i class="ph-bold ph-lock-key"></i>
                 <span>Terkunci (Sertifikat Terbit)</span>
@@ -512,6 +519,36 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </div>
 </div>
+
+<?php if ($isCertAdmin): ?>
+    <div class="mb-4 p-3 rounded-lg d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 border" style="background-color: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.25);">
+        <div class="d-flex align-items-center gap-2.5">
+            <div class="w-8 h-8 rounded-circle d-flex align-items-center justify-content-center shrink-0" style="background: rgba(59, 130, 246, 0.15); color: #2563EB; width: 36px; height: 36px;">
+                <i class="ph-bold ph-shield-check" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <div class="fw-bold" style="font-size: 0.8125rem; color: #1D4ED8;">
+                    Mode Tinjau Pengurus Sertifikat (Read-Only)
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                    Anda sedang memeriksa data parameter teknisi dan rekapitulasi data ukur mentah. Seluruh input dikunci untuk menjaga integritas data ISO/IEC 17025.
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 shrink-0">
+            <a href="certificates.php" class="btn-surface text-xs" style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="ph-bold ph-arrow-left"></i>
+                <span>Kembali ke Sertifikat</span>
+            </a>
+            <?php if ($currentInst && $currentInst['status'] === 'DATA_SUBMITTED'): ?>
+                <a href="certificates.php?instrument_id=<?= (int)$currentInst['id'] ?>" class="btn-brand-primary text-xs" style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="ph-bold ph-certificate"></i>
+                    <span>Terbitkan Sertifikat Resmi &rarr;</span>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <!-- 2. Two-Column Workbench Layout -->
 <div class="row g-4 align-items-start">
@@ -652,6 +689,30 @@ require_once __DIR__ . '/includes/header.php';
                             </p>
                         </div>
                     </div>
+                <?php elseif ($isCertAdmin): ?>
+                    <div style="background-color: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); color: #1D4ED8; padding: 0.875rem 1rem; border-radius: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;" class="flex-sm-row align-items-sm-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <i class="ph-bold ph-shield-check" style="font-size: 1.35rem; flex-shrink: 0; color: #2563EB;"></i>
+                            <div>
+                                <p class="fw-bold mb-0" style="color: #1E40AF; font-size: 0.8125rem;">Mode Tinjau Pengurus Sertifikat (Read-Only)</p>
+                                <p class="mb-0 mt-0.5" style="line-height: 1.4; color: #2563EB; font-size: 0.6875rem;">
+                                    Anda sedang meninjau parameter dan data mentah teknisi sebelum menetapkan nomor sertifikat resmi.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 shrink-0">
+                            <a href="certificates.php?tab=queue" class="btn-surface" style="height: 32px; padding: 0 12px; font-size: 11px;">
+                                <i class="ph-bold ph-arrow-left"></i>
+                                <span>Ke Antrean</span>
+                            </a>
+                            <?php if ($currentInst['status'] === 'DATA_SUBMITTED'): ?>
+                                <a href="certificates.php?instrument_id=<?= (int)$currentInst['id'] ?>" class="btn-brand-primary" style="height: 32px; padding: 0 12px; font-size: 11px;">
+                                    <i class="ph-bold ph-certificate"></i>
+                                    <span>Terbitkan Nomor &rarr;</span>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 <?php endif; ?>
 
                 <!-- Instrument Top Identity Bar -->
@@ -712,10 +773,10 @@ require_once __DIR__ . '/includes/header.php';
                                     type="date" 
                                     name="calibration_date" 
                                     required 
-                                    <?= $isCertified ? 'disabled' : '' ?> 
+                                    <?= $isReadOnly ? 'disabled' : '' ?> 
                                     value="<?= htmlspecialchars((string)($currentInst['calibration_date'] ?: date('Y-m-d'))) ?>" 
                                     class="ent-input font-medium"
-                                    style="height: 38px; width: 100%; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                    style="height: 38px; width: 100%; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                                 >
                             </div>
                         </div>
@@ -728,20 +789,20 @@ require_once __DIR__ . '/includes/header.php';
                                         type="number" 
                                         step="0.1" 
                                         name="temperature" 
-                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        <?= $isReadOnly ? 'disabled' : '' ?> 
                                         value="<?= htmlspecialchars((string)($currentWs['temperature'] ?? 20.0)) ?>" 
                                         class="ent-input text-center font-mono fw-bold"
-                                        style="width: 75px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                        style="width: 75px; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                                     >
                                     <span style="color: var(--text-muted); font-size: 0.8125rem;">±</span>
                                     <input 
                                         type="number" 
                                         step="0.1" 
                                         name="temperature_uncertainty" 
-                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        <?= $isReadOnly ? 'disabled' : '' ?> 
                                         value="<?= htmlspecialchars((string)($currentWs['temperature_uncertainty'] ?? 1.0)) ?>" 
                                         class="ent-input text-center font-mono"
-                                        style="width: 65px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                        style="width: 65px; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                                     >
                                     <span style="color: var(--text-muted); font-size: 0.75rem; font-family: monospace;">°C</span>
                                 </div>
@@ -756,20 +817,20 @@ require_once __DIR__ . '/includes/header.php';
                                         type="number" 
                                         step="0.1" 
                                         name="humidity" 
-                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        <?= $isReadOnly ? 'disabled' : '' ?> 
                                         value="<?= htmlspecialchars((string)($currentWs['humidity'] ?? 55.0)) ?>" 
                                         class="ent-input text-center font-mono fw-bold"
-                                        style="width: 75px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                        style="width: 75px; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                                     >
                                     <span style="color: var(--text-muted); font-size: 0.8125rem;">±</span>
                                     <input 
                                         type="number" 
                                         step="0.1" 
                                         name="humidity_uncertainty" 
-                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        <?= $isReadOnly ? 'disabled' : '' ?> 
                                         value="<?= htmlspecialchars((string)($currentWs['humidity_uncertainty'] ?? 5.0)) ?>" 
                                         class="ent-input text-center font-mono"
-                                        style="width: 65px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                        style="width: 65px; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                                     >
                                     <span style="color: var(--text-muted); font-size: 0.75rem; font-family: monospace;">% RH</span>
                                 </div>
@@ -794,11 +855,11 @@ require_once __DIR__ . '/includes/header.php';
                             <input 
                                 type="text" 
                                 name="standard_calibrator" 
-                                <?= $isCertified ? 'disabled' : '' ?> 
+                                <?= $isReadOnly ? 'disabled' : '' ?> 
                                 required 
                                 value="<?= htmlspecialchars((string)($currentWs['standard_calibrator'] ?? 'Dead Weight Tester Fluke P3000 Series SN: DWT-4412')) ?>" 
                                 class="ent-input"
-                                style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                style="width: 100%; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                             >
                         </div>
 
@@ -808,10 +869,10 @@ require_once __DIR__ . '/includes/header.php';
                                 <input 
                                     type="text" 
                                     name="standard_cert_no" 
-                                    <?= $isCertified ? 'disabled' : '' ?> 
+                                    <?= $isReadOnly ? 'disabled' : '' ?> 
                                     value="<?= htmlspecialchars((string)($currentWs['standard_cert_no'] ?? 'CERT-KAN-2025-042')) ?>" 
                                     class="ent-input font-mono"
-                                    style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                    style="width: 100%; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                                 >
                             </div>
                             <div class="col-12 col-sm-6">
@@ -819,10 +880,10 @@ require_once __DIR__ . '/includes/header.php';
                                 <input 
                                     type="date" 
                                     name="standard_valid_until" 
-                                    <?= $isCertified ? 'disabled' : '' ?> 
+                                    <?= $isReadOnly ? 'disabled' : '' ?> 
                                     value="<?= htmlspecialchars((string)($currentWs['standard_valid_until'] ?? date('Y-m-d', strtotime('+1 year')))) ?>" 
                                     class="ent-input"
-                                    style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                    style="width: 100%; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                                 >
                             </div>
                         </div>
@@ -832,10 +893,10 @@ require_once __DIR__ . '/includes/header.php';
                             <input 
                                 type="text" 
                                 name="calibration_method" 
-                                <?= $isCertified ? 'disabled' : '' ?> 
+                                <?= $isReadOnly ? 'disabled' : '' ?> 
                                 value="<?= htmlspecialchars((string)($currentWs['calibration_method'] ?? 'Instruksi Kerja Kalibrasi IK-KAL-01 (EURAMET/JIS)')) ?>" 
                                 class="ent-input"
-                                style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                style="width: 100%; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                             >
                         </div>
                     </div>
@@ -851,7 +912,7 @@ require_once __DIR__ . '/includes/header.php';
                             <span style="font-family: monospace; font-size: 11px; color: var(--text-muted);">(Koreksi = Standar - Rata-rata)</span>
                         </div>
 
-                        <?php if (!$isCertified && hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                        <?php if (!$isReadOnly && hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
                             <div class="d-flex align-items-center gap-1.5 flex-wrap">
                                 <button type="button" onclick="autoFillWorksheetDemo('<?= $currentInst['scope_code'] ?>')" class="btn-surface" style="font-size: 11px; padding: 4px 10px; height: 30px;">
                                     <i class="ph-bold ph-magic-wand"></i>
@@ -887,19 +948,19 @@ require_once __DIR__ . '/includes/header.php';
                                 <?php foreach ($readings as $idx => $r): ?>
                                     <tr class="reading-calc-row">
                                         <td>
-                                            <input type="text" name="points[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['point']) ?>" class="ent-input" style="width: 95px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
+                                            <input type="text" name="points[]" <?= $isReadOnly ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['point']) ?>" class="ent-input" style="width: 95px; height: 32px; font-size: 11px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
                                         <td class="text-end">
-                                            <input type="number" step="any" name="standards[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['standard']) ?>" class="std-val ent-input text-end" style="width: 85px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
+                                            <input type="number" step="any" name="standards[]" <?= $isReadOnly ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['standard']) ?>" class="std-val ent-input text-end" style="width: 85px; height: 32px; font-size: 11px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
                                         <td class="text-end">
-                                            <input type="number" step="any" name="run1[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run1']) ?>" class="r1-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
+                                            <input type="number" step="any" name="run1[]" <?= $isReadOnly ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run1']) ?>" class="r1-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
                                         <td class="text-end">
-                                            <input type="number" step="any" name="run2[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run2']) ?>" class="r2-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
+                                            <input type="number" step="any" name="run2[]" <?= $isReadOnly ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run2']) ?>" class="r2-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
                                         <td class="text-end">
-                                            <input type="number" step="any" name="run3[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run3']) ?>" class="r3-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
+                                            <input type="number" step="any" name="run3[]" <?= $isReadOnly ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run3']) ?>" class="r3-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
                                         <td class="text-end">
                                             <input type="text" readonly value="<?= number_format((float)$r['mean'], 4, '.', '') ?>" class="mean-val ent-input text-end fw-semibold" style="width: 80px; height: 32px; font-size: 11px; background-color: var(--surface-subtle); color: var(--text-primary); cursor: not-allowed;">
@@ -908,7 +969,7 @@ require_once __DIR__ . '/includes/header.php';
                                             <input type="text" readonly value="<?= ($r['correction'] >= 0 ? '+' : '') . number_format((float)$r['correction'], 4, '.', '') ?>" class="corr-val ent-input text-end fw-bold" style="width: 80px; height: 32px; font-size: 11px; background-color: var(--surface-subtle); color: <?= $r['correction'] >= 0 ? '#10B981' : '#EF4444' ?>; cursor: not-allowed;">
                                         </td>
                                         <td class="text-end">
-                                            <input type="number" step="any" name="uncertainties[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['uncertainty']) ?>" class="ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
+                                            <input type="number" step="any" name="uncertainties[]" <?= $isReadOnly ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['uncertainty']) ?>" class="ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -924,10 +985,10 @@ require_once __DIR__ . '/includes/header.php';
                         <input 
                             type="text" 
                             name="visual_inspection" 
-                            <?= $isCertified ? 'disabled' : '' ?> 
+                            <?= $isReadOnly ? 'disabled' : '' ?> 
                             value="<?= htmlspecialchars((string)($currentWs['visual_inspection'] ?? 'Fisik bersih, display jernih, berfungsi normal')) ?>" 
                             class="ent-input"
-                            style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                            style="width: 100%; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                         >
                     </div>
                     <div class="col-12 col-sm-6">
@@ -935,10 +996,10 @@ require_once __DIR__ . '/includes/header.php';
                         <input 
                             type="text" 
                             name="technician_notes" 
-                            <?= $isCertified ? 'disabled' : '' ?> 
+                            <?= $isReadOnly ? 'disabled' : '' ?> 
                             value="<?= htmlspecialchars((string)($currentWs['technician_notes'] ?? 'Pengambilan data lancar, siap diterbitkan sertifikat.')) ?>" 
                             class="ent-input"
-                            style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                            style="width: 100%; height: 38px; <?= $isReadOnly ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
                         >
                     </div>
                 </div>
@@ -967,10 +1028,17 @@ require_once __DIR__ . '/includes/header.php';
                                 <span>Serahkan ke Bagian Sertifikat &rarr;</span>
                             </button>
                         <?php else: ?>
-                            <span class="badge-status neutral">
-                                <i class="ph-bold ph-lock-key"></i>
-                                <span>Mode Tinjau</span>
-                            </span>
+                            <?php if ($currentInst['status'] === 'DATA_SUBMITTED' && hasRole('CERT_ADMIN')): ?>
+                                <a href="certificates.php?instrument_id=<?= (int)$currentInst['id'] ?>" class="btn-brand-primary" style="height: 38px; padding: 0 16px; font-size: 12px;">
+                                    <i class="ph-bold ph-certificate"></i>
+                                    <span>Terbitkan Sertifikat Resmi &rarr;</span>
+                                </a>
+                            <?php else: ?>
+                                <span class="badge-status neutral">
+                                    <i class="ph-bold ph-lock-key"></i>
+                                    <span>Mode Tinjau (Read-Only)</span>
+                                </span>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>

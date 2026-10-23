@@ -159,11 +159,23 @@ $incomingQueue = $db->query("
         i.*,
         o.order_number,
         o.customer_name,
+        o.customer_address,
+        o.customer_contact,
+        o.order_date,
         o.service_type,
+        w.id as ws_id,
         w.submitted_at,
         w.temperature,
+        w.temperature_uncertainty,
         w.humidity,
-        w.standard_calibrator
+        w.humidity_uncertainty,
+        w.standard_calibrator,
+        w.standard_cert_no,
+        w.standard_valid_until,
+        w.calibration_method,
+        w.readings_json,
+        w.visual_inspection,
+        w.technician_notes
     FROM instruments i
     JOIN orders o ON i.order_id = o.id
     JOIN worksheets w ON w.instrument_id = i.id
@@ -220,12 +232,35 @@ $sqlIssued = "
         i.brand,
         i.model_type,
         i.serial_number,
+        i.capacity_range,
+        i.resolution,
+        i.technician_name,
+        i.calibration_date,
+        i.scope_code as inst_scope_code,
+        o.id as order_id,
         o.order_number,
         o.customer_name,
-        o.service_type
+        o.customer_address,
+        o.customer_contact,
+        o.order_date,
+        o.service_type,
+        w.id as ws_id,
+        w.temperature,
+        w.temperature_uncertainty,
+        w.humidity,
+        w.humidity_uncertainty,
+        w.standard_calibrator,
+        w.standard_cert_no,
+        w.standard_valid_until,
+        w.calibration_method,
+        w.readings_json,
+        w.visual_inspection,
+        w.technician_notes,
+        w.submitted_at as ws_submitted_at
     FROM certificates c
     JOIN instruments i ON c.instrument_id = i.id
     JOIN orders o ON i.order_id = o.id
+    LEFT JOIN worksheets w ON w.instrument_id = i.id
     WHERE 1=1
 ";
 $paramsIssued = [];
@@ -425,7 +460,7 @@ require_once __DIR__ . '/includes/header.php';
                         <th class="w-[160px]">Teknisi & Waktu Masuk</th>
                         <th class="w-[140px]">Kondisi Lingkungan</th>
                         <th>Standar Acuan Kalibrator</th>
-                        <th class="text-right w-[200px]">Tindakan</th>
+                        <th class="text-right w-[280px]">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -434,6 +469,42 @@ require_once __DIR__ . '/includes/header.php';
                             $sc = $scopes[$item['scope_code']] ?? ['name' => $item['scope_code']];
                             $isItemKan = ((int)($item['is_kan'] ?? 1) === 1);
                             $predicted = generateCertificateNumber($db, $item['scope_code'], date('Y-m-d'), '00', $isItemKan);
+                            $itemReviewData = [
+                                'instrument_id' => (int)$item['id'],
+                                'order_id' => (int)$item['order_id'],
+                                'order_number' => (string)$item['order_number'],
+                                'customer_name' => (string)$item['customer_name'],
+                                'customer_address' => (string)($item['customer_address'] ?? '-'),
+                                'customer_contact' => (string)($item['customer_contact'] ?? '-'),
+                                'order_date' => (string)($item['order_date'] ?? '-'),
+                                'service_type' => (string)($item['service_type'] ?? 'IN_LAB'),
+                                'name' => (string)$item['name'],
+                                'brand' => (string)($item['brand'] ?? '-'),
+                                'model_type' => (string)($item['model_type'] ?? '-'),
+                                'serial_number' => (string)($item['serial_number'] ?? '-'),
+                                'capacity_range' => (string)($item['capacity_range'] ?? '-'),
+                                'resolution' => (string)($item['resolution'] ?? '-'),
+                                'scope_code' => (string)$item['scope_code'],
+                                'is_kan' => $isItemKan,
+                                'instrument_status' => (string)$item['status'],
+                                'ws_id' => (int)($item['ws_id'] ?? 0),
+                                'technician_name' => (string)($item['technician_name'] ?? '-'),
+                                'calibration_date' => (string)($item['calibration_date'] ?? '-'),
+                                'submitted_at' => (string)($item['submitted_at'] ?? '-'),
+                                'temperature' => (string)($item['temperature'] ?? '-'),
+                                'temperature_uncertainty' => (string)($item['temperature_uncertainty'] ?? '0.5'),
+                                'humidity' => (string)($item['humidity'] ?? '-'),
+                                'humidity_uncertainty' => (string)($item['humidity_uncertainty'] ?? '3.0'),
+                                'standard_calibrator' => (string)($item['standard_calibrator'] ?? '-'),
+                                'standard_cert_no' => (string)($item['standard_cert_no'] ?? '-'),
+                                'standard_valid_until' => (string)($item['standard_valid_until'] ?? '-'),
+                                'calibration_method' => (string)($item['calibration_method'] ?? '-'),
+                                'visual_inspection' => (string)($item['visual_inspection'] ?? '-'),
+                                'technician_notes' => (string)($item['technician_notes'] ?? '-'),
+                                'readings' => json_decode((string)($item['readings_json'] ?? '[]'), true) ?: [],
+                                'certificate_number' => '',
+                                'predicted_cert' => $predicted['certificate_number'] ?? ''
+                            ];
                         ?>
                         <tr>
                             <td>
@@ -472,14 +543,21 @@ require_once __DIR__ . '/includes/header.php';
                             </td>
 
                             <td class="text-right whitespace-nowrap">
-                                <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                                    <button onclick="openGenerateModal(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['name'])) ?>', '<?= htmlspecialchars(addslashes($item['customer_name'])) ?>', '<?= $item['scope_code'] ?>', <?= $isItemKan ? 1 : 0 ?>, '<?= $predicted['certificate_number'] ?>')" class="btn-brand-primary">
-                                        <i class="ph-bold ph-certificate text-xs"></i>
-                                        <span>Terbitkan (<?= $predicted['certificate_number'] ?>)</span>
+                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                    <button type="button" onclick='openReviewModal(<?= json_encode($itemReviewData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>)' class="btn-surface btn-compact" title="Tinjau Detail Data SPK & Hasil Pengujian Teknisi">
+                                        <i class="ph-bold ph-eye text-slate-500"></i>
+                                        <span>Tinjau Data</span>
                                     </button>
-                                <?php else: ?>
-                                    <span class="badge-status neutral">Mode Tinjau</span>
-                                <?php endif; ?>
+
+                                    <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                                        <button onclick="openGenerateModal(<?= $item['id'] ?>, '<?= htmlspecialchars(addslashes($item['name'])) ?>', '<?= htmlspecialchars(addslashes($item['customer_name'])) ?>', '<?= $item['scope_code'] ?>', <?= $isItemKan ? 1 : 0 ?>, '<?= $predicted['certificate_number'] ?>')" class="btn-brand-primary btn-compact">
+                                            <i class="ph-bold ph-certificate text-xs"></i>
+                                            <span>Terbitkan</span>
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="badge-status neutral">Mode Tinjau</span>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -576,7 +654,7 @@ require_once __DIR__ . '/includes/header.php';
                     <th class="w-[180px]">Masa Berlaku</th>
                     <th class="w-[160px]">Penandatangan</th>
                     <th class="w-[100px]">Revisi</th>
-                    <th class="text-right w-[150px]">Aksi</th>
+                    <th class="text-right w-[220px]">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -597,6 +675,46 @@ require_once __DIR__ . '/includes/header.php';
                         $isJustIssued = ($newlyIssued && $cert['certificate_number'] === $newlyIssued);
                         $isCertKan = (isset($cert['is_kan']) && (int)$cert['is_kan'] === 1 && substr($cert['certificate_number'], 0, 1) !== 'N');
                         $menuId = "action-menu-" . $cert['id'];
+                        $certReviewData = [
+                            'instrument_id' => (int)$cert['instrument_id'],
+                            'order_id' => (int)$cert['order_id'],
+                            'order_number' => (string)$cert['order_number'],
+                            'customer_name' => (string)$cert['customer_name'],
+                            'customer_address' => (string)($cert['customer_address'] ?? '-'),
+                            'customer_contact' => (string)($cert['customer_contact'] ?? '-'),
+                            'order_date' => (string)($cert['order_date'] ?? '-'),
+                            'service_type' => (string)($cert['service_type'] ?? 'IN_LAB'),
+                            'name' => (string)$cert['instrument_name'],
+                            'brand' => (string)($cert['brand'] ?? '-'),
+                            'model_type' => (string)($cert['model_type'] ?? '-'),
+                            'serial_number' => (string)($cert['serial_number'] ?? '-'),
+                            'capacity_range' => (string)($cert['capacity_range'] ?? '-'),
+                            'resolution' => (string)($cert['resolution'] ?? '-'),
+                            'scope_code' => (string)$cert['scope_code'],
+                            'is_kan' => $isCertKan,
+                            'instrument_status' => 'CERTIFIED',
+                            'ws_id' => (int)($cert['ws_id'] ?? 0),
+                            'technician_name' => (string)($cert['technician_name'] ?? '-'),
+                            'calibration_date' => (string)($cert['calibration_date'] ?? '-'),
+                            'submitted_at' => (string)($cert['ws_submitted_at'] ?? '-'),
+                            'temperature' => (string)($cert['temperature'] ?? '-'),
+                            'temperature_uncertainty' => (string)($cert['temperature_uncertainty'] ?? '0.5'),
+                            'humidity' => (string)($cert['humidity'] ?? '-'),
+                            'humidity_uncertainty' => (string)($cert['humidity_uncertainty'] ?? '3.0'),
+                            'standard_calibrator' => (string)($cert['standard_calibrator'] ?? '-'),
+                            'standard_cert_no' => (string)($cert['standard_cert_no'] ?? '-'),
+                            'standard_valid_until' => (string)($cert['standard_valid_until'] ?? '-'),
+                            'calibration_method' => (string)($cert['calibration_method'] ?? '-'),
+                            'visual_inspection' => (string)($cert['visual_inspection'] ?? '-'),
+                            'technician_notes' => (string)($cert['technician_notes'] ?? '-'),
+                            'readings' => json_decode((string)($cert['readings_json'] ?? '[]'), true) ?: [],
+                            'certificate_number' => (string)$cert['certificate_number'],
+                            'issue_date' => (string)$cert['issue_date'],
+                            'valid_until' => (string)$cert['valid_until'],
+                            'technical_manager' => (string)$cert['technical_manager'],
+                            'revision_number' => (string)$cert['revision_number'],
+                            'predicted_cert' => ''
+                        ];
                     ?>
                     <tr class="<?= $isJustIssued ? 'row-highlight' : '' ?>">
                         
@@ -653,12 +771,18 @@ require_once __DIR__ . '/includes/header.php';
                             <?php endif; ?>
                         </td>
 
-                        <!-- Col 7: ACTION BUTTONS ([Buat PDF] + [•••] Contextual Menu) -->
+                        <!-- Col 7: ACTION BUTTONS ([Tinjau] + [Buat PDF] + [•••] Contextual Menu) -->
                         <td class="text-right whitespace-nowrap">
                             <div class="inline-flex items-center gap-1.5 justify-end">
                                 
+                                <!-- Tinjau SPK & Worksheet -->
+                                <button type="button" onclick='openReviewModal(<?= json_encode($certReviewData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>)' class="btn-surface btn-compact" title="Tinjau Detail Data SPK & Hasil Pengujian Teknisi">
+                                    <i class="ph-bold ph-eye text-slate-500"></i>
+                                    <span>Tinjau</span>
+                                </button>
+
                                 <!-- Primary Action: Buat PDF -->
-                                <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="btn-brand-primary" title="Buka dan Cetak Dokumen Resmi PDF">
+                                <a href="print_certificate.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="btn-brand-primary btn-compact" title="Buka dan Cetak Dokumen Resmi PDF">
                                     <i class="ph-bold ph-file-pdf text-xs"></i>
                                     <span>Buat PDF</span>
                                 </a>
@@ -670,6 +794,18 @@ require_once __DIR__ . '/includes/header.php';
                                     </button>
                                     
                                     <div id="<?= $menuId ?>" class="action-menu-dropdown">
+                                        <button type="button" onclick='openReviewModal(<?= json_encode($certReviewData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>); toggleActionMenu("<?= $menuId ?>", event);' class="action-menu-item">
+                                            <i class="ph-bold ph-clipboard-text text-slate-500"></i>
+                                            <span>Tinjau SPK & Worksheet</span>
+                                        </button>
+                                        <a href="worksheet.php?instrument_id=<?= (int)$cert['instrument_id'] ?>" class="action-menu-item">
+                                            <i class="ph-bold ph-wrench text-slate-500"></i>
+                                            <span>Buka Lembar Kerja Penuh</span>
+                                        </a>
+                                        <a href="orders.php?search=<?= urlencode($cert['order_number']) ?>" class="action-menu-item">
+                                            <i class="ph-bold ph-file-text text-slate-500"></i>
+                                            <span>Buka Berkas SPK</span>
+                                        </a>
                                         <a href="verify.php?cert=<?= urlencode($cert['certificate_number']) ?>" target="_blank" class="action-menu-item">
                                             <i class="ph-bold ph-qr-code text-slate-500"></i>
                                             <span>Verifikasi QR Code</span>
@@ -828,8 +964,361 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
+<!-- MODAL 3: Tinjau Lengkap Data SPK & Lembar Kerja Teknisi (ISO/IEC 17025 Reviewer Modal) -->
+<div id="review-data-modal" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="ent-modal rounded-xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl text-xs overflow-hidden">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-4 shrink-0 bg-slate-50 dark:bg-slate-900/80">
+            <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        MODE TINJAU PENGURUS SERTIFIKAT
+                    </span>
+                    <span class="text-xs text-slate-400">·</span>
+                    <span class="text-xs text-slate-500 font-mono">ISO/IEC 17025 Data Verification</span>
+                </div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tinjau Detail Data SPK & Lembar Kerja Teknisi</h3>
+            </div>
+            <button onclick="closeModal('review-data-modal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md transition-colors">
+                <i class="ph-bold ph-x text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-5 overflow-y-auto space-y-5 flex-1">
+            
+            <!-- Instrument Summary Banner -->
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span id="review-scope-badge" class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200"></span>
+                        <span id="review-kan-badge"></span>
+                        <span id="review-service-badge"></span>
+                    </div>
+                    <h4 id="review-inst-name" class="text-base font-bold text-slate-900 dark:text-slate-100"></h4>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                        Merek / Tipe: <strong id="review-brand-model" class="text-slate-800 dark:text-slate-200"></strong> · 
+                        No. Seri: <strong id="review-serial-number" class="font-mono text-slate-900 dark:text-slate-100"></strong>
+                    </p>
+                </div>
+                <div class="text-left md:text-right shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-100 dark:border-slate-700">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Status Alur Sertifikasi</span>
+                    <div id="review-status-pill"></div>
+                    <div id="review-cert-no-box" class="mt-1 font-mono text-xs font-bold text-[#C81E26] dark:text-red-400"></div>
+                </div>
+            </div>
+
+            <!-- Bagian 1: Data Registrasi SPK & Pelanggan -->
+            <div class="ent-card overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                        <i class="ph-bold ph-clipboard-text text-sky-600"></i>
+                        <span>1. Data Registrasi SPK & Informasi Pelanggan</span>
+                    </div>
+                    <span id="review-order-number-badge" class="font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-400"></span>
+                </div>
+                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Nama Perusahaan / Pelanggan</span>
+                        <div id="review-customer-name" class="text-xs font-semibold text-slate-900 dark:text-slate-100"></div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Narahubung & Kontak</span>
+                        <div id="review-customer-contact" class="text-xs text-slate-800 dark:text-slate-200"></div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Tanggal Registrasi SPK</span>
+                        <div id="review-order-date" class="font-mono text-xs text-slate-800 dark:text-slate-200"></div>
+                    </div>
+                    <div class="sm:col-span-2 lg:col-span-3">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Alamat Lengkap Pelanggan (Lokasi Kalibrasi)</span>
+                        <div id="review-customer-address" class="text-xs text-slate-700 dark:text-slate-300"></div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Rentang Kapasitas Ukur</span>
+                        <div id="review-capacity-range" class="font-mono text-xs font-medium text-slate-800 dark:text-slate-200"></div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Resolusi / Daya Baca</span>
+                        <div id="review-resolution" class="font-mono text-xs font-medium text-slate-800 dark:text-slate-200"></div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Metode Penyerahan</span>
+                        <div id="review-service-desc" class="text-xs text-slate-700 dark:text-slate-300 font-medium"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bagian 2: Parameter Pengujian & Standar Teknisi -->
+            <div class="ent-card overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                        <i class="ph-bold ph-wrench text-amber-600"></i>
+                        <span>2. Parameter Teknis & Alat Standar Acuan</span>
+                    </div>
+                    <span id="review-tech-badge" class="text-[11px] text-slate-500"></span>
+                </div>
+                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Teknisi Penguji</span>
+                        <div id="review-technician-name" class="text-xs font-semibold text-slate-900 dark:text-slate-100"></div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Tanggal Pelaksanaan Kalibrasi</span>
+                        <div id="review-calibration-date" class="font-mono text-xs text-slate-800 dark:text-slate-200"></div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Waktu Submit Lembar Kerja</span>
+                        <div id="review-submitted-at" class="font-mono text-xs text-slate-800 dark:text-slate-200"></div>
+                    </div>
+
+                    <!-- Kondisi Lingkungan -->
+                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-1">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Suhu Ruangan Lab</span>
+                        <div class="font-mono text-sm font-bold text-slate-900 dark:text-slate-100">
+                            <span id="review-temp"></span> °C <span class="text-slate-400 font-normal text-xs">± <span id="review-temp-u"></span> °C</span>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-1">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Kelembaban Relatif (RH)</span>
+                        <div class="font-mono text-sm font-bold text-slate-900 dark:text-slate-100">
+                            <span id="review-humidity"></span> % <span class="text-slate-400 font-normal text-xs">± <span id="review-humidity-u"></span> %</span>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 sm:col-span-2 lg:col-span-1">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Metode & Instruksi Kerja</span>
+                        <div id="review-method" class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate"></div>
+                    </div>
+
+                    <!-- Alat Standar Kalibrator -->
+                    <div class="sm:col-span-2 lg:col-span-2">
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Alat Standar Acuan (Calibrator)</span>
+                        <div id="review-calibrator" class="text-xs font-semibold text-slate-900 dark:text-slate-100"></div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">
+                            No. Sertifikat: <strong id="review-calibrator-cert" class="font-mono text-slate-700 dark:text-slate-300"></strong> · 
+                            Masa Berlaku: <strong id="review-calibrator-valid" class="font-mono text-slate-700 dark:text-slate-300"></strong>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Inspeksi Visual Fisik</span>
+                        <div id="review-visual" class="text-xs text-slate-800 dark:text-slate-200 font-medium"></div>
+                    </div>
+
+                    <div id="review-notes-container" class="sm:col-span-2 lg:col-span-3 hidden">
+                        <div class="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-900 dark:text-amber-200">
+                            <span class="font-bold flex items-center gap-1 mb-0.5"><i class="ph-bold ph-note"></i> Catatan Khusus Teknisi:</span>
+                            <span id="review-notes"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bagian 3: Rekapitulasi Data Mentah Titik Ukur (Readings) -->
+            <div class="ent-card overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                        <i class="ph-bold ph-table text-emerald-600"></i>
+                        <span>3. Rekapitulasi Data Titik Ukur & Ketidakpastian (Readings)</span>
+                    </div>
+                    <span id="review-readings-count" class="text-[11px] text-slate-500 font-mono"></span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="ent-table min-w-[700px]">
+                        <thead>
+                            <tr>
+                                <th class="w-[140px]">Titik Uji / Nominal</th>
+                                <th class="text-right w-[110px]">Nilai Standar</th>
+                                <th class="text-right w-[80px]">Run 1</th>
+                                <th class="text-right w-[80px]">Run 2</th>
+                                <th class="text-right w-[80px]">Run 3</th>
+                                <th class="text-right w-[100px]">Rata-rata (Mean)</th>
+                                <th class="text-right w-[100px]">Koreksi</th>
+                                <th class="text-right w-[110px]">Ketidakpastian (U95)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="review-readings-tbody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800 p-4 shrink-0 bg-slate-50 dark:bg-slate-900/80">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <a id="review-link-spk" href="#" class="btn-surface text-xs" title="Buka SPK di halaman Sales Order">
+                    <i class="ph-bold ph-arrow-square-out text-slate-400"></i>
+                    <span>Buka SPK</span>
+                </a>
+                <a id="review-link-ws" href="#" class="btn-surface text-xs" title="Buka Lembar Kerja Teknisi secara lengkap">
+                    <i class="ph-bold ph-wrench text-slate-400"></i>
+                    <span>Buka Worksheet Penuh</span>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-2 justify-end w-full sm:w-auto">
+                <button type="button" onclick="closeModal('review-data-modal')" class="btn-surface">Tutup</button>
+                <div id="review-dynamic-action"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 <script>
-let currentModalScopeCode = 'P';
+let currentReviewData = null;
+
+function openReviewModal(data) {
+    if (!data) return;
+    currentReviewData = data;
+    
+    // Header & Summary
+    document.getElementById('review-inst-name').textContent = data.name || '-';
+    document.getElementById('review-brand-model').textContent = (data.brand || '-') + ' · ' + (data.model_type || '-');
+    document.getElementById('review-serial-number').textContent = data.serial_number || '-';
+    
+    document.getElementById('review-scope-badge').textContent = '[' + (data.scope_code || 'P') + ']';
+    
+    const kanBadgeEl = document.getElementById('review-kan-badge');
+    if (data.is_kan) {
+        kanBadgeEl.innerHTML = '<span class="pill-kan text-[10px]">Akreditasi KAN</span>';
+    } else {
+        kanBadgeEl.innerHTML = '<span class="pill-non-kan text-[10px]">Non-KAN (N)</span>';
+    }
+
+    const srvBadgeEl = document.getElementById('review-service-badge');
+    if (data.service_type === 'ON_SITE') {
+        srvBadgeEl.innerHTML = '<span class="badge-status warning" style="font-size: 10px; padding: 1px 6px;">On-Site (Lokasi Klien)</span>';
+    } else {
+        srvBadgeEl.innerHTML = '<span class="badge-status info" style="font-size: 10px; padding: 1px 6px;">In-Lab (Lab Kalpindo)</span>';
+    }
+
+    const statusPillEl = document.getElementById('review-status-pill');
+    const certBoxEl = document.getElementById('review-cert-no-box');
+    if (data.instrument_status === 'CERTIFIED' || data.certificate_number) {
+        statusPillEl.innerHTML = '<span class="badge-status success"><span class="badge-dot"></span><span>Sertifikat Terbit Resmi</span></span>';
+        certBoxEl.textContent = data.certificate_number;
+    } else if (data.instrument_status === 'DATA_SUBMITTED') {
+        statusPillEl.innerHTML = '<span class="badge-status warning"><span class="badge-dot"></span><span>Menunggu Nomor Sertifikat</span></span>';
+        certBoxEl.textContent = data.predicted_cert ? ('Estimasi: ' + data.predicted_cert) : '';
+    } else {
+        statusPillEl.innerHTML = '<span class="badge-status info"><span class="badge-dot"></span><span>' + data.instrument_status + '</span></span>';
+        certBoxEl.textContent = '';
+    }
+
+    // Bagian 1: Data SPK
+    document.getElementById('review-order-number-badge').textContent = data.order_number ? ('SPK: ' + data.order_number) : '';
+    document.getElementById('review-customer-name').textContent = data.customer_name || '-';
+    document.getElementById('review-customer-contact').textContent = data.customer_contact || '-';
+    document.getElementById('review-order-date').textContent = data.order_date || '-';
+    document.getElementById('review-customer-address').textContent = data.customer_address || '-';
+    document.getElementById('review-capacity-range').textContent = data.capacity_range || '-';
+    document.getElementById('review-resolution').textContent = data.resolution || '-';
+    document.getElementById('review-service-desc').textContent = data.service_type === 'ON_SITE' ? 'Kalibrasi langsung di fasilitas / pabrik pelanggan' : 'Alat dikirim & diuji di ruang kalibrasi PT Kalpindo';
+
+    // Bagian 2: Parameter Teknisi
+    document.getElementById('review-tech-badge').textContent = data.technician_name ? ('Oleh: ' + data.technician_name) : '';
+    document.getElementById('review-technician-name').textContent = data.technician_name || '-';
+    document.getElementById('review-calibration-date').textContent = data.calibration_date || '-';
+    document.getElementById('review-submitted-at').textContent = data.submitted_at || '-';
+    document.getElementById('review-temp').textContent = data.temperature || '-';
+    document.getElementById('review-temp-u').textContent = data.temperature_uncertainty || '0.5';
+    document.getElementById('review-humidity').textContent = data.humidity || '-';
+    document.getElementById('review-humidity-u').textContent = data.humidity_uncertainty || '3.0';
+    document.getElementById('review-method').textContent = data.calibration_method || 'IK-LAB-01 (Metode Perbandingan Langsung)';
+    document.getElementById('review-calibrator').textContent = data.standard_calibrator || '-';
+    document.getElementById('review-calibrator-cert').textContent = data.standard_cert_no || '-';
+    document.getElementById('review-calibrator-valid').textContent = data.standard_valid_until || '-';
+    document.getElementById('review-visual').textContent = data.visual_inspection || 'Fisik bersih, display normal';
+
+    const notesContainer = document.getElementById('review-notes-container');
+    const notesEl = document.getElementById('review-notes');
+    if (data.technician_notes && data.technician_notes.trim() !== '') {
+        notesEl.textContent = data.technician_notes;
+        notesContainer.classList.remove('hidden');
+    } else {
+        notesContainer.classList.add('hidden');
+    }
+
+    // Bagian 3: Tabel Readings
+    const tbody = document.getElementById('review-readings-tbody');
+    const countEl = document.getElementById('review-readings-count');
+    tbody.innerHTML = '';
+    
+    const readings = data.readings || [];
+    countEl.textContent = readings.length + ' titik ukur';
+
+    if (readings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Belum ada data titik ukur yang tercatat dalam lembar kerja teknisi.</td></tr>';
+    } else {
+        readings.forEach((r, idx) => {
+            const tr = document.createElement('tr');
+            const pt = r.point || ('Titik ' + (idx + 1));
+            const std = (r.standard !== undefined && r.standard !== null) ? Number(r.standard).toFixed(2) : '-';
+            const r1 = (r.run1 !== undefined && r.run1 !== null) ? Number(r.run1).toFixed(2) : '-';
+            const r2 = (r.run2 !== undefined && r.run2 !== null) ? Number(r.run2).toFixed(2) : '-';
+            const r3 = (r.run3 !== undefined && r.run3 !== null) ? Number(r.run3).toFixed(2) : '-';
+            const mean = (r.mean !== undefined && r.mean !== null) ? Number(r.mean).toFixed(4) : '-';
+            const corr = (r.correction !== undefined && r.correction !== null) ? ((Number(r.correction) >= 0 ? '+' : '') + Number(r.correction).toFixed(4)) : '-';
+            const unc = (r.uncertainty !== undefined && r.uncertainty !== null) ? ('± ' + Number(r.uncertainty).toFixed(4)) : '-';
+
+            const corrColor = (r.correction && Number(r.correction) < 0) ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+
+            tr.innerHTML = `
+                <td class="font-medium text-slate-900 dark:text-slate-100">${escapeHtml(pt)}</td>
+                <td class="text-right font-mono text-slate-700 dark:text-slate-300">${std}</td>
+                <td class="text-right font-mono text-slate-600 dark:text-slate-400">${r1}</td>
+                <td class="text-right font-mono text-slate-600 dark:text-slate-400">${r2}</td>
+                <td class="text-right font-mono text-slate-600 dark:text-slate-400">${r3}</td>
+                <td class="text-right font-mono font-semibold text-slate-900 dark:text-slate-100">${mean}</td>
+                <td class="text-right font-mono font-bold ${corrColor}">${corr}</td>
+                <td class="text-right font-mono text-slate-700 dark:text-slate-300">${unc}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Links
+    document.getElementById('review-link-spk').href = 'orders.php?search=' + encodeURIComponent(data.order_number || '');
+    document.getElementById('review-link-ws').href = 'worksheet.php?instrument_id=' + (data.instrument_id || 0);
+
+    // Dynamic Primary Action
+    const dynamicActionContainer = document.getElementById('review-dynamic-action');
+    dynamicActionContainer.innerHTML = '';
+    
+    if (data.certificate_number) {
+        dynamicActionContainer.innerHTML = `
+            <a href="print_certificate.php?cert=${encodeURIComponent(data.certificate_number)}" target="_blank" class="btn-brand-primary">
+                <i class="ph-bold ph-file-pdf"></i>
+                <span>Cetak PDF Resmi</span>
+            </a>
+        `;
+    } else if (data.instrument_status === 'DATA_SUBMITTED') {
+        dynamicActionContainer.innerHTML = `
+            <button type="button" onclick="proceedToIssueFromReview()" class="btn-brand-primary">
+                <i class="ph-bold ph-certificate"></i>
+                <span>Lanjut Terbitkan Sertifikat &rarr;</span>
+            </button>
+        `;
+    }
+
+    openModal('review-data-modal');
+}
+
+function proceedToIssueFromReview() {
+    if (!currentReviewData) return;
+    const d = currentReviewData;
+    closeModal('review-data-modal');
+    openGenerateModal(d.instrument_id, d.name, d.customer_name, d.scope_code, d.is_kan ? 1 : 0, d.predicted_cert);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 function switchCertTab(tabName) {
     const queuePane = document.getElementById('pane-queue');

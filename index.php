@@ -138,7 +138,7 @@ $scopes = getScopeList();
         </div>
         <div class="kpi-value text-sky-700 dark:text-sky-400"><?= $inProgressCount ?></div>
         <div class="kpi-subtext">
-            <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+            <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN', 'CERT_ADMIN'])): ?>
                 <a href="worksheet.php" class="text-sky-700 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1">
                     Buka Worksheet <i class="ph-bold ph-arrow-right text-[10px]"></i>
                 </a>
@@ -371,7 +371,7 @@ $scopes = getScopeList();
                                  </div>
                             <?php else: ?>
                                 <div class="inline-flex items-center gap-1.5 justify-end whitespace-nowrap">
-                                    <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
+                                    <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN', 'CERT_ADMIN'])): ?>
                                         <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="btn-surface btn-compact whitespace-nowrap">
                                             <i class="ph-bold ph-wrench text-slate-500"></i>
                                             <span>Worksheet</span>

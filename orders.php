@@ -1,9 +1,11 @@
 <?php
 declare(strict_types=1);
 
-$pageTitle = '1. Sales Order Kalibrasi';
+$pageTitle = 'Sales Order (SPK) Kalibrasi';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
+
+requireRole(['SUPER_ADMIN', 'SALES', 'CERT_ADMIN'], 'index.php');
 
 $db = getDbConnection();
 $scopes = getScopeList();
@@ -375,34 +377,42 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
                                         <i class="ph-bold ph-pencil-simple text-slate-500"></i>
                                         <span>Edit SPK</span>
                                     </button>
-                                    <div class="action-menu-container">
-                                        <button type="button" onclick="toggleActionMenu('<?= $menuIdOrder ?>', event)" class="btn-icon" title="Opsi SPK" aria-label="Opsi">
-                                            <i class="ph-bold ph-dots-three-vertical text-sm"></i>
-                                        </button>
-                                        <div id="<?= $menuIdOrder ?>" class="action-menu-dropdown">
-                                            <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="action-menu-item">
-                                                <i class="ph-bold ph-chart-line text-slate-500"></i><span>Lacak Alur Kerja</span>
-                                            </a>
-                                            <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                                                <a href="worksheet.php?instrument_id=<?= (int)($o['instrument_id'] ?? 0) ?>&order_id=<?= (int)$o['id'] ?>" class="action-menu-item">
-                                                    <i class="ph-bold ph-wrench text-slate-500"></i><span>Buka Worksheet</span>
-                                                </a>
-                                            <?php endif; ?>
-                                            <?php if ($o['status'] !== 'COMPLETED' && ($o['instrument_status'] ?? '') !== 'CERTIFIED'): ?>
-                                                <div class="action-menu-divider"></div>
-                                                <form action="orders.php" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus SPK <?= htmlspecialchars($o['order_number']) ?>?');">
-                                                    <input type="hidden" name="action" value="delete_order">
-                                                    <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
-                                                    <button type="submit" class="action-menu-item danger">
-                                                        <i class="ph-bold ph-trash"></i><span>Hapus SPK</span>
-                                                    </button>
-                                                </form>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
                                 <?php else: ?>
-                                    <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="btn-surface btn-compact whitespace-nowrap text-xs"><span>Lacak Alur &rarr;</span></a>
+                                    <button type="button" onclick='openEditOrderModal(<?= json_encode($editData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>)' class="btn-surface btn-compact whitespace-nowrap text-xs" title="Tinjau Rincian SPK & Spesifikasi Alat">
+                                        <i class="ph-bold ph-eye text-slate-500"></i>
+                                        <span>Detail SPK</span>
+                                    </button>
                                 <?php endif; ?>
+                                <div class="action-menu-container">
+                                    <button type="button" onclick="toggleActionMenu('<?= $menuIdOrder ?>', event)" class="btn-icon" title="Opsi SPK" aria-label="Opsi">
+                                        <i class="ph-bold ph-dots-three-vertical text-sm"></i>
+                                    </button>
+                                    <div id="<?= $menuIdOrder ?>" class="action-menu-dropdown">
+                                        <a href="index.php?search=<?= urlencode($o['order_number']) ?>" class="action-menu-item">
+                                            <i class="ph-bold ph-chart-line text-slate-500"></i><span>Lacak Alur Kerja</span>
+                                        </a>
+                                        <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN', 'CERT_ADMIN'])): ?>
+                                            <a href="worksheet.php?instrument_id=<?= (int)($o['instrument_id'] ?? 0) ?>&order_id=<?= (int)$o['id'] ?>" class="action-menu-item">
+                                                <i class="ph-bold ph-wrench text-slate-500"></i><span>Buka Worksheet</span>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if (($o['instrument_status'] ?? '') === 'DATA_SUBMITTED' && hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                                            <a href="certificates.php?instrument_id=<?= (int)($o['instrument_id'] ?? 0) ?>" class="action-menu-item">
+                                                <i class="ph-bold ph-certificate text-slate-500"></i><span>Terbitkan Sertifikat</span>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if (hasRole(['SUPER_ADMIN', 'SALES']) && $o['status'] !== 'COMPLETED' && ($o['instrument_status'] ?? '') !== 'CERTIFIED'): ?>
+                                            <div class="action-menu-divider"></div>
+                                            <form action="orders.php" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus SPK <?= htmlspecialchars($o['order_number']) ?>?');">
+                                                <input type="hidden" name="action" value="delete_order">
+                                                <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
+                                                <button type="submit" class="action-menu-item danger">
+                                                    <i class="ph-bold ph-trash"></i><span>Hapus SPK</span>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -670,11 +680,13 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-4 border-t" style="border-color: var(--border-subtle);">
-                <button type="button" onclick="closeModal('edit-order-modal')" class="btn-surface">Batal</button>
-                <button type="submit" class="btn-brand-primary">
-                    <i class="ph-bold ph-floppy-disk"></i>
-                    <span>Simpan Perubahan SPK</span>
-                </button>
+                <button type="button" onclick="closeModal('edit-order-modal')" class="btn-surface"><?= hasRole(['SUPER_ADMIN', 'SALES']) ? 'Batal' : 'Tutup' ?></button>
+                <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
+                    <button type="submit" class="btn-brand-primary">
+                        <i class="ph-bold ph-floppy-disk"></i>
+                        <span>Simpan Perubahan SPK</span>
+                    </button>
+                <?php endif; ?>
             </div>
         </form>
     </div>
@@ -729,7 +741,19 @@ function openEditOrderModal(data) {
     const scopeSelect = document.getElementById('edit-scope-code');
     const kanSelect = document.getElementById('edit-is-kan');
 
-    if (data.is_certified) {
+    const canEditOrder = <?= hasRole(['SUPER_ADMIN', 'SALES']) ? 'true' : 'false' ?>;
+
+    if (!canEditOrder) {
+        const modalForm = document.getElementById('edit-order-form');
+        if (modalForm) {
+            modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.type !== 'hidden') {
+                    el.setAttribute('disabled', 'disabled');
+                    el.classList.add('bg-gray-100', 'cursor-not-allowed');
+                }
+            });
+        }
+    } else if (data.is_certified) {
         if (warningBox) warningBox.classList.remove('hidden');
         if (certNoSpan) certNoSpan.textContent = data.certificate_number || 'Sertifikat Terbit';
         [scopeSelect, kanSelect].forEach(el => {

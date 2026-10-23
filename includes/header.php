@@ -47,7 +47,7 @@ $operationalItems = array_values(array_filter([
         'url' => 'orders.php',
         'icon' => 'ph-clipboard-text',
         'badge' => null,
-        'roles' => ['SUPER_ADMIN', 'SALES'],
+        'roles' => ['SUPER_ADMIN', 'SALES', 'CERT_ADMIN'],
     ],
 ], function($item) {
     return hasRole($item['roles']);
@@ -62,7 +62,7 @@ $technicalItems = array_values(array_filter([
             'label' => (string)$pendingWorksheetCount,
             'class' => 'badge-status warning'
         ] : null,
-        'roles' => ['SUPER_ADMIN', 'TECHNICIAN'],
+        'roles' => ['SUPER_ADMIN', 'TECHNICIAN', 'CERT_ADMIN'],
     ],
     [
         'name' => 'Penerbitan & Arsip',
