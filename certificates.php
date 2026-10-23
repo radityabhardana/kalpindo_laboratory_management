@@ -391,15 +391,15 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- 3. TAB NAVIGATION (Antrean Penerbitan Baru vs Database Arsip) -->
-<div class="border-b border-slate-200 dark:border-slate-800 mb-6 flex items-center justify-between gap-4 overflow-x-auto">
-    <nav class="flex items-center gap-2 -mb-px text-xs font-semibold">
+<div class="cert-tab-bar">
+    <nav class="cert-tab-nav">
         <button 
             type="button" 
             onclick="switchCertTab('queue')" 
             id="tab-btn-queue" 
-            class="tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 <?= $activeTab === 'queue' ? 'border-[#C81E26] text-[#C81E26] dark:border-red-500 dark:text-red-400' : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200' ?>"
+            class="cert-tab-link <?= $activeTab === 'queue' ? 'active' : '' ?>"
         >
-            <i class="ph-bold ph-tray text-sm <?= $activeTab === 'queue' ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-400' ?>"></i>
+            <i class="ph-bold ph-tray"></i>
             <span>Antrean Penerbitan Baru</span>
             <span class="badge-status <?= count($incomingQueue) > 0 ? 'danger' : 'neutral' ?>" style="font-size: 10px; padding: 1px 6px;">
                 <?= count($incomingQueue) ?>
@@ -410,9 +410,9 @@ require_once __DIR__ . '/includes/header.php';
             type="button" 
             onclick="switchCertTab('archive')" 
             id="tab-btn-archive" 
-            class="tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 <?= $activeTab === 'archive' ? 'border-[#C81E26] text-[#C81E26] dark:border-red-500 dark:text-red-400' : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200' ?>"
+            class="cert-tab-link <?= $activeTab === 'archive' ? 'active' : '' ?>"
         >
-            <i class="ph-bold ph-archive text-sm <?= $activeTab === 'archive' ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-400' ?>"></i>
+            <i class="ph-bold ph-archive"></i>
             <span>Database Arsip Sertifikat Terbit</span>
             <span class="badge-status success" style="font-size: 10px; padding: 1px 6px;">
                 <?= $totalIssuedCount ?>
@@ -1328,20 +1328,12 @@ function switchCertTab(tabName) {
     
     if (!queuePane || !archivePane) return;
 
-    const activeClasses = 'tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 border-[#C81E26] text-[#C81E26] dark:border-red-500 dark:text-red-400';
-    const inactiveClasses = 'tab-link py-3 px-4 border-b-2 font-bold whitespace-nowrap transition-colors flex items-center gap-2 border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200';
-
     if (tabName === 'archive') {
         queuePane.classList.add('hidden');
         archivePane.classList.remove('hidden');
 
-        if (archiveBtn) archiveBtn.className = activeClasses;
-        if (queueBtn) queueBtn.className = inactiveClasses;
-
-        const queueIcon = queueBtn ? queueBtn.querySelector('i') : null;
-        const archiveIcon = archiveBtn ? archiveBtn.querySelector('i') : null;
-        if (queueIcon) queueIcon.className = 'ph-bold ph-tray text-sm text-slate-400';
-        if (archiveIcon) archiveIcon.className = 'ph-bold ph-archive text-sm text-[#C81E26] dark:text-red-400';
+        if (archiveBtn) archiveBtn.classList.add('active');
+        if (queueBtn) queueBtn.classList.remove('active');
 
         const url = new URL(window.location);
         url.searchParams.set('tab', 'archive');
@@ -1350,13 +1342,8 @@ function switchCertTab(tabName) {
         archivePane.classList.add('hidden');
         queuePane.classList.remove('hidden');
 
-        if (queueBtn) queueBtn.className = activeClasses;
-        if (archiveBtn) archiveBtn.className = inactiveClasses;
-
-        const queueIcon = queueBtn ? queueBtn.querySelector('i') : null;
-        const archiveIcon = archiveBtn ? archiveBtn.querySelector('i') : null;
-        if (queueIcon) queueIcon.className = 'ph-bold ph-tray text-sm text-[#C81E26] dark:text-red-400';
-        if (archiveIcon) archiveIcon.className = 'ph-bold ph-archive text-sm text-slate-400';
+        if (queueBtn) queueBtn.classList.add('active');
+        if (archiveBtn) archiveBtn.classList.remove('active');
 
         const url = new URL(window.location);
         url.searchParams.set('tab', 'queue');

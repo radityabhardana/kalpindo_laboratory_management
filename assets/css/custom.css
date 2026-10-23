@@ -1774,6 +1774,98 @@ html.dark .ws-queue-item.is-active,
     white-space: nowrap;
 }
 
+/* ========================================================== */
+/* Certificates Navigation Tabs (Clean Underline Style)      */
+/* ========================================================== */
+.cert-tab-bar {
+    border-bottom: 1px solid var(--border-subtle) !important;
+    margin-bottom: 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+}
+.cert-tab-bar::-webkit-scrollbar {
+    display: none !important;
+}
+
+.cert-tab-nav {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin-bottom: -1px !important;
+    padding: 0 !important;
+}
+
+.cert-tab-link, .tab-link {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    color: var(--text-muted) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    outline: none !important;
+}
+
+.cert-tab-link:hover, .tab-link:hover {
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-strong) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.cert-tab-link.active, .tab-link.active {
+    color: var(--brand-primary) !important;
+    border-bottom-color: var(--brand-primary) !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.cert-tab-link i, .tab-link i {
+    font-size: 1rem !important;
+    transition: color 0.15s ease !important;
+}
+
+.cert-tab-link.active i, .tab-link.active i {
+    color: var(--brand-primary) !important;
+}
+
+.cert-tab-link:not(.active) i, .tab-link:not(.active) i {
+    color: var(--text-subtle) !important;
+}
+
+html.dark .cert-tab-link.active,
+html.dark .tab-link.active,
+[data-bs-theme="dark"] .cert-tab-link.active,
+[data-bs-theme="dark"] .tab-link.active {
+    color: #F87171 !important;
+    border-bottom-color: #EF4444 !important;
+}
+
+html.dark .cert-tab-link.active i,
+html.dark .tab-link.active i,
+[data-bs-theme="dark"] .cert-tab-link.active i,
+[data-bs-theme="dark"] .tab-link.active i {
+    color: #F87171 !important;
+}
+
 .ws-table td {
     padding: 0.4375rem 0.375rem;
     vertical-align: middle;
