@@ -273,28 +273,28 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Banner: Akun Master Setup Sistem (High-Contrast Dedicated Card) -->
-<div class="rounded-xl p-4 sm:p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm" style="background-color: #0F172A; border: 1px solid #1E293B; color: #FFFFFF;">
+<!-- Banner: Akun Master Setup Sistem (Adaptive Light & Dark Mode) -->
+<div class="master-admin-banner">
     <div class="flex items-start sm:items-center gap-3.5">
-        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0" style="background-color: #1E293B; color: #F59E0B; border: 1px solid #334155;">
+        <div class="master-admin-icon">
             <i class="ph-bold ph-shield-star"></i>
         </div>
         <div>
             <div class="flex items-center gap-2 flex-wrap">
-                <h2 class="text-xs font-bold tracking-wide uppercase m-0" style="color: #FFFFFF !important;">Akun Master Setup Sistem</h2>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold" style="background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155;">@admin</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3);">Root Level</span>
+                <h2 class="master-admin-title">Akun Master Setup Sistem</h2>
+                <span class="master-admin-badge-admin">@admin</span>
+                <span class="master-admin-badge-root">Root Level</span>
             </div>
-            <p class="text-[11px] mt-1 max-w-2xl mb-0" style="color: #CBD5E1 !important; line-height: 1.5;">
+            <p class="master-admin-desc">
                 Akun bawaan sistem berlevel root untuk konfigurasi awal, inisialisasi basis data, dan darurat otorisasi. Akun ini tidak dapat dihapus atau diturunkan hak aksesnya.
             </p>
         </div>
     </div>
     <?php if ($systemAdmin): ?>
         <div class="shrink-0 w-full sm:w-auto">
-            <button type="button" onclick="openEditUserModal(<?= htmlspecialchars(json_encode($systemAdmin)) ?>)" class="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-2 shadow-sm" style="background-color: #1E293B; color: #F8FAFC; border: 1px solid #334155;">
+            <button type="button" onclick="openEditUserModal(<?= htmlspecialchars(json_encode($systemAdmin)) ?>)" class="btn-surface w-full sm:w-auto" style="height: 38px; padding: 0 16px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="ph-bold ph-key text-xs" style="color: #F59E0B;"></i>
-                <span style="color: #F8FAFC;">Ganti Sandi Setup</span>
+                <span>Ganti Sandi Setup</span>
             </button>
         </div>
     <?php endif; ?>

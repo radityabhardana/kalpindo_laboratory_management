@@ -1892,3 +1892,95 @@ html.dark .tab-link.active i,
     vertical-align: middle;
 }
 
+/* ========================================================== */
+/* Master Admin Setup Banner (Adaptive Light & Dark Mode)     */
+/* ========================================================== */
+.master-admin-banner {
+    background-color: var(--surface-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-left: 4px solid #F59E0B !important;
+    border-radius: 0.75rem !important;
+    padding: 1.125rem 1.25rem !important;
+    margin-bottom: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+    gap: 1rem !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease !important;
+}
+
+@media (min-width: 640px) {
+    .master-admin-banner {
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+}
+
+.master-admin-icon {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    border-radius: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.25rem !important;
+    flex-shrink: 0 !important;
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    color: #D97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+}
+
+html.dark .master-admin-icon,
+[data-bs-theme="dark"] .master-admin-icon {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    color: #FBBF24 !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+.master-admin-title {
+    font-size: 0.8125rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    color: var(--text-primary) !important;
+    margin: 0 !important;
+}
+
+.master-admin-badge-admin {
+    padding: 0.15rem 0.5rem !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.6875rem !important;
+    font-family: var(--font-mono) !important;
+    font-weight: 700 !important;
+    background-color: var(--surface-subtle) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+}
+
+.master-admin-badge-root {
+    padding: 0.15rem 0.5rem !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.6875rem !important;
+    font-weight: 700 !important;
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    color: #B45309 !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+}
+
+html.dark .master-admin-badge-root,
+[data-bs-theme="dark"] .master-admin-badge-root {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #FBBF24 !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.master-admin-desc {
+    font-size: 0.75rem !important;
+    color: var(--text-muted) !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0 !important;
+    line-height: 1.5 !important;
+    max-width: 48rem !important;
+}
+
