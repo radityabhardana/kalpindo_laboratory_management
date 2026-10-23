@@ -362,13 +362,7 @@ $scopes = getScopeList();
                                          <i class="ph-bold ph-file-pdf text-[#C81E26]"></i>
                                          <span>Cetak PDF</span>
                                      </a>
-
-                                     <!-- Tombol Langsung Verifikasi QR Code untuk Front Office & Pelanggan -->
-                                     <a href="verify.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="btn-surface btn-compact whitespace-nowrap text-slate-700 dark:text-slate-200" title="Verifikasi QR Code Publik Online">
-                                         <i class="ph-bold ph-qr-code text-emerald-600 dark:text-emerald-400"></i>
-                                         <span>Verifikasi QR</span>
-                                     </a>
-                                 </div>
+                                </div>
                             <?php else: ?>
                                 <div class="inline-flex items-center gap-1.5 justify-end whitespace-nowrap">
                                     <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN', 'CERT_ADMIN'])): ?>
