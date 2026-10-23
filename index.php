@@ -107,7 +107,7 @@ $scopes = getScopeList();
         <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
             <a href="orders.php?action=create" class="btn-brand-primary">
                 <i class="ph-bold ph-plus text-xs"></i>
-                <span>+ Buat SPK Baru</span>
+                <span>Buat SPK Baru</span>
             </a>
         <?php endif; ?>
     </div>

@@ -249,10 +249,10 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Header Control Bar -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
     <div>
         <div class="flex items-center gap-2 mb-1">
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60" style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
                 ADMINISTRASI SISTEM
             </span>
             <span class="text-xs text-slate-400">·</span>
@@ -268,19 +268,19 @@ require_once __DIR__ . '/includes/header.php';
     <div class="flex items-center gap-2 shrink-0">
         <button type="button" onclick="openModal('modal-add-user')" class="btn-brand-primary">
             <i class="ph-bold ph-plus text-xs"></i>
-            <span>+ Tambah Karyawan</span>
+            <span>Tambah Karyawan</span>
         </button>
     </div>
 </div>
 
 <!-- Banner: Akun Master Setup Sistem (Adaptive Light & Dark Mode) -->
 <div class="master-admin-banner">
-    <div class="flex items-start sm:items-center gap-3.5">
+    <div class="master-admin-content">
         <div class="master-admin-icon">
             <i class="ph-bold ph-shield-star"></i>
         </div>
-        <div>
-            <div class="flex items-center gap-2 flex-wrap">
+        <div class="master-admin-text">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
                 <h2 class="master-admin-title">Akun Master Setup Sistem</h2>
                 <span class="master-admin-badge-admin">@admin</span>
                 <span class="master-admin-badge-root">Root Level</span>
@@ -291,8 +291,8 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
     <?php if ($systemAdmin): ?>
-        <div class="shrink-0 w-full sm:w-auto">
-            <button type="button" onclick="openEditUserModal(<?= htmlspecialchars(json_encode($systemAdmin)) ?>)" class="btn-surface w-full sm:w-auto" style="height: 38px; padding: 0 16px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+        <div class="master-admin-action">
+            <button type="button" onclick="openEditUserModal(<?= htmlspecialchars(json_encode($systemAdmin)) ?>)" class="btn-surface" style="height: 38px; padding: 0 16px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;">
                 <i class="ph-bold ph-key text-xs" style="color: #F59E0B;"></i>
                 <span>Ganti Sandi Setup</span>
             </button>

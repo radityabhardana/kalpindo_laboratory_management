@@ -419,7 +419,7 @@ if (hasRole('SUPER_ADMIN')) {
                 <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
                     <a href="orders.php?action=create" class="btn-brand-primary">
                         <i class="ph-bold ph-plus text-xs"></i>
-                        <span class="d-none d-sm-inline">+ SPK Baru</span>
+                        <span class="d-none d-sm-inline">SPK Baru</span>
                     </a>
                 <?php endif; ?>
 

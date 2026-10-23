@@ -1010,6 +1010,20 @@ html.dark ::-webkit-scrollbar-thumb:hover,
 .shrink-0 { flex-shrink: 0; }
 .grow { flex-grow: 1; }
 
+@media (min-width: 640px) {
+    .sm\:flex-row { flex-direction: row !important; }
+    .sm\:flex-col { flex-direction: column !important; }
+    .sm\:items-center { align-items: center !important; }
+    .sm\:items-start { align-items: flex-start !important; }
+    .sm\:justify-between { justify-content: space-between !important; }
+    .sm\:w-auto { width: auto !important; }
+    .sm\:w-full { width: 100% !important; }
+    .sm\:inline { display: inline !important; }
+    .sm\:inline-flex { display: inline-flex !important; }
+    .sm\:block { display: block !important; }
+    .sm\:hidden { display: none !important; }
+}
+
 @media (min-width: 768px) {
     .md\:flex-row { flex-direction: row; }
     .md\:items-center { align-items: center; }
@@ -1936,9 +1950,8 @@ html.dark .tab-link.active i,
     margin-bottom: 1.5rem !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
-    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
     gap: 1rem !important;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
     transition: background-color 0.15s ease, border-color 0.15s ease !important;
 }
 
@@ -1946,7 +1959,27 @@ html.dark .tab-link.active i,
     .master-admin-banner {
         flex-direction: row !important;
         align-items: center !important;
+        justify-content: space-between !important;
     }
+}
+
+.master-admin-content {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.875rem !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.master-admin-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.master-admin-action {
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 .master-admin-icon {
@@ -1977,6 +2010,7 @@ html.dark .master-admin-icon,
     text-transform: uppercase !important;
     color: var(--text-primary) !important;
     margin: 0 !important;
+    white-space: nowrap !important;
 }
 
 .master-admin-badge-admin {
@@ -1988,6 +2022,7 @@ html.dark .master-admin-icon,
     background-color: var(--surface-subtle) !important;
     color: var(--text-secondary) !important;
     border: 1px solid var(--border-subtle) !important;
+    white-space: nowrap !important;
 }
 
 .master-admin-badge-root {
@@ -1998,6 +2033,7 @@ html.dark .master-admin-icon,
     background-color: rgba(245, 158, 11, 0.1) !important;
     color: #B45309 !important;
     border: 1px solid rgba(245, 158, 11, 0.25) !important;
+    white-space: nowrap !important;
 }
 
 html.dark .master-admin-badge-root,
@@ -2013,7 +2049,7 @@ html.dark .master-admin-badge-root,
     margin-top: 0.25rem !important;
     margin-bottom: 0 !important;
     line-height: 1.5 !important;
-    max-width: 48rem !important;
+    max-width: 52rem !important;
 }
 
 /* ========================================================== */

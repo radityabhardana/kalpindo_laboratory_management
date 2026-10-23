@@ -263,7 +263,7 @@ $completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === '
         <?php if (hasRole(['SUPER_ADMIN', 'SALES'])): ?>
             <button onclick="openModal('create-order-modal')" class="btn-brand-primary">
                 <i class="ph-bold ph-plus text-xs"></i>
-                <span>+ Buat SPK Baru</span>
+                <span>Buat SPK Baru</span>
             </button>
         <?php else: ?>
             <span class="badge-status neutral">
