@@ -301,7 +301,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- Role Statistics Summary Cards (Unified KPI Widgets) -->
-<div class="grid grid-cols-2 sm:grid-cols-5 gap-3.5 mb-6">
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
     
     <!-- 1. Total Karyawan -->
     <div class="kpi-widget accent-primary">
@@ -344,7 +344,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- 5. Bagian Sertifikat -->
-    <div class="kpi-widget accent-warning col-span-2 sm:col-span-1">
+    <div class="kpi-widget accent-warning col-span-2 lg:col-span-1">
         <div class="flex items-center justify-between">
             <span class="kpi-label">Sertifikat</span>
             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
