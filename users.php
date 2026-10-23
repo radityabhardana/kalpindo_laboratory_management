@@ -251,105 +251,106 @@ require_once __DIR__ . '/includes/header.php';
 <!-- Header Control Bar -->
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
-        <div class="flex items-center gap-2">
-            <h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Manajemen Personil & Hak Akses</h1>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                <i class="ph-fill ph-shield-check text-emerald-600 text-xs"></i>
-                ISO/IEC 17025 RBAC
+        <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60">
+                ADMINISTRASI SISTEM
             </span>
+            <span class="text-xs text-slate-400">·</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">ISO/IEC 17025 RBAC Matriks</span>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Manajemen Personil & Hak Akses</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
             Konfigurasi akun staf laboratorium, divisi operasional, dan matriks hak otorisasi alur kerja kalibrasi.
         </p>
     </div>
 
     <!-- Action: Tambah Karyawan Baru Button -->
-    <div class="flex items-center gap-2">
-        <button type="button" onclick="openModal('modal-add-user')" class="btn-brand-primary text-xs">
+    <div class="flex items-center gap-2 shrink-0">
+        <button type="button" onclick="openModal('modal-add-user')" class="btn-brand-primary">
             <i class="ph-bold ph-plus text-xs"></i>
-            <span>Tambah Karyawan</span>
+            <span>+ Tambah Karyawan</span>
         </button>
     </div>
 </div>
 
-<!-- Banner: Akun Master Setup Sistem -->
-<div class="bg-slate-900 dark:bg-slate-950 text-white rounded-xl p-4 sm:p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-slate-800 shadow-subtle">
+<!-- Banner: Akun Master Setup Sistem (High-Contrast Dedicated Card) -->
+<div class="rounded-xl p-4 sm:p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm" style="background-color: #0F172A; border: 1px solid #1E293B; color: #FFFFFF;">
     <div class="flex items-start sm:items-center gap-3.5">
-        <div class="w-10 h-10 rounded-lg bg-slate-800 text-amber-400 flex items-center justify-center text-lg shrink-0 border border-slate-700 shadow-inner">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0" style="background-color: #1E293B; color: #F59E0B; border: 1px solid #334155;">
             <i class="ph-bold ph-shield-star"></i>
         </div>
         <div>
-            <div class="flex items-center gap-2">
-                <h2 class="text-xs font-bold text-white tracking-wide uppercase">Akun Master Setup Sistem</h2>
-                <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-mono border border-slate-700">@admin</span>
-                <span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-semibold border border-amber-500/20">Root Level</span>
+            <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-xs font-bold tracking-wide uppercase m-0" style="color: #FFFFFF !important;">Akun Master Setup Sistem</h2>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold" style="background-color: #1E293B; color: #E2E8F0; border: 1px solid #334155;">@admin</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3);">Root Level</span>
             </div>
-            <p class="text-[11px] text-slate-400 mt-1 max-w-2xl">
+            <p class="text-[11px] mt-1 max-w-2xl mb-0" style="color: #CBD5E1 !important; line-height: 1.5;">
                 Akun bawaan sistem berlevel root untuk konfigurasi awal, inisialisasi basis data, dan darurat otorisasi. Akun ini tidak dapat dihapus atau diturunkan hak aksesnya.
             </p>
         </div>
     </div>
     <?php if ($systemAdmin): ?>
         <div class="shrink-0 w-full sm:w-auto">
-            <button type="button" onclick="openEditUserModal(<?= htmlspecialchars(json_encode($systemAdmin)) ?>)" class="w-full sm:w-auto px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 hover:text-white transition-all inline-flex items-center justify-center gap-1.5 shadow-sm">
-                <i class="ph-bold ph-key text-xs text-amber-400"></i>
-                <span>Ganti Sandi Setup</span>
+            <button type="button" onclick="openEditUserModal(<?= htmlspecialchars(json_encode($systemAdmin)) ?>)" class="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-2 shadow-sm" style="background-color: #1E293B; color: #F8FAFC; border: 1px solid #334155;">
+                <i class="ph-bold ph-key text-xs" style="color: #F59E0B;"></i>
+                <span style="color: #F8FAFC;">Ganti Sandi Setup</span>
             </button>
         </div>
     <?php endif; ?>
 </div>
 
-<!-- Role Statistics Summary Cards (KPI Widgets) -->
+<!-- Role Statistics Summary Cards (Unified KPI Widgets) -->
 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3.5 mb-6">
     
     <!-- 1. Total Karyawan -->
-    <div class="ent-card kpi-widget p-3.5 sm:p-4">
-        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Personil</span>
-        <div class="mt-1 flex items-baseline justify-between">
-            <span class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight"><?= $totalEmployees ?></span>
-            <span class="text-[11px] text-slate-400 font-medium">staf aktif</span>
+    <div class="kpi-widget accent-primary">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Total Personil</span>
+            <i class="ph-bold ph-users text-slate-400"></i>
         </div>
-        <span class="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">Personil operasional</span>
+        <div class="kpi-value"><?= $totalEmployees ?></div>
+        <div class="kpi-subtext">Staf aktif terdaftar</div>
     </div>
 
     <!-- 2. Super Admin Karyawan -->
-    <div class="ent-card kpi-widget p-3.5 sm:p-4" style="--kpi-color: #C81E26;">
-        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Super Admin</span>
-        <div class="mt-1 flex items-baseline justify-between">
-            <span class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight"><?= $countAdminEmployees ?></span>
-            <span class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">Otoritas Penuh</span>
+    <div class="kpi-widget accent-primary">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Super Admin</span>
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
         </div>
-        <span class="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">Manajer sistem lab</span>
+        <div class="kpi-value text-rose-700 dark:text-rose-400"><?= $countAdminEmployees ?></div>
+        <div class="kpi-subtext">Otoritas sistem penuh</div>
     </div>
 
     <!-- 3. Sales -->
-    <div class="ent-card kpi-widget p-3.5 sm:p-4" style="--kpi-color: #6366F1;">
-        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Divisi Sales</span>
-        <div class="mt-1 flex items-baseline justify-between">
-            <span class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight"><?= $countSales ?></span>
-            <span class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">Order SPK</span>
+    <div class="kpi-widget accent-info">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Divisi Sales</span>
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
         </div>
-        <span class="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">Penerima & registrasi</span>
+        <div class="kpi-value text-indigo-700 dark:text-indigo-400"><?= $countSales ?></div>
+        <div class="kpi-subtext">Order & registrasi SPK</div>
     </div>
 
     <!-- 4. Teknisi -->
-    <div class="ent-card kpi-widget p-3.5 sm:p-4" style="--kpi-color: #059669;">
-        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Teknisi Lab</span>
-        <div class="mt-1 flex items-baseline justify-between">
-            <span class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight"><?= $countTech ?></span>
-            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Kalibrasi</span>
+    <div class="kpi-widget accent-success">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Teknisi Lab</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
         </div>
-        <span class="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">Penguji & worksheet</span>
+        <div class="kpi-value text-emerald-700 dark:text-emerald-400"><?= $countTech ?></div>
+        <div class="kpi-subtext">Penguji & lembar kerja</div>
     </div>
 
     <!-- 5. Bagian Sertifikat -->
-    <div class="ent-card kpi-widget p-3.5 sm:p-4 col-span-2 sm:col-span-1" style="--kpi-color: #D97706;">
-        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Admin Sertifikat</span>
-        <div class="mt-1 flex items-baseline justify-between">
-            <span class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight"><?= $countCert ?></span>
-            <span class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">Penerbitan</span>
+    <div class="kpi-widget accent-warning col-span-2 sm:col-span-1">
+        <div class="flex items-center justify-between">
+            <span class="kpi-label">Sertifikat</span>
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
         </div>
-        <span class="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">Validasi & nomor sertifikat</span>
+        <div class="kpi-value text-amber-700 dark:text-amber-400"><?= $countCert ?></div>
+        <div class="kpi-subtext">Validasi & nomor resmi</div>
     </div>
 
 </div>
@@ -359,19 +360,19 @@ require_once __DIR__ . '/includes/header.php';
     
     <!-- Real-time Filter Buttons -->
     <div class="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto" id="role-filter-group">
-        <button type="button" onclick="filterUserRole('ALL', this)" class="role-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm">
+        <button type="button" onclick="filterUserRole('ALL', this)" class="role-filter-btn btn-brand-primary btn-compact text-xs">
             Semua (<?= $totalEmployees ?>)
         </button>
-        <button type="button" onclick="filterUserRole('SUPER_ADMIN', this)" class="role-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <button type="button" onclick="filterUserRole('SUPER_ADMIN', this)" class="role-filter-btn btn-surface btn-compact text-xs">
             Admin (<?= $countAdminEmployees ?>)
         </button>
-        <button type="button" onclick="filterUserRole('SALES', this)" class="role-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <button type="button" onclick="filterUserRole('SALES', this)" class="role-filter-btn btn-surface btn-compact text-xs">
             Sales (<?= $countSales ?>)
         </button>
-        <button type="button" onclick="filterUserRole('TECHNICIAN', this)" class="role-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <button type="button" onclick="filterUserRole('TECHNICIAN', this)" class="role-filter-btn btn-surface btn-compact text-xs">
             Teknisi (<?= $countTech ?>)
         </button>
-        <button type="button" onclick="filterUserRole('CERT_ADMIN', this)" class="role-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <button type="button" onclick="filterUserRole('CERT_ADMIN', this)" class="role-filter-btn btn-surface btn-compact text-xs">
             Sertifikat (<?= $countCert ?>)
         </button>
     </div>
@@ -379,7 +380,7 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Search Input -->
     <div class="w-full md:w-80 relative">
         <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-        <input type="text" id="user-search-input" onkeyup="searchUsers()" placeholder="Cari nama, username, email, divisi..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+        <input type="text" id="user-search-input" onkeyup="searchUsers()" placeholder="Cari nama, username, email, divisi..." class="ent-input pl-8 text-xs">
     </div>
 
 </div>
@@ -416,7 +417,7 @@ require_once __DIR__ . '/includes/header.php';
                             <!-- 1. Personil Info -->
                             <td>
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs shrink-0 border border-slate-200 dark:border-slate-700">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0" style="background-color: var(--surface-subtle); color: var(--text-primary); border: 1px solid var(--border-subtle);">
                                         <?= htmlspecialchars($u['avatar_initials'] ?: 'KP') ?>
                                     </div>
                                     <div class="min-w-0">
@@ -433,7 +434,7 @@ require_once __DIR__ . '/includes/header.php';
 
                             <!-- 2. Username -->
                             <td>
-                                <span class="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                                <span class="font-mono text-xs font-semibold px-2 py-0.5 rounded" style="background-color: var(--surface-subtle); color: var(--text-primary); border: 1px solid var(--border-subtle);">
                                     @<?= htmlspecialchars($u['username']) ?>
                                 </span>
                             </td>
@@ -450,14 +451,13 @@ require_once __DIR__ . '/includes/header.php';
                                     <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                     
                                     <div class="relative inline-block">
-                                        <select name="new_role" onchange="this.form.submit()" class="text-xs font-medium pl-2.5 pr-7 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 appearance-none cursor-pointer focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors shadow-xs">
+                                        <select name="new_role" onchange="this.form.submit()" class="ent-select text-xs font-medium py-1" style="height: 32px; padding-right: 28px;">
                                             <?php foreach ($allRoles as $rKey => $rVal): ?>
                                                 <option value="<?= $rKey ?>" <?= $u['role'] === $rKey ? 'selected' : '' ?>>
                                                     <?= $rVal['name'] ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <i class="ph-bold ph-caret-down text-[10px] text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                                     </div>
                                 </form>
                             </td>
@@ -474,7 +474,7 @@ require_once __DIR__ . '/includes/header.php';
                                     <!-- Edit Button -->
                                     <button type="button" 
                                         onclick="openEditUserModal(<?= htmlspecialchars(json_encode($u)) ?>)" 
-                                        class="btn-surface text-xs"
+                                        class="btn-surface btn-compact text-xs"
                                         title="Ubah Profil & Hak Akses Karyawan">
                                         <i class="ph-bold ph-pencil-simple text-xs"></i>
                                         <span class="hidden sm:inline">Edit</span>
@@ -510,11 +510,11 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- MODAL 1: TAMBAH KARYAWAN BARU -->
-<div id="modal-add-user" class="fixed inset-0 z-modal bg-slate-950/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="ent-modal rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+<div id="modal-add-user" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="ent-modal rounded-xl max-w-lg w-full shadow-2xl overflow-hidden text-xs">
         
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60">
             <div>
                 <h3 class="font-bold text-base text-slate-900 dark:text-white tracking-tight">Daftarkan Personil Baru</h3>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Registrasi akun staf laboratorium dan tetapkan peran akses operasional.</p>
@@ -525,26 +525,26 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <!-- Form -->
-        <form action="users.php" method="POST" class="p-6 space-y-4 text-xs">
+        <form action="users.php" method="POST" class="p-6 space-y-4">
             <input type="hidden" name="action" value="add_user">
 
             <!-- Nama Lengkap -->
             <div>
                 <label for="add_full_name" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap & Gelar <span class="text-rose-500">*</span></label>
-                <input type="text" id="add_full_name" name="full_name" required placeholder="Contoh: Raditya Pratama, S.T." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                <input type="text" id="add_full_name" name="full_name" required placeholder="Contoh: Raditya Pratama, S.T." class="ent-input">
             </div>
 
             <!-- Username & Password Row -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label for="add_username" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Username Login <span class="text-rose-500">*</span></label>
-                    <input type="text" id="add_username" name="username" required placeholder="misal: radit" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Huruf kecil tanpa spasi</p>
+                    <input type="text" id="add_username" name="username" required placeholder="misal: radit" class="ent-input font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Huruf kecil tanpa spasi</p>
                 </div>
                 <div>
                     <label for="add_password" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kata Sandi Awal <span class="text-rose-500">*</span></label>
-                    <input type="text" id="add_password" name="password" required value="password123" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Default: password123</p>
+                    <input type="text" id="add_password" name="password" required value="password123" class="ent-input font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Default: password123</p>
                 </div>
             </div>
 
@@ -552,18 +552,18 @@ require_once __DIR__ . '/includes/header.php';
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label for="add_email" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Email</label>
-                    <input type="email" id="add_email" name="email" placeholder="nama@kalpindo.co.id" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                    <input type="email" id="add_email" name="email" placeholder="nama@kalpindo.co.id" class="ent-input">
                 </div>
                 <div>
                     <label for="add_department" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Departemen / Divisi</label>
-                    <input type="text" id="add_department" name="department" value="Operasional Laboratorium" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                    <input type="text" id="add_department" name="department" value="Operasional Laboratorium" class="ent-input">
                 </div>
             </div>
 
             <!-- Peran Sistem (Role Selection) -->
             <div>
                 <label for="add_role" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Peran Akses (Role) <span class="text-rose-500">*</span></label>
-                <select id="add_role" name="role" required class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                <select id="add_role" name="role" required class="ent-select">
                     <?php foreach ($allRoles as $rKey => $rVal): ?>
                         <option value="<?= $rKey ?>" <?= $rKey === 'TECHNICIAN' ? 'selected' : '' ?>>
                             <?= $rVal['name'] ?> — <?= $rVal['desc'] ?>
@@ -573,11 +573,11 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <!-- Buttons -->
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-                <button type="button" onclick="closeModal('modal-add-user')" class="btn-surface text-xs">
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeModal('modal-add-user')" class="btn-surface">
                     Batal
                 </button>
-                <button type="submit" class="btn-brand-primary text-xs">
+                <button type="submit" class="btn-brand-primary">
                     Simpan & Daftarkan
                 </button>
             </div>
@@ -588,11 +588,11 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- MODAL 2: UBAH DATA & PERAN KARYAWAN (EDIT USER) -->
-<div id="modal-edit-user" class="fixed inset-0 z-modal bg-slate-950/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="ent-modal rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+<div id="modal-edit-user" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="ent-modal rounded-xl max-w-lg w-full shadow-2xl overflow-hidden text-xs">
         
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60">
             <div>
                 <h3 class="font-bold text-base text-slate-900 dark:text-white tracking-tight">Ubah Profil & Hak Akses</h3>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Perbarui informasi personil, peran sistem, atau atur ulang kata sandi.</p>
@@ -603,14 +603,14 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <!-- Form -->
-        <form action="users.php" method="POST" class="p-6 space-y-4 text-xs">
+        <form action="users.php" method="POST" class="p-6 space-y-4">
             <input type="hidden" name="action" value="edit_user">
             <input type="hidden" id="edit_user_id" name="user_id" value="">
 
             <!-- Username Info Card -->
             <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between">
                 <div>
-                    <span class="text-[10px] text-slate-400 uppercase font-bold block">Username Akun</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">Username Akun</span>
                     <span id="edit_username_badge" class="font-mono text-xs font-bold text-slate-900 dark:text-white"></span>
                 </div>
                 <span id="edit_admin_tag" class="hidden px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded text-[10px] font-semibold">
@@ -621,25 +621,25 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Nama Lengkap -->
             <div>
                 <label for="edit_full_name" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap & Gelar <span class="text-rose-500">*</span></label>
-                <input type="text" id="edit_full_name" name="full_name" required class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                <input type="text" id="edit_full_name" name="full_name" required class="ent-input">
             </div>
 
             <!-- Email & Departemen Row -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label for="edit_email" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Email</label>
-                    <input type="email" id="edit_email" name="email" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                    <input type="email" id="edit_email" name="email" class="ent-input">
                 </div>
                 <div>
                     <label for="edit_department" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Departemen / Divisi</label>
-                    <input type="text" id="edit_department" name="department" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                    <input type="text" id="edit_department" name="department" class="ent-input">
                 </div>
             </div>
 
             <!-- Peran Sistem (Role Selection) -->
             <div>
                 <label for="edit_role" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Peran Akses (Role) <span class="text-rose-500">*</span></label>
-                <select id="edit_role" name="role" required class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                <select id="edit_role" name="role" required class="ent-select">
                     <?php foreach ($allRoles as $rKey => $rVal): ?>
                         <option value="<?= $rKey ?>">
                             <?= $rVal['name'] ?>
@@ -649,19 +649,19 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <!-- Reset Password (Opsional) -->
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800">
                 <label for="edit_new_password" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Ganti Kata Sandi <span class="text-slate-400 font-normal text-[11px]">(Kosongkan jika tidak diubah)</span>
                 </label>
-                <input type="text" id="edit_new_password" name="new_password" placeholder="Masukkan kata sandi baru..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors">
+                <input type="text" id="edit_new_password" name="new_password" placeholder="Masukkan kata sandi baru..." class="ent-input font-mono">
             </div>
 
             <!-- Buttons -->
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-                <button type="button" onclick="closeModal('modal-edit-user')" class="btn-surface text-xs">
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeModal('modal-edit-user')" class="btn-surface">
                     Batal
                 </button>
-                <button type="submit" class="btn-brand-primary text-xs">
+                <button type="submit" class="btn-brand-primary">
                     Simpan Perubahan
                 </button>
             </div>
@@ -672,10 +672,10 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- MODAL 3: KONFIRMASI HAPUS KARYAWAN -->
-<div id="modal-delete-user" class="fixed inset-0 z-modal bg-slate-950/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="ent-modal rounded-xl max-w-md w-full shadow-2xl overflow-hidden">
+<div id="modal-delete-user" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="ent-modal rounded-xl max-w-md w-full shadow-2xl overflow-hidden text-xs">
         <div class="p-6 text-center">
-            <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto mb-3 border border-rose-200/80 dark:border-rose-900/50">
+            <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto mb-3 border border-rose-200 dark:border-rose-900/50">
                 <i class="ph-bold ph-warning"></i>
             </div>
             <h3 class="font-bold text-base text-slate-900 dark:text-white">Hapus Akun Karyawan?</h3>
@@ -685,10 +685,10 @@ require_once __DIR__ . '/includes/header.php';
                 <input type="hidden" name="action" value="delete_user">
                 <input type="hidden" id="delete_user_id" name="user_id" value="">
                 
-                <button type="button" onclick="closeModal('modal-delete-user')" class="btn-surface text-xs w-full py-2">
+                <button type="button" onclick="closeModal('modal-delete-user')" class="btn-surface w-full py-2">
                     Batal
                 </button>
-                <button type="submit" class="w-full py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-subtle transition-colors">
+                <button type="submit" class="w-full py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-sm transition-colors border-0">
                     Ya, Hapus Akun
                 </button>
             </form>
@@ -703,9 +703,9 @@ function filterUserRole(role, btnEl) {
     currentRoleFilter = role;
     
     document.querySelectorAll('.role-filter-btn').forEach(b => {
-        b.className = 'role-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors';
+        b.className = 'role-filter-btn btn-surface btn-compact text-xs';
     });
-    btnEl.className = 'role-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm';
+    btnEl.className = 'role-filter-btn btn-brand-primary btn-compact text-xs';
     
     applyUserFilters();
 }
