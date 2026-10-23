@@ -253,17 +253,17 @@ $scopes = getScopeList();
 
     <!-- Structured Data Table -->
     <div class="overflow-x-auto">
-        <table class="ent-table min-w-[1150px]">
+        <table class="ent-table min-w-[1260px]">
             <thead>
                 <tr>
                     <th class="w-[190px]">No. Order & Pelanggan</th>
                     <th class="w-[240px]">Nama Alat & Spesifikasi</th>
                     <th class="w-[140px]">Ruang Lingkup</th>
-                    <th class="w-[90px]">Layanan</th>
+                    <th class="w-[110px] whitespace-nowrap">Layanan</th>
                     <th class="w-[130px]">Teknisi</th>
                     <th class="w-[160px]">Status Alur</th>
                     <th class="w-[170px]">No. Sertifikat</th>
-                    <th class="text-right w-[150px]">Tindak Lanjut</th>
+                    <th class="text-right w-[240px] whitespace-nowrap">Tindak Lanjut</th>
                 </tr>
             </thead>
             <tbody>
@@ -300,7 +300,7 @@ $scopes = getScopeList();
                                 <?= htmlspecialchars($inst['instrument_name']) ?>
                             </div>
                             <div class="cell-secondary truncate max-w-[220px]">
-                                <?= htmlspecialchars($inst['brand']) ?> · <?= htmlspecialchars($inst['model_type']) ?>
+                                <?= htmlspecialchars((string)($inst['brand'] ?: '-')) ?> · <?= htmlspecialchars((string)($inst['model_type'] ?: '-')) ?>
                             </div>
                             <div class="cell-meta">SN: <?= htmlspecialchars($inst['serial_number']) ?></div>
                         </td>
@@ -349,7 +349,7 @@ $scopes = getScopeList();
                         <td class="text-right whitespace-nowrap">
                             <?php if ($inst['instrument_status'] === 'DATA_SUBMITTED'): ?>
                                 <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
-                                    <a href="certificates.php?instrument_id=<?= $inst['instrument_id'] ?>" class="btn-brand-primary">
+                                    <a href="certificates.php?instrument_id=<?= $inst['instrument_id'] ?>" class="btn-brand-primary btn-compact whitespace-nowrap">
                                         <i class="ph-bold ph-certificate text-xs"></i>
                                         <span>Terbitkan</span>
                                     </a>
@@ -357,32 +357,36 @@ $scopes = getScopeList();
                                     <span class="badge-status purple">Siap Terbit</span>
                                 <?php endif; ?>
                             <?php elseif ($inst['instrument_status'] === 'CERTIFIED' && $inst['certificate_number']): ?>
-                                <div class="inline-flex items-center gap-1.5 justify-end">
-                                    <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="btn-surface text-xs" title="Buka Dokumen PDF">
-                                        <i class="ph-bold ph-file-pdf text-[#C81E26]"></i>
-                                        <span>Cetak PDF</span>
-                                    </a>
+                                <div class="inline-flex items-center gap-1.5 justify-end whitespace-nowrap">
+                                    <a href="print_certificate.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="btn-surface btn-compact whitespace-nowrap" title="Buka Dokumen PDF Cetak">
+                                         <i class="ph-bold ph-file-pdf text-[#C81E26]"></i>
+                                         <span>Cetak PDF</span>
+                                     </a>
 
-                                    <div class="action-menu-container">
-                                        <button type="button" onclick="toggleActionMenu('<?= $menuIdInst ?>', event)" class="btn-icon" title="Opsi" aria-label="Menu Opsi">
-                                            <i class="ph-bold ph-dots-three-vertical text-sm"></i>
-                                        </button>
-                                        <div id="<?= $menuIdInst ?>" class="action-menu-dropdown">
-                                            <a href="verify.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="action-menu-item">
-                                                <i class="ph-bold ph-qr-code text-slate-500"></i>
-                                                <span>Verifikasi QR Code</span>
-                                            </a>
-                                            <a href="certificates.php?search=<?= urlencode($inst['certificate_number']) ?>#archive-section" class="action-menu-item">
-                                                <i class="ph-bold ph-folder-open text-slate-500"></i>
-                                                <span>Lihat di Arsip</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+                                     <!-- Tombol Langsung Verifikasi QR Code untuk Front Office & Pelanggan -->
+                                     <a href="verify.php?cert=<?= urlencode($inst['certificate_number']) ?>" target="_blank" class="btn-surface btn-compact whitespace-nowrap text-slate-700 dark:text-slate-200" title="Verifikasi QR Code Publik Online">
+                                         <i class="ph-bold ph-qr-code text-emerald-600 dark:text-emerald-400"></i>
+                                         <span>Verifikasi QR</span>
+                                     </a>
+
+                                     <?php if (hasRole(['SUPER_ADMIN', 'CERT_ADMIN'])): ?>
+                                         <div class="action-menu-container">
+                                             <button type="button" onclick="toggleActionMenu('<?= $menuIdInst ?>', event)" class="btn-icon" style="height: 1.75rem; width: 1.75rem;" title="Opsi Tindak Lanjut" aria-label="Menu Opsi">
+                                                 <i class="ph-bold ph-dots-three-vertical text-sm"></i>
+                                             </button>
+                                             <div id="<?= $menuIdInst ?>" class="action-menu-dropdown">
+                                                 <a href="certificates.php?search=<?= urlencode($inst['certificate_number']) ?>#archive-section" class="action-menu-item">
+                                                     <i class="ph-bold ph-folder-open text-slate-500"></i>
+                                                     <span>Lihat di Arsip</span>
+                                                 </a>
+                                             </div>
+                                         </div>
+                                     <?php endif; ?>
+                                 </div>
                             <?php else: ?>
-                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                <div class="inline-flex items-center gap-1.5 justify-end whitespace-nowrap">
                                     <?php if (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                                        <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="btn-surface text-xs">
+                                        <a href="worksheet.php?instrument_id=<?= $inst['instrument_id'] ?>" class="btn-surface btn-compact whitespace-nowrap">
                                             <i class="ph-bold ph-wrench text-slate-500"></i>
                                             <span>Worksheet</span>
                                         </a>

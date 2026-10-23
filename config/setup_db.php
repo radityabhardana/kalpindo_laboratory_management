@@ -119,7 +119,8 @@ function initializeDatabase(PDO $pdo): void {
         ['M', 'Massa (Mass)', 'Timbangan analitik presisi, timbangan elektronik, anak timbangan kelas E2/F1/M1', 'g, kg, mg', 'indigo'],
         ['T', 'Suhu (Temperature)', 'Thermometer digital, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'],
         ['D', 'Dimensi (Dimension)', 'Vernier caliper, digital micrometer, dial gauge, height gauge', 'mm, inch, µm', 'blue'],
-        ['E', 'Kelistrikan (Electric)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet']
+        ['E', 'Kelistrikan (Electric)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet'],
+        ['A', 'Akustik & Getaran (Acoustic)', 'Sound level meter, acoustic calibrator, vibration meter', 'dB, Hz, m/s²', 'rose']
     ];
 
     $stmtScope = $pdo->prepare("INSERT OR IGNORE INTO scopes (code, name, description, unit_samples, color) VALUES (?, ?, ?, ?, ?)");
@@ -255,8 +256,8 @@ function initializeDatabase(PDO $pdo): void {
     $pdo->exec("
         INSERT OR IGNORE INTO instruments (id, order_id, name, scope_code, brand, model_type, serial_number, capacity_range, resolution, technician_name, calibration_date, status)
         VALUES (
-            3, 3, 'Digital Thermometer & Probe PT100', 'S', 'Chino Corp', 'DP-500B', 'CN-718290',
-            '-20 °C s/d 150 °C', '0.01 °C', 'Dedi Kurniawan, A.Md.', '2026-05-14', 'DATA_SUBMITTED'
+            3, 3, 'Digital Thermometer & Probe PT100', 'T', 'Chino Corp', 'DP-500B', 'CN-718290',
+            '-20 °C s/d 150 °C', '0.01 °C', 'Raditya Bagus Hardana', '2026-05-14', 'DATA_SUBMITTED'
         );
     ");
 
@@ -271,7 +272,7 @@ function initializeDatabase(PDO $pdo): void {
         VALUES (
             3, 3, 21.0, 1.0, 58.0, 5.0,
             'Standard Platinum Resistance Thermometer (SPRT) Fluke 5628 SN: 8812',
-            'CERT-KAN-S-2025-110', '2026-11-20',
+            'CERT-KAN-T-2025-110', '2026-11-20',
             'Metode Kalibrasi Termometer Digital MK-KAL-02 (Komparasi Direct Bath)',
             " . $pdo->quote($readingsInst3) . ",
             'Probe utuh, kabel tidak ada robekan, battery level prima',
@@ -284,75 +285,75 @@ function initializeDatabase(PDO $pdo): void {
         INSERT OR IGNORE INTO instruments (id, order_id, name, scope_code, brand, model_type, serial_number, capacity_range, resolution, technician_name, calibration_date, status)
         VALUES (
             4, 4, 'Digital Outside Micrometer', 'D', 'Mitutoyo', '293-240-30', 'MTY-552918',
-            '0 - 25 mm', '0.001 mm', 'Ahmad Farhan, A.Md.', '2026-05-15', 'IN_PROGRESS'
+            '0 - 25 mm', '0.001 mm', 'Raditya Bagus Hardana', '2026-05-15', 'IN_PROGRESS'
         );
     ");
 
-    // 5. Seed Users for Multi-Role RBAC (Personal Employee Accounts + Master Admin)
+    // 5. Seed Users for Multi-Role RBAC (Matching README and Live Database)
     $usersData = [
         [
             'admin',
             password_hash('admin', PASSWORD_DEFAULT),
-            'Administrator Utama',
+            'Master Administrator',
             'admin@kalpindo.co.id',
             'SUPER_ADMIN',
             'Manajemen Sistem & Operasional',
             'AD'
         ],
         [
-            'radit',
-            password_hash('password123', PASSWORD_DEFAULT),
-            'Raditya Pratama',
-            'raditya@kalpindo.co.id',
-            'CERT_ADMIN',
-            'Administrasi Sertifikasi & Mutu',
-            'RP'
-        ],
-        [
-            'siti',
-            password_hash('password123', PASSWORD_DEFAULT),
-            'Siti Rahmawati, S.E.',
-            'siti@kalpindo.co.id',
+            'april',
+            password_hash('april', PASSWORD_DEFAULT),
+            'April Aulia Anjani',
+            'april@kalpindo.co.id',
             'SALES',
             'Sales & Layanan Pelanggan',
-            'SR'
+            'AA'
         ],
         [
-            'fauzi',
-            password_hash('password123', PASSWORD_DEFAULT),
-            'Ahmad Fauzi, A.Md.',
-            'fauzi@kalpindo.co.id',
+            'radit',
+            password_hash('radit', PASSWORD_DEFAULT),
+            'Raditya Bagus Hardana',
+            'raditya@kalpindo.co.id',
             'TECHNICIAN',
             'Laboratorium Kalibrasi Teknis',
-            'AF'
+            'RH'
+        ],
+        [
+            'adi',
+            password_hash('adiadi', PASSWORD_DEFAULT),
+            'Adi Nugroho, S.T.',
+            'adi@kalpindo.co.id',
+            'CERT_ADMIN',
+            'Administrasi Penerbitan Sertifikat',
+            'AN'
         ],
         // Legacy role aliases for backward compatibility
         [
             'sales',
             password_hash('password123', PASSWORD_DEFAULT),
-            'Siti Rahmawati, S.E.',
+            'April Aulia Anjani',
             'sales@kalpindo.co.id',
             'SALES',
             'Sales & Layanan Pelanggan',
-            'SR'
+            'AA'
         ],
         [
             'teknisi',
             password_hash('password123', PASSWORD_DEFAULT),
-            'Ahmad Fauzi, A.Md.',
+            'Raditya Bagus Hardana',
             'teknisi@kalpindo.co.id',
             'TECHNICIAN',
             'Laboratorium Kalibrasi Teknis',
-            'AF'
+            'RH'
         ],
         [
             'sertifikat',
             password_hash('password123', PASSWORD_DEFAULT),
-            'Raditya Pratama',
+            'Adi Nugroho, S.T.',
             'sertifikat@kalpindo.co.id',
             'CERT_ADMIN',
-            'Administrasi Sertifikasi & Mutu',
-            'RP'
+            'Administrasi Penerbitan Sertifikat',
+            'AN'
         ]
     ];
 

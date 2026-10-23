@@ -20,13 +20,12 @@ CREATE TABLE `scopes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `scopes` (`code`, `name`, `description`, `unit_samples`, `color`) VALUES
-('P', 'Pressure (Tekanan)', 'Kalibrasi pressure gauge, differential manometer, transmitter tekanan', 'bar, psi, kPa, MPa', 'emerald'),
-('S', 'Suhu & Kelembaban (Temperature)', 'Thermometer digital, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'),
+('P', 'Tekanan (Pressure)', 'Kalibrasi pressure gauge, differential manometer, transmitter tekanan', 'bar, psi, kPa, MPa', 'emerald'),
 ('M', 'Massa (Mass)', 'Timbangan analitik presisi, timbangan elektronik, anak timbangan kelas E2/F1/M1', 'g, kg, mg', 'indigo'),
+('T', 'Suhu (Temperature)', 'Thermometer digital, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'),
 ('D', 'Dimensi (Dimension)', 'Vernier caliper, digital micrometer, dial gauge, height gauge', 'mm, inch, µm', 'blue'),
-('E', 'Kelistrikan (Electrical)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet'),
-('V', 'Volumetrik (Volume)', 'Labu ukur, micropipette, buret, piknometer', 'ml, L, µl', 'cyan'),
-('F', 'Gaya & Torsi (Force & Torque)', 'Torque wrench, digital push-pull gauge, load cell', 'Nm, N, kgf', 'rose');
+('E', 'Kelistrikan (Electric)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet'),
+('A', 'Akustik & Getaran (Acoustic)', 'Sound level meter, acoustic calibrator, vibration meter', 'dB, Hz, m/s²', 'rose');
 
 -- ----------------------------------------------------------
 -- 2. Tabel Surat Perintah Kerja / Order (Orders)
@@ -67,6 +66,7 @@ CREATE TABLE `instruments` (
   `resolution` varchar(50) DEFAULT NULL,
   `technician_name` varchar(100) DEFAULT NULL,
   `calibration_date` date DEFAULT NULL,
+  `is_kan` tinyint(1) NOT NULL DEFAULT 1,
   `status` varchar(30) DEFAULT 'ASSIGNED',
   PRIMARY KEY (`id`),
   KEY `order_id` (`order_id`),
@@ -75,11 +75,11 @@ CREATE TABLE `instruments` (
   CONSTRAINT `fk_inst_scope` FOREIGN KEY (`scope_code`) REFERENCES `scopes` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `instruments` (`id`, `order_id`, `name`, `scope_code`, `brand`, `model_type`, `serial_number`, `capacity_range`, `resolution`, `technician_name`, `calibration_date`, `status`) VALUES
-(1, 1, 'Digital Pressure Gauge', 'P', 'Fluke Calibration', '700G07', 'SN-2605891', '0 - 10 bar', '0.001 bar', 'Ahmad Farhan, A.Md.', '2026-05-11', 'CERTIFIED'),
-(2, 2, 'Analytical Balance 4 Desimal', 'M', 'Mettler Toledo', 'ME204T', 'MT-994102', '0 - 220 g', '0.0001 g', 'Budi Santoso, S.T.', '2026-05-13', 'CERTIFIED'),
-(3, 3, 'Digital Thermometer & Probe PT100', 'S', 'Chino Corp', 'DP-500B', 'CN-718290', '-20 °C s/d 150 °C', '0.01 °C', 'Dedi Kurniawan, A.Md.', '2026-05-14', 'DATA_SUBMITTED'),
-(4, 4, 'Digital Outside Micrometer', 'D', 'Mitutoyo', '293-240-30', 'MTY-552918', '0 - 25 mm', '0.001 mm', 'Ahmad Farhan, A.Md.', '2026-05-15', 'IN_PROGRESS');
+INSERT INTO `instruments` (`id`, `order_id`, `name`, `scope_code`, `brand`, `model_type`, `serial_number`, `capacity_range`, `resolution`, `technician_name`, `calibration_date`, `is_kan`, `status`) VALUES
+(1, 1, 'Digital Pressure Gauge', 'P', 'Fluke Calibration', '700G07', 'SN-2605891', '0 - 10 bar', '0.001 bar', 'Raditya Bagus Hardana', '2026-05-11', 1, 'CERTIFIED'),
+(2, 2, 'Analytical Balance 4 Desimal', 'M', 'Mettler Toledo', 'ME204T', 'MT-994102', '0 - 220 g', '0.0001 g', 'Raditya Bagus Hardana', '2026-05-13', 1, 'CERTIFIED'),
+(3, 3, 'Digital Thermometer & Probe PT100', 'T', 'Chino Corp', 'DP-500B', 'CN-718290', '-20 °C s/d 150 °C', '0.01 °C', 'Raditya Bagus Hardana', '2026-05-14', 1, 'DATA_SUBMITTED'),
+(4, 4, 'Digital Outside Micrometer', 'D', 'Mitutoyo', '293-240-30', 'MTY-552918', '0 - 25 mm', '0.001 mm', 'Raditya Bagus Hardana', '2026-05-15', 1, 'IN_PROGRESS');
 
 -- ----------------------------------------------------------
 -- 4. Tabel Lembar Kerja Fisik (Worksheets)
@@ -107,7 +107,7 @@ CREATE TABLE `worksheets` (
 INSERT INTO `worksheets` (`id`, `instrument_id`, `temperature`, `temperature_uncertainty`, `humidity`, `humidity_uncertainty`, `standard_calibrator`, `standard_cert_no`, `standard_valid_until`, `calibration_method`, `readings_json`, `visual_inspection`, `technician_notes`) VALUES
 (1, 1, 20.20, 0.80, 54.00, 4.00, 'Dead Weight Tester Fluke P3000 Series SN: DWT-4412', 'CERT-KAN-P-2025-042', '2027-04-15', 'Metode Kalibrasi Tekanan MK-KAL-04 (Mengacu EURAMET cg-17)', '[{"point":"0.00 bar","standard":0,"run1":0,"run2":0,"run3":0,"mean":0,"correction":0,"uncertainty":0.004},{"point":"2.50 bar","standard":2.5,"run1":2.502,"run2":2.501,"run3":2.502,"mean":2.502,"correction":-0.002,"uncertainty":0.005},{"point":"5.00 bar","standard":5,"run1":5.003,"run2":5.002,"run3":5.003,"mean":5.003,"correction":-0.003,"uncertainty":0.006},{"point":"7.50 bar","standard":7.5,"run1":7.504,"run2":7.503,"run3":7.504,"mean":7.504,"correction":-0.004,"uncertainty":0.007},{"point":"10.00 bar","standard":10,"run1":10.005,"run2":10.004,"run3":10.005,"mean":10.005,"correction":-0.005,"uncertainty":0.008}]', 'Fisik bersih, display jernih, konektor NPT 1/4 inch baik', 'Pengambilan data onsite lancar, tidak ada kebocoran sambungan manifold.'),
 (2, 2, 20.00, 0.50, 52.00, 3.00, 'Anak Timbangan Standar Kelas E2 (OIML R111) SN: E2-SET-102', 'CERT-SNSU-M-2025-019', '2027-02-28', 'Metode Kalibrasi Timbangan Non-Otomatis MK-KAL-01 (EURAMET cg-18)', '[{"point":"1.0000 g","standard":1.00002,"run1":1,"run2":1,"run3":1.0001,"mean":1,"correction":0.00002,"uncertainty":0.00005},{"point":"10.0000 g","standard":10.00005,"run1":10.0001,"run2":10,"run3":10.0001,"mean":10.0001,"correction":-0.00005,"uncertainty":0.00007},{"point":"50.0000 g","standard":50.00012,"run1":50.0002,"run2":50.0001,"run3":50.0002,"mean":50.0002,"correction":-0.00008,"uncertainty":0.00011},{"point":"100.0000 g","standard":100.0002,"run1":100.0003,"run2":100.0002,"run3":100.0003,"mean":100.0003,"correction":-0.0001,"uncertainty":0.00015},{"point":"200.0000 g","standard":200.00045,"run1":200.0005,"run2":200.0005,"run3":200.0004,"mean":200.0005,"correction":-0.00005,"uncertainty":0.00022}]', 'Kondisi bersih, meja anti-getar stabil, kaca draft shield utuh', 'Hasil pengujian histeresis dan ketertelusuran daya ulang sangat baik.'),
-(3, 3, 21.00, 1.00, 58.00, 5.00, 'Standard Platinum Resistance Thermometer (SPRT) Fluke 5628 SN: 8812', 'CERT-KAN-S-2025-110', '2026-11-20', 'Metode Kalibrasi Termometer Digital MK-KAL-02 (Komparasi Direct Bath)', '[{"point":"0.00 °C","standard":0.01,"run1":0.03,"run2":0.02,"run3":0.03,"mean":0.03,"correction":-0.02,"uncertainty":0.03},{"point":"50.00 °C","standard":50,"run1":50.04,"run2":50.03,"run3":50.04,"mean":50.04,"correction":-0.04,"uncertainty":0.04},{"point":"100.00 °C","standard":99.98,"run1":100.05,"run2":100.04,"run3":100.05,"mean":100.05,"correction":-0.07,"uncertainty":0.05}]', 'Probe utuh, kabel tidak ada robekan, battery level prima', 'Data mentah dari lembar kertas sudah selesai direkap, mohon diterbitkan nomor sertifikat ruang lingkup Suhu.');
+(3, 3, 21.00, 1.00, 58.00, 5.00, 'Standard Platinum Resistance Thermometer (SPRT) Fluke 5628 SN: 8812', 'CERT-KAN-T-2025-110', '2026-11-20', 'Metode Kalibrasi Termometer Digital MK-KAL-02 (Komparasi Direct Bath)', '[{"point":"0.00 °C","standard":0.01,"run1":0.03,"run2":0.02,"run3":0.03,"mean":0.03,"correction":-0.02,"uncertainty":0.03},{"point":"50.00 °C","standard":50,"run1":50.04,"run2":50.03,"run3":50.04,"mean":50.04,"correction":-0.04,"uncertainty":0.04},{"point":"100.00 °C","standard":99.98,"run1":100.05,"run2":100.04,"run3":100.05,"mean":100.05,"correction":-0.07,"uncertainty":0.05}]', 'Probe utuh, kabel tidak ada robekan, battery level prima', 'Data mentah dari lembar kertas sudah selesai direkap, mohon diterbitkan nomor sertifikat ruang lingkup Suhu.');
 
 -- ----------------------------------------------------------
 -- 5. Tabel Sertifikat Kalibrasi (Certificates)
@@ -118,6 +118,7 @@ CREATE TABLE `certificates` (
   `instrument_id` int(11) NOT NULL UNIQUE,
   `certificate_number` varchar(50) NOT NULL UNIQUE,
   `scope_code` varchar(5) NOT NULL,
+  `is_kan` tinyint(1) NOT NULL DEFAULT 1,
   `year_prefix` varchar(2) NOT NULL,
   `month_prefix` varchar(2) NOT NULL,
   `sequence_number` int(11) NOT NULL,
@@ -134,9 +135,9 @@ CREATE TABLE `certificates` (
   CONSTRAINT `fk_cert_scope` FOREIGN KEY (`scope_code`) REFERENCES `scopes` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `certificates` (`id`, `instrument_id`, `certificate_number`, `scope_code`, `year_prefix`, `month_prefix`, `sequence_number`, `revision_number`, `issue_date`, `valid_until`, `technical_manager`, `status`, `revision_notes`) VALUES
-(1, 1, '2605P0012-00', 'P', '26', '05', 12, '00', '2026-05-12', '2027-05-12', 'Ir. Hendra Wijaya, M.T.', 'ISSUED', NULL),
-(2, 2, '2605M0005-00', 'M', '26', '05', 5, '00', '2026-05-13', '2027-05-13', 'Ir. Hendra Wijaya, M.T.', 'ISSUED', NULL);
+INSERT INTO `certificates` (`id`, `instrument_id`, `certificate_number`, `scope_code`, `is_kan`, `year_prefix`, `month_prefix`, `sequence_number`, `revision_number`, `issue_date`, `valid_until`, `technical_manager`, `status`, `revision_notes`) VALUES
+(1, 1, '2605P0012-00', 'P', 1, '26', '05', 12, '00', '2026-05-12', '2027-05-12', 'Ir. Hendra Wijaya, M.T.', 'ISSUED', NULL),
+(2, 2, '2605M0005-00', 'M', 1, '26', '05', 5, '00', '2026-05-13', '2027-05-13', 'Ir. Hendra Wijaya, M.T.', 'ISSUED', NULL);
 
 -- ----------------------------------------------------------
 -- 6. Tabel Pengguna Multi-Role (Users & RBAC)
@@ -156,9 +157,12 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `users` (`id`, `username`, `password_hash`, `full_name`, `email`, `role`, `department`, `avatar_initials`) VALUES
-(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Ir. Hendra Wijaya, M.T.', 'hendra.wijaya@kalpindo.co.id', 'SUPER_ADMIN', 'Manajemen & Mutu ISO 17025', 'HW'),
-(2, 'sales', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Siti Rahmawati, S.E.', 'siti.sales@kalpindo.co.id', 'SALES', 'Sales & Layanan Pelanggan', 'SR'),
-(3, 'teknisi', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Ahmad Fauzi, A.Md.', 'ahmad.fauzi@kalpindo.co.id', 'TECHNICIAN', 'Laboratorium Kalibrasi Teknis', 'AF'),
-(4, 'sertifikat', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Raditya Pratama', 'raditya.cert@kalpindo.co.id', 'CERT_ADMIN', 'Administrasi Penerbitan Sertifikat', 'RP');
+(1, 'admin', '$2y$10$1OUKuBLZ55LVZ4gL.HMm3O5n8VI3zysGA6f7kQpoV1v67oEe31tou', 'Master Administrator', 'admin@kalpindo.co.id', 'SUPER_ADMIN', 'Manajemen Sistem & Operasional', 'AD'),
+(2, 'april', '$2y$10$KkFZw7GlBdxmDOwOaj2Ecem.epqIqtSYvjhaioqgllHZ6og7D9W9G', 'April Aulia Anjani', 'april@kalpindo.co.id', 'SALES', 'Sales & Layanan Pelanggan', 'AA'),
+(3, 'radit', '$2y$10$rJhTBTvALySyKUrsTFtJ/eAlImKC7voXxZMAyD0JvpRJA.mWBTK7S', 'Raditya Bagus Hardana', 'raditya@kalpindo.co.id', 'TECHNICIAN', 'Laboratorium Kalibrasi Teknis', 'RH'),
+(4, 'adi', '$2y$10$D9umrPTZoYiOYLTO9al4oOZgFei0EczHqQg7BJEbjkWki/llyHnpC', 'Adi Nugroho, S.T.', 'adi@kalpindo.co.id', 'CERT_ADMIN', 'Administrasi Penerbitan Sertifikat', 'AN'),
+(5, 'sales', '$2y$10$zZXz1Kq4D4kNiEgeNxM98OrhArrx2s3JTHAwJGbbvVevC.LrHr84i', 'April Aulia Anjani', 'sales@kalpindo.co.id', 'SALES', 'Sales & Layanan Pelanggan', 'AA'),
+(6, 'teknisi', '$2y$10$zZXz1Kq4D4kNiEgeNxM98OrhArrx2s3JTHAwJGbbvVevC.LrHr84i', 'Raditya Bagus Hardana', 'teknisi@kalpindo.co.id', 'TECHNICIAN', 'Laboratorium Kalibrasi Teknis', 'RH'),
+(7, 'sertifikat', '$2y$10$zZXz1Kq4D4kNiEgeNxM98OrhArrx2s3JTHAwJGbbvVevC.LrHr84i', 'Adi Nugroho, S.T.', 'sertifikat@kalpindo.co.id', 'CERT_ADMIN', 'Administrasi Penerbitan Sertifikat', 'AN');
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -29,6 +29,6 @@
 
     <!-- Local Client-side Scripts -->
     <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/app.js?v=<?= filemtime(__DIR__ . '/../assets/js/app.js') ?>"></script>
 </body>
 </html>

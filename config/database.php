@@ -70,6 +70,16 @@ function runMigrations(PDO $pdo): void {
     if ($hasRun) return;
     $hasRun = true;
 
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS schema_migrations (version VARCHAR(50) PRIMARY KEY, applied_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
+        $stmtCheck = $pdo->query("SELECT COUNT(*) FROM schema_migrations WHERE version = 'v1_standardize_scopes_kan'");
+        if ((int)$stmtCheck->fetchColumn() > 0) {
+            return; // Migrasi sudah selesai dijalankan sebelumnya
+        }
+    } catch (Exception $e) {}
+
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
     // 1. Kolom is_kan pada tabel instruments dan certificates (1 = KAN, 0 = Non-KAN)
     try {
         $pdo->exec("ALTER TABLE instruments ADD COLUMN is_kan INTEGER DEFAULT 1");
@@ -79,17 +89,25 @@ function runMigrations(PDO $pdo): void {
         $pdo->exec("ALTER TABLE certificates ADD COLUMN is_kan INTEGER DEFAULT 1");
     } catch (Exception $e) {}
 
-    // 2. Ruang Lingkup Resmi: P (Pressure), M (Massa), T (Suhu), D (Dimensi), E (Electric)
+    // 2. Ruang Lingkup Resmi: P (Pressure), M (Massa), T (Suhu), D (Dimensi), E (Electric), A (Akustik)
     try {
-        $pdo->exec("
-            INSERT OR REPLACE INTO scopes (code, name, description, unit_samples, color)
-            VALUES 
-                ('P', 'Tekanan (Pressure)', 'Pressure gauge, transmitter tekanan, manometer, vacuum gauge', 'bar, psi, kPa, MPa', 'emerald'),
-                ('M', 'Massa (Mass)', 'Timbangan analitik presisi, timbangan elektronik, anak timbangan standar', 'g, kg, mg', 'indigo'),
-                ('T', 'Suhu (Temperature)', 'Thermometer digital & gelas, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'),
-                ('D', 'Dimensi (Dimension)', 'Vernier caliper, digital micrometer, dial gauge, gauge block', 'mm, inch, µm', 'blue'),
-                ('E', 'Kelistrikan (Electric)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet')
-        ");
+        $scopes = [
+            ['P', 'Tekanan (Pressure)', 'Pressure gauge, transmitter tekanan, manometer, vacuum gauge', 'bar, psi, kPa, MPa', 'emerald'],
+            ['M', 'Massa (Mass)', 'Timbangan analitik presisi, timbangan elektronik, anak timbangan standar', 'g, kg, mg', 'indigo'],
+            ['T', 'Suhu (Temperature)', 'Thermometer digital & gelas, thermocouple, thermohygrometer, oven, bath', '°C, %RH, K', 'amber'],
+            ['D', 'Dimensi (Dimension)', 'Vernier caliper, digital micrometer, dial gauge, gauge block', 'mm, inch, µm', 'blue'],
+            ['E', 'Kelistrikan (Electric)', 'Digital multimeter, clamp meter, voltage calibrator, insulation tester', 'V, A, Ohm, Hz', 'violet'],
+            ['A', 'Akustik & Getaran (Acoustic)', 'Sound level meter, acoustic calibrator, vibration meter', 'dB, Hz, m/s²', 'rose']
+        ];
+
+        $insertSql = ($driver === 'mysql') 
+            ? "REPLACE INTO scopes (code, name, description, unit_samples, color) VALUES (?, ?, ?, ?, ?)"
+            : "INSERT OR REPLACE INTO scopes (code, name, description, unit_samples, color) VALUES (?, ?, ?, ?, ?)";
+        
+        $stmt = $pdo->prepare($insertSql);
+        foreach ($scopes as $sc) {
+            $stmt->execute($sc);
+        }
 
         // Migrasi kode 'S' lama ke 'T' (Suhu)
         $pdo->exec("UPDATE instruments SET scope_code = 'T' WHERE scope_code = 'S'");
@@ -99,6 +117,11 @@ function runMigrations(PDO $pdo): void {
         // Sinkronisasi status is_kan dari awalan nomor sertifikat (N = Non-KAN)
         $pdo->exec("UPDATE certificates SET is_kan = 0 WHERE certificate_number LIKE 'N%'");
         $pdo->exec("UPDATE certificates SET is_kan = 1 WHERE certificate_number NOT LIKE 'N%'");
+
+        $markSql = ($driver === 'mysql')
+            ? "INSERT IGNORE INTO schema_migrations (version) VALUES ('v1_standardize_scopes_kan')"
+            : "INSERT OR IGNORE INTO schema_migrations (version) VALUES ('v1_standardize_scopes_kan')";
+        $pdo->exec($markSql);
     } catch (Exception $e) {}
 }
 

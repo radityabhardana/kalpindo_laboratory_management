@@ -26,7 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $instId = (int)($_POST['instrument_id'] ?? 0);
 
         // Kunci Integritas Audit ISO/IEC 17025: Lembar kerja yang instrumennya sudah CERTIFIED tidak boleh diedit
-        $currentInstStatus = $db->query("SELECT status FROM instruments WHERE id = {$instId}")->fetchColumn();
+        $stmtStatusCheck = $db->prepare("SELECT status FROM instruments WHERE id = ?");
+        $stmtStatusCheck->execute([$instId]);
+        $currentInstStatus = $stmtStatusCheck->fetchColumn();
         if ($currentInstStatus === 'CERTIFIED') {
             throw new Exception("Instrumen ini telah diterbitkan sertifikat resmi ('CERTIFIED'). Lembar kerja dikunci secara permanen (Read-Only) sesuai standar audit ISO/IEC 17025. Jika diperlukan koreksi, terbitkan amandemen/revisi sertifikat pada modul Sertifikat.");
         }
@@ -78,7 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         $db->beginTransaction();
 
-        $existingWsId = $db->query("SELECT id FROM worksheets WHERE instrument_id = {$instId}")->fetchColumn();
+        $stmtWsCheck = $db->prepare("SELECT id FROM worksheets WHERE instrument_id = ?");
+        $stmtWsCheck->execute([$instId]);
+        $existingWsId = $stmtWsCheck->fetchColumn();
 
         if ($existingWsId) {
             $stmt = $db->prepare("
@@ -111,14 +115,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             ]);
         }
 
+        $calDate = !empty($_POST['calibration_date']) ? $_POST['calibration_date'] : date('Y-m-d');
+        $stmtUpdateDate = $db->prepare("UPDATE instruments SET calibration_date = ? WHERE id = ?");
+        $stmtUpdateDate->execute([$calDate, $instId]);
+
         if ($submitToCert) {
-            $db->exec("UPDATE instruments SET status = 'DATA_SUBMITTED' WHERE id = {$instId}");
+            $stmtStatus = $db->prepare("UPDATE instruments SET status = 'DATA_SUBMITTED' WHERE id = ?");
+            $stmtStatus->execute([$instId]);
             $db->commit();
             setFlash('success', 'Data mentah lembar kerja BERHASIL diserahkan ke Bagian Sertifikat untuk diterbitkan nomor resmi.');
             header('Location: index.php');
             exit;
         } else {
-            $db->exec("UPDATE instruments SET status = 'IN_PROGRESS' WHERE id = {$instId}");
+            $stmtStatus = $db->prepare("UPDATE instruments SET status = 'IN_PROGRESS' WHERE id = ?");
+            $stmtStatus->execute([$instId]);
             $db->commit();
             setFlash('success', 'Draf lembar kerja kalibrasi berhasil disimpan.');
             header("Location: worksheet.php?instrument_id={$instId}");
@@ -153,6 +163,16 @@ $instrumentList = $db->query("
         END,
         i.id DESC
 ")->fetchAll();
+
+$orderIdParam = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
+if ($selectedInstId === 0 && $orderIdParam > 0) {
+    foreach ($instrumentList as $item) {
+        if ((int)$item['order_id'] === $orderIdParam) {
+            $selectedInstId = (int)$item['id'];
+            break;
+        }
+    }
+}
 
 if ($selectedInstId === 0 && !empty($instrumentList)) {
     $firstPending = array_filter($instrumentList, fn($x) => in_array($x['status'], ['ASSIGNED', 'IN_PROGRESS']));
@@ -217,26 +237,268 @@ if (empty($readings)) {
     ];
 }
 
+$countTotal = count($instrumentList);
+$countPending = 0;
+$countCertified = 0;
+foreach ($instrumentList as $item) {
+    if (in_array($item['status'], ['ASSIGNED', 'IN_PROGRESS'])) {
+        $countPending++;
+    } else {
+        $countCertified++;
+    }
+}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
+<style>
+    /* Dedicated Worksheet & Queue Styling */
+    .ws-queue-card {
+        background-color: var(--surface-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+    .ws-queue-header {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+        background-color: var(--surface-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .ws-queue-search {
+        position: relative;
+        padding: 0.625rem 0.875rem;
+        border-bottom: 1px solid var(--border-subtle);
+        background-color: var(--surface-card);
+    }
+    .ws-queue-search input {
+        width: 100%;
+        height: 2.25rem;
+        padding: 0.375rem 0.75rem 0.375rem 2.25rem;
+        font-size: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-strong);
+        background-color: var(--surface-subtle);
+        color: var(--text-primary);
+        outline: none;
+        transition: all 0.15s ease;
+    }
+    .ws-queue-search input:focus {
+        border-color: var(--brand-primary);
+        background-color: var(--surface-card);
+        box-shadow: 0 0 0 2px var(--brand-primary-ring);
+    }
+    .ws-queue-search .search-icon {
+        position: absolute;
+        left: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        pointer-events: none;
+    }
+    .ws-queue-tabs {
+        display: flex;
+        padding: 0.375rem 0.625rem;
+        gap: 0.375rem;
+        background-color: var(--surface-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .ws-tab-btn {
+        flex: 1;
+        padding: 0.3125rem 0.375rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        border-radius: 0.375rem;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.12s ease;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        white-space: nowrap;
+    }
+    .ws-tab-btn:hover {
+        color: var(--text-primary);
+        background-color: var(--surface-muted);
+    }
+    .ws-tab-btn.active {
+        background-color: var(--surface-card);
+        color: var(--brand-primary);
+        border-color: var(--border-subtle);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .ws-queue-list {
+        max-height: 590px;
+        overflow-y: auto;
+        padding: 0.625rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-strong) transparent;
+    }
+    .ws-queue-list::-webkit-scrollbar {
+        width: 5px;
+    }
+    .ws-queue-list::-webkit-scrollbar-thumb {
+        background-color: var(--border-strong);
+        border-radius: 4px;
+    }
+    .ws-queue-item {
+        display: block;
+        text-decoration: none !important;
+        background-color: var(--surface-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.625rem;
+        padding: 0.75rem 0.875rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.15s ease;
+    }
+    .ws-queue-item:hover {
+        border-color: var(--border-active);
+        background-color: var(--surface-subtle);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+    .ws-queue-item.is-active {
+        background-color: rgba(200, 30, 38, 0.04) !important;
+        border-color: var(--brand-primary) !important;
+        box-shadow: 0 0 0 1px var(--brand-primary), 0 4px 10px -2px rgba(200, 30, 38, 0.15) !important;
+    }
+    html.dark .ws-queue-item.is-active,
+    [data-bs-theme="dark"] .ws-queue-item.is-active {
+        background-color: rgba(200, 30, 38, 0.12) !important;
+    }
+    .ws-queue-item.is-active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background-color: var(--brand-primary);
+        border-radius: 4px 0 0 4px;
+    }
+    .ws-queue-item .item-title {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.35;
+        margin-top: 0.3125rem;
+    }
+    .ws-queue-item .item-customer {
+        font-size: 0.6875rem;
+        color: var(--text-muted);
+        margin-top: 0.1875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3125rem;
+    }
+    .ws-queue-item .item-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        padding-top: 0.4375rem;
+        border-top: 1px solid var(--border-subtle);
+    }
+    .ws-sn-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-family: var(--font-mono, monospace);
+        font-size: 0.625rem;
+        font-weight: 600;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        background-color: var(--surface-subtle);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+    }
+    .ws-specs-strip {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        background-color: var(--surface-subtle);
+        border: 1px solid var(--border-subtle);
+    }
+    @media (min-width: 640px) {
+        .ws-specs-strip {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+    .ws-spec-box .label {
+        display: block;
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.125rem;
+    }
+    .ws-spec-box .val {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .ws-env-card {
+        padding: 0.875rem;
+        border-radius: 0.5rem;
+        background-color: var(--surface-subtle);
+        border: 1px solid var(--border-subtle);
+    }
+    .ws-env-card label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 0.375rem;
+    }
+    .ws-table th {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.625rem 0.5rem;
+        background-color: var(--surface-subtle);
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-strong);
+        white-space: nowrap;
+    }
+    .ws-table td {
+        padding: 0.4375rem 0.375rem;
+        vertical-align: middle;
+    }
+</style>
+
 <!-- 1. Header Control Bar -->
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
     <div>
-        <div class="flex items-center gap-2 mb-1">
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60" style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: rgba(200,30,38,0.1); color: #C81E26; border: 1px solid rgba(200,30,38,0.2);">
                 LABORATORIUM & PENGUJIAN
             </span>
-            <span class="text-xs text-slate-400">·</span>
-            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Input Data Mentah & Ketidakpastian</span>
+            <span style="color: var(--text-muted); font-size: 11px;">•</span>
+            <span style="color: var(--text-muted); font-size: 12px; font-family: var(--font-mono, monospace);">Input Data Mentah & Ketidakpastian</span>
         </div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Lembar Kerja Kalibrasi (Worksheet)</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
+        <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.02em;">Lembar Kerja Kalibrasi (Worksheet)</h1>
+        <p class="mb-0 text-muted" style="font-size: 0.8125rem;">
             Pencatatan kondisi lingkungan uji lab/site, kalibrator acuan tertelusur, dan rekapitulasi data mentah teknisi sesuai standar ISO/IEC 17025.
         </p>
     </div>
     
-    <div class="flex items-center gap-2 shrink-0">
+    <div class="d-flex align-items-center gap-2 shrink-0">
         <?php if ($isCertified): ?>
             <span class="badge-status success">
                 <i class="ph-bold ph-lock-key"></i>
@@ -252,75 +514,140 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- 2. Two-Column Workbench Layout -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<div class="row g-4 align-items-start">
 
-    <!-- Left Column (4 of 12 = ~33%): Instrument List / Queue -->
-    <div class="lg:col-span-4 space-y-4">
-        <div class="ent-card overflow-hidden">
-            <div class="ent-card-header">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
-                    <h2 class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Antrean Alat Teknisi</h2>
+    <!-- Left Column (4/12 or 5/12 on large screens): Instrument Queue -->
+    <div class="col-12 col-xl-4 col-lg-5">
+        <div class="ws-queue-card">
+            
+            <!-- Queue Header -->
+            <div class="ws-queue-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="ph-bold ph-tray" style="color: var(--brand-primary); font-size: 1.1rem;"></i>
+                    <h2 class="mb-0 fw-bold" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-primary);">
+                        Antrean Alat Teknisi
+                    </h2>
                 </div>
-                <span class="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium"><?= count($instrumentList) ?> alat</span>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" style="font-size: 0.6875rem; font-family: monospace;">
+                    <span id="queue-visible-count"><?= $countTotal ?></span> / <?= $countTotal ?> alat
+                </span>
             </div>
 
-            <div class="divide-y divide-slate-100 dark:divide-slate-800 max-h-[660px] overflow-y-auto">
+            <!-- Queue Search Filter -->
+            <div class="ws-queue-search">
+                <i class="ph-bold ph-magnifying-glass search-icon"></i>
+                <input 
+                    type="text" 
+                    id="queue-search" 
+                    oninput="filterQueue()" 
+                    placeholder="Cari nama alat, SN, SPK, pelanggan..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- Queue Status Tabs -->
+            <div class="ws-queue-tabs">
+                <button type="button" class="ws-tab-btn active" data-tab="all" onclick="filterQueue('all')">
+                    Semua (<?= $countTotal ?>)
+                </button>
+                <button type="button" class="ws-tab-btn" data-tab="pending" onclick="filterQueue('pending')">
+                    <span class="badge-dot bg-warning" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background-color: #F59E0B;"></span>
+                    Perlu Uji (<?= $countPending ?>)
+                </button>
+                <button type="button" class="ws-tab-btn" data-tab="certified" onclick="filterQueue('certified')">
+                    <span class="badge-dot bg-success" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background-color: #10B981;"></span>
+                    Selesai (<?= $countCertified ?>)
+                </button>
+            </div>
+
+            <!-- Scrollable Queue List of Cards -->
+            <div class="ws-queue-list" id="queue-items-container">
                 <?php if (empty($instrumentList)): ?>
-                    <div class="p-8 text-center text-slate-400 text-xs">Belum ada alat yang ditugaskan ke teknisi.</div>
+                    <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.75rem;">
+                        <i class="ph-bold ph-tray" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+                        Belum ada alat yang ditugaskan ke teknisi.
+                    </div>
                 <?php endif; ?>
 
                 <?php foreach ($instrumentList as $item): ?>
                     <?php 
                         $isSelected = ($item['id'] === $selectedInstId);
                         $isItemKan = ((int)($item['is_kan'] ?? 1) === 1);
+                        $isItemCertified = in_array($item['status'], ['CERTIFIED', 'DATA_SUBMITTED']);
                     ?>
-                    <a href="worksheet.php?instrument_id=<?= $item['id'] ?>" class="block p-3.5 transition-all text-left <?= $isSelected ? 'bg-red-50/70 dark:bg-red-950/30 border-l-[3px] border-l-[#C81E26]' : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/50' ?>">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-mono text-xs font-bold <?= $isSelected ? 'text-[#C81E26] dark:text-red-400' : 'text-slate-900 dark:text-slate-200' ?>">
+                    <a 
+                        href="worksheet.php?instrument_id=<?= $item['id'] ?>" 
+                        class="ws-queue-item <?= $isSelected ? 'is-active' : '' ?>"
+                        data-status="<?= htmlspecialchars($item['status']) ?>"
+                        data-search="<?= htmlspecialchars(strtolower($item['name'] . ' ' . $item['order_number'] . ' ' . $item['serial_number'] . ' ' . $item['customer_name'])) ?>"
+                        title="Klik untuk memilih alat ini"
+                    >
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="font-mono fw-bold" style="font-size: 0.75rem; color: <?= $isSelected ? 'var(--brand-primary)' : 'var(--text-primary)' ?>;">
                                 <?= htmlspecialchars($item['order_number']) ?>
                             </span>
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-mono text-[10px] text-slate-400">[<?= htmlspecialchars($item['scope_code']) ?>]</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span style="font-family: monospace; font-size: 10px; color: var(--text-muted); font-weight: 600;">[<?= htmlspecialchars($item['scope_code']) ?>]</span>
                                 <?= renderAccreditationBadge($isItemKan) ?>
                             </div>
                         </div>
                         
-                        <h4 class="font-semibold text-xs text-slate-900 dark:text-slate-100 line-clamp-1"><?= htmlspecialchars($item['name']) ?></h4>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate"><?= htmlspecialchars($item['customer_name']) ?></p>
+                        <div class="item-title">
+                            <?= htmlspecialchars($item['name']) ?>
+                        </div>
                         
-                        <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
-                            <span class="font-mono text-[10px] text-slate-400">SN: <?= htmlspecialchars($item['serial_number']) ?></span>
-                            <?= renderStatusBadge($item['status']) ?>
+                        <div class="item-customer">
+                            <i class="ph-bold ph-buildings" style="font-size: 11px;"></i>
+                            <span class="text-truncate"><?= htmlspecialchars($item['customer_name']) ?></span>
+                        </div>
+                        
+                        <div class="item-footer">
+                            <span class="ws-sn-pill">
+                                SN: <?= htmlspecialchars($item['serial_number']) ?>
+                            </span>
+                            <div class="d-flex align-items-center gap-1">
+                                <?= renderStatusBadge($item['status']) ?>
+                                <?php if ($isSelected): ?>
+                                    <span style="font-size: 9px; font-weight: 700; color: #FFFFFF; background-color: var(--brand-primary); padding: 1px 6px; border-radius: 4px; text-transform: uppercase;">
+                                        Aktif
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </a>
                 <?php endforeach; ?>
+
+                <!-- Empty Search Notice -->
+                <div id="queue-empty-search" style="display: none; padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.75rem;">
+                    <i class="ph-bold ph-magnifying-glass" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+                    Tidak ada instrumen yang cocok dengan pencarian.
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Right Column (8 of 12 = ~67%): Worksheet Digital Form -->
-    <div class="lg:col-span-8">
+    <!-- Right Column (8/12 or 7/12 on large screens): Worksheet Form -->
+    <div class="col-12 col-xl-8 col-lg-7">
         <?php if (!$currentInst): ?>
-            <div class="ent-card p-12 text-center text-slate-400 text-xs">
-                <i class="ph-bold ph-tray text-4xl text-slate-300 dark:text-slate-600 mb-2 block"></i>
-                <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Alat untuk Membuka Lembar Kerja</h4>
-                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Silakan klik salah satu alat dari daftar antrean di sebelah kiri untuk mengisi data pengukuran kalibrasi.</p>
+            <div class="ent-card p-5 text-center" style="color: var(--text-muted); padding: 3.5rem 1.5rem !important;">
+                <i class="ph-bold ph-tray" style="font-size: 3rem; margin-bottom: 0.75rem; display: block; color: var(--text-muted); opacity: 0.4;"></i>
+                <h4 class="fw-bold mb-1" style="font-size: 0.9375rem; color: var(--text-primary);">Pilih Alat untuk Membuka Lembar Kerja</h4>
+                <p class="mb-0" style="font-size: 0.75rem; max-width: 360px; margin: 0 auto;">Silakan klik salah satu alat dari daftar antrean di sebelah kiri untuk mengisi data pengukuran kalibrasi.</p>
             </div>
         <?php else: ?>
             
-            <form action="worksheet.php" method="POST" class="ent-card p-5 sm:p-6 space-y-6 text-xs">
+            <form action="worksheet.php" method="POST" class="ent-card p-4 p-sm-5" style="display: flex; flex-direction: column; gap: 1.5rem;" id="worksheet-form">
                 <input type="hidden" name="action" value="save_worksheet">
                 <input type="hidden" name="instrument_id" value="<?= $currentInst['id'] ?>">
 
                 <!-- Audit Lock Notice Banner -->
                 <?php if ($isCertified): ?>
-                    <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 p-3.5 rounded-lg flex items-start gap-2.5">
-                        <i class="ph-bold ph-lock-key text-base text-amber-600 shrink-0 mt-0.5"></i>
-                        <div class="text-xs">
-                            <p class="font-bold">Lembar Kerja Terkunci (Read-Only Audit)</p>
-                            <p class="text-[11px] mt-0.5">
-                                Sertifikat resmi telah diterbitkan dengan Nomor: <span class="font-mono font-bold"><?= htmlspecialchars($currentInst['certificate_number'] ?? '-') ?></span>.
+                    <div style="background-color: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); color: #B45309; padding: 0.875rem 1rem; border-radius: 0.5rem; display: flex; align-items: flex-start; gap: 0.625rem; font-size: 0.75rem;">
+                        <i class="ph-bold ph-lock-key" style="font-size: 1.2rem; flex-shrink: 0; margin-top: 0.125rem;"></i>
+                        <div>
+                            <p class="fw-bold mb-0" style="color: #92400E;">Lembar Kerja Terkunci (Read-Only Audit)</p>
+                            <p class="mb-0 mt-1" style="line-height: 1.4;">
+                                Sertifikat resmi telah diterbitkan dengan Nomor: <span style="font-family: monospace; font-weight: 700;"><?= htmlspecialchars($currentInst['certificate_number'] ?? '-') ?></span>.
                                 Sesuai klausul audit integritas data ISO/IEC 17025, data mentah tidak dapat diedit langsung.
                             </p>
                         </div>
@@ -328,10 +655,10 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endif; ?>
 
                 <!-- Instrument Top Identity Bar -->
-                <div class="border-b border-slate-100 dark:border-slate-800 pb-4">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700">
+                <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; font-weight: 700; background-color: var(--surface-subtle); padding: 0.25rem 0.625rem; border-radius: 0.375rem; border: 1px solid var(--border-subtle); color: var(--text-primary);">
                                 <?= htmlspecialchars($currentInst['order_number']) ?>
                             </span>
                             <?= renderLocationBadge($currentInst['service_type']) ?>
@@ -340,155 +667,248 @@ require_once __DIR__ . '/includes/header.php';
                         <?= renderStatusBadge($currentInst['status']) ?>
                     </div>
 
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight mt-1"><?= htmlspecialchars($currentInst['name']) ?></h2>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
-                        Pelanggan: <span class="font-semibold text-slate-700 dark:text-slate-300"><?= htmlspecialchars($currentInst['customer_name']) ?></span> · 
+                    <h2 class="h4 fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.02em;">
+                        <?= htmlspecialchars($currentInst['name']) ?>
+                    </h2>
+                    <p class="mb-3 text-muted" style="font-size: 0.75rem;">
+                        Pelanggan: <span class="fw-semibold" style="color: var(--text-secondary);"><?= htmlspecialchars($currentInst['customer_name']) ?></span> · 
                         Alamat: <?= htmlspecialchars($currentInst['customer_address'] ?: '-') ?>
                     </p>
 
                     <!-- Compact Specs Strip -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px]">
-                        <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Merk / Tipe</span>
-                            <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($currentInst['brand'] ?: '-') ?> / <?= htmlspecialchars($currentInst['model_type'] ?: '-') ?></span>
+                    <div class="ws-specs-strip">
+                        <div class="ws-spec-box">
+                            <span class="label">Merk / Tipe</span>
+                            <span class="val"><?= htmlspecialchars($currentInst['brand'] ?: '-') ?> / <?= htmlspecialchars($currentInst['model_type'] ?: '-') ?></span>
                         </div>
-                        <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Nomor Seri (SN)</span>
-                            <span class="font-mono font-bold text-slate-900 dark:text-slate-100"><?= htmlspecialchars($currentInst['serial_number']) ?></span>
+                        <div class="ws-spec-box">
+                            <span class="label">Nomor Seri (SN)</span>
+                            <span class="val font-mono fw-bold" style="color: var(--brand-primary);"><?= htmlspecialchars($currentInst['serial_number']) ?></span>
                         </div>
-                        <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Kapasitas / Resolusi</span>
-                            <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($currentInst['capacity_range'] ?: '-') ?> (<?= htmlspecialchars($currentInst['resolution'] ?: '-') ?>)</span>
+                        <div class="ws-spec-box">
+                            <span class="label">Kapasitas / Resolusi</span>
+                            <span class="val"><?= htmlspecialchars($currentInst['capacity_range'] ?: '-') ?> (<?= htmlspecialchars($currentInst['resolution'] ?: '-') ?>)</span>
                         </div>
-                        <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Teknisi Bertugas</span>
-                            <span class="font-bold text-slate-900 dark:text-slate-100"><?= htmlspecialchars($currentInst['technician_name'] ?: '-') ?></span>
+                        <div class="ws-spec-box">
+                            <span class="label">Teknisi Bertugas</span>
+                            <span class="val"><?= htmlspecialchars($currentInst['technician_name'] ?: '-') ?></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Section 1: Kondisi Lingkungan -->
-                <div class="space-y-3">
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                        <span class="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">1. Kondisi Lingkungan Kalibrasi</span>
+                <div>
+                    <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; margin-bottom: 0.875rem;">
+                        <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-primary);">
+                            1. Kondisi Lingkungan Kalibrasi
+                        </span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-slate-50/60 dark:bg-slate-800/60 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">Suhu Ruangan Lab / Site (°C)</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" step="0.1" name="temperature" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['temperature'] ?? 20.0)) ?>" class="ent-input w-24 text-center font-mono font-bold <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
-                                <span class="text-slate-400 text-xs">±</span>
-                                <input type="number" step="0.1" name="temperature_uncertainty" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['temperature_uncertainty'] ?? 1.0)) ?>" class="ent-input w-20 text-center font-mono <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
-                                <span class="text-slate-500 text-xs font-mono">°C</span>
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-4">
+                            <div class="ws-env-card">
+                                <label>Tgl Pengujian Kalibrasi <span style="color: var(--brand-primary);">*</span></label>
+                                <input 
+                                    type="date" 
+                                    name="calibration_date" 
+                                    required 
+                                    <?= $isCertified ? 'disabled' : '' ?> 
+                                    value="<?= htmlspecialchars((string)($currentInst['calibration_date'] ?: date('Y-m-d'))) ?>" 
+                                    class="ent-input font-medium"
+                                    style="height: 38px; width: 100%; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                >
                             </div>
                         </div>
 
-                        <div class="bg-slate-50/60 dark:bg-slate-800/60 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">Kelembaban Relatif (% RH)</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" step="0.1" name="humidity" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['humidity'] ?? 55.0)) ?>" class="ent-input w-24 text-center font-mono font-bold <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
-                                <span class="text-slate-400 text-xs">±</span>
-                                <input type="number" step="0.1" name="humidity_uncertainty" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['humidity_uncertainty'] ?? 5.0)) ?>" class="ent-input w-20 text-center font-mono <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
-                                <span class="text-slate-500 text-xs font-mono">% RH</span>
+                        <div class="col-12 col-sm-4">
+                            <div class="ws-env-card">
+                                <label>Suhu Ruangan Lab / Site (°C)</label>
+                                <div class="d-flex align-items-center gap-1.5">
+                                    <input 
+                                        type="number" 
+                                        step="0.1" 
+                                        name="temperature" 
+                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        value="<?= htmlspecialchars((string)($currentWs['temperature'] ?? 20.0)) ?>" 
+                                        class="ent-input text-center font-mono fw-bold"
+                                        style="width: 75px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                    >
+                                    <span style="color: var(--text-muted); font-size: 0.8125rem;">±</span>
+                                    <input 
+                                        type="number" 
+                                        step="0.1" 
+                                        name="temperature_uncertainty" 
+                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        value="<?= htmlspecialchars((string)($currentWs['temperature_uncertainty'] ?? 1.0)) ?>" 
+                                        class="ent-input text-center font-mono"
+                                        style="width: 65px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                    >
+                                    <span style="color: var(--text-muted); font-size: 0.75rem; font-family: monospace;">°C</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-4">
+                            <div class="ws-env-card">
+                                <label>Kelembaban Relatif (% RH)</label>
+                                <div class="d-flex align-items-center gap-1.5">
+                                    <input 
+                                        type="number" 
+                                        step="0.1" 
+                                        name="humidity" 
+                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        value="<?= htmlspecialchars((string)($currentWs['humidity'] ?? 55.0)) ?>" 
+                                        class="ent-input text-center font-mono fw-bold"
+                                        style="width: 75px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                    >
+                                    <span style="color: var(--text-muted); font-size: 0.8125rem;">±</span>
+                                    <input 
+                                        type="number" 
+                                        step="0.1" 
+                                        name="humidity_uncertainty" 
+                                        <?= $isCertified ? 'disabled' : '' ?> 
+                                        value="<?= htmlspecialchars((string)($currentWs['humidity_uncertainty'] ?? 5.0)) ?>" 
+                                        class="ent-input text-center font-mono"
+                                        style="width: 65px; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                    >
+                                    <span style="color: var(--text-muted); font-size: 0.75rem; font-family: monospace;">% RH</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Section 2: Standar Acuan -->
-                <div class="space-y-3">
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                        <span class="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">2. Standar Acuan Tertelusur (Calibrator)</span>
+                <div>
+                    <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; margin-bottom: 0.875rem;">
+                        <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-primary);">
+                            2. Standar Acuan Tertelusur (Calibrator)
+                        </span>
                     </div>
 
-                    <div class="space-y-3">
+                    <div class="d-flex flex-column gap-3">
                         <div>
-                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Alat Standar Acuan & SN <span class="text-rose-500">*</span></label>
-                            <input type="text" name="standard_calibrator" <?= $isCertified ? 'disabled' : '' ?> required value="<?= htmlspecialchars((string)($currentWs['standard_calibrator'] ?? 'Dead Weight Tester Fluke P3000 Series SN: DWT-4412')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                            <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">
+                                Nama Alat Standar Acuan & SN <span style="color: var(--brand-primary);">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                name="standard_calibrator" 
+                                <?= $isCertified ? 'disabled' : '' ?> 
+                                required 
+                                value="<?= htmlspecialchars((string)($currentWs['standard_calibrator'] ?? 'Dead Weight Tester Fluke P3000 Series SN: DWT-4412')) ?>" 
+                                class="ent-input"
+                                style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                            >
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">No. Sertifikat Standar</label>
-                                <input type="text" name="standard_cert_no" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['standard_cert_no'] ?? 'CERT-KAN-2025-042')) ?>" class="ent-input font-mono <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">No. Sertifikat Standar</label>
+                                <input 
+                                    type="text" 
+                                    name="standard_cert_no" 
+                                    <?= $isCertified ? 'disabled' : '' ?> 
+                                    value="<?= htmlspecialchars((string)($currentWs['standard_cert_no'] ?? 'CERT-KAN-2025-042')) ?>" 
+                                    class="ent-input font-mono"
+                                    style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                >
                             </div>
-                            <div>
-                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Masa Berlaku Kalibrasi Standar</label>
-                                <input type="date" name="standard_valid_until" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['standard_valid_until'] ?? date('Y-m-d', strtotime('+1 year')))) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Masa Berlaku Kalibrasi Standar</label>
+                                <input 
+                                    type="date" 
+                                    name="standard_valid_until" 
+                                    <?= $isCertified ? 'disabled' : '' ?> 
+                                    value="<?= htmlspecialchars((string)($currentWs['standard_valid_until'] ?? date('Y-m-d', strtotime('+1 year')))) ?>" 
+                                    class="ent-input"
+                                    style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                                >
                             </div>
                         </div>
 
                         <div>
-                            <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Metode Kalibrasi (Instruksi Kerja)</label>
-                            <input type="text" name="calibration_method" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['calibration_method'] ?? 'Instruksi Kerja Kalibrasi IK-KAL-01 (EURAMET/JIS)')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                            <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Metode Kalibrasi (Instruksi Kerja)</label>
+                            <input 
+                                type="text" 
+                                name="calibration_method" 
+                                <?= $isCertified ? 'disabled' : '' ?> 
+                                value="<?= htmlspecialchars((string)($currentWs['calibration_method'] ?? 'Instruksi Kerja Kalibrasi IK-KAL-01 (EURAMET/JIS)')) ?>" 
+                                class="ent-input"
+                                style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                            >
                         </div>
                     </div>
                 </div>
 
                 <!-- Section 3: Tabel Pembacaan Ukur -->
-                <div class="space-y-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">3. Tabel Rekapitulasi Data Mentah</span>
-                            <span class="font-mono text-[10px] text-slate-400 hidden sm:inline">(Koreksi = Standar - Rata-rata)</span>
+                <div>
+                    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; margin-bottom: 0.875rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-primary);">
+                                3. Tabel Rekapitulasi Data Mentah
+                            </span>
+                            <span style="font-family: monospace; font-size: 11px; color: var(--text-muted);">(Koreksi = Standar - Rata-rata)</span>
                         </div>
 
                         <?php if (!$isCertified && hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" onclick="autoFillWorksheetDemo('<?= $currentInst['scope_code'] ?>')" class="btn-surface text-[11px] py-1 px-2.5">
-                                    Contoh Ukur
+                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                <button type="button" onclick="autoFillWorksheetDemo('<?= $currentInst['scope_code'] ?>')" class="btn-surface" style="font-size: 11px; padding: 4px 10px; height: 30px;">
+                                    <i class="ph-bold ph-magic-wand"></i>
+                                    <span>Contoh Ukur</span>
                                 </button>
-                                <button type="button" onclick="addWorksheetRow()" class="btn-surface text-[11px] py-1 px-2.5">
-                                    + Tambah Titik
+                                <button type="button" onclick="addWorksheetRow()" class="btn-surface" style="font-size: 11px; padding: 4px 10px; height: 30px;">
+                                    <i class="ph-bold ph-plus"></i>
+                                    <span>Tambah Titik</span>
                                 </button>
-                                <button type="button" onclick="removeWorksheetRow()" class="btn-surface text-[11px] py-1 px-2.5 text-rose-600 hover:text-rose-700">
-                                    Hapus
+                                <button type="button" onclick="removeWorksheetRow()" class="btn-surface text-danger" style="font-size: 11px; padding: 4px 10px; height: 30px;">
+                                    <i class="ph-bold ph-trash"></i>
+                                    <span>Hapus Baris</span>
                                 </button>
                             </div>
                         <?php endif; ?>
                     </div>
 
-                    <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
-                        <table id="worksheet-table" class="ent-table min-w-[680px]">
+                    <div class="table-responsive" style="border: 1px solid var(--border-subtle); border-radius: 0.5rem; overflow: hidden;">
+                        <table id="worksheet-table" class="ws-table w-100" style="margin-bottom: 0;">
                             <thead>
                                 <tr>
-                                    <th class="py-2.5 px-3">Titik Nominal</th>
-                                    <th class="py-2.5 px-3 text-right">Nilai Standar</th>
-                                    <th class="py-2.5 px-2 text-right">Run 1</th>
-                                    <th class="py-2.5 px-2 text-right">Run 2</th>
-                                    <th class="py-2.5 px-2 text-right">Run 3</th>
-                                    <th class="py-2.5 px-2 text-right">Rata-rata (X̄)</th>
-                                    <th class="py-2.5 px-2 text-right">Koreksi</th>
-                                    <th class="py-2.5 px-3 text-right">U95 (k=2)</th>
+                                    <th>Titik Nominal</th>
+                                    <th class="text-end">Nilai Standar</th>
+                                    <th class="text-end">Run 1</th>
+                                    <th class="text-end">Run 2</th>
+                                    <th class="text-end">Run 3</th>
+                                    <th class="text-end">Rata-rata (X̄)</th>
+                                    <th class="text-end">Koreksi</th>
+                                    <th class="text-end">U95 (k=2)</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-[11px]">
+                            <tbody class="font-mono" style="font-size: 12px;">
                                 <?php foreach ($readings as $idx => $r): ?>
                                     <tr class="reading-calc-row">
-                                        <td class="py-2 px-2.5">
-                                            <input type="text" name="points[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['point']) ?>" class="ent-input w-24 py-1 px-2 text-[11px] <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                        <td>
+                                            <input type="text" name="points[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['point']) ?>" class="ent-input" style="width: 95px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
-                                        <td class="py-2 px-2.5 text-right">
-                                            <input type="number" step="any" name="standards[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['standard']) ?>" class="std-val ent-input w-20 py-1 px-2 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                        <td class="text-end">
+                                            <input type="number" step="any" name="standards[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['standard']) ?>" class="std-val ent-input text-end" style="width: 85px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
-                                        <td class="py-2 px-1 text-right">
-                                            <input type="number" step="any" name="run1[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run1']) ?>" class="r1-val ent-input w-16 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                        <td class="text-end">
+                                            <input type="number" step="any" name="run1[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run1']) ?>" class="r1-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
-                                        <td class="py-2 px-1 text-right">
-                                            <input type="number" step="any" name="run2[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run2']) ?>" class="r2-val ent-input w-16 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                        <td class="text-end">
+                                            <input type="number" step="any" name="run2[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run2']) ?>" class="r2-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
-                                        <td class="py-2 px-1 text-right">
-                                            <input type="number" step="any" name="run3[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run3']) ?>" class="r3-val ent-input w-16 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                        <td class="text-end">
+                                            <input type="number" step="any" name="run3[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['run3']) ?>" class="r3-val ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
-                                        <td class="py-2 px-1 text-right">
-                                            <input type="text" readonly value="<?= number_format((float)$r['mean'], 4, '.', '') ?>" class="mean-val bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 text-[11px] text-slate-700 dark:text-slate-300 w-18 text-right font-semibold cursor-not-allowed">
+                                        <td class="text-end">
+                                            <input type="text" readonly value="<?= number_format((float)$r['mean'], 4, '.', '') ?>" class="mean-val ent-input text-end fw-semibold" style="width: 80px; height: 32px; font-size: 11px; background-color: var(--surface-subtle); color: var(--text-primary); cursor: not-allowed;">
                                         </td>
-                                        <td class="py-2 px-1 text-right">
-                                            <input type="text" readonly value="<?= ($r['correction'] >= 0 ? '+' : '') . number_format((float)$r['correction'], 4, '.', '') ?>" class="corr-val bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 text-[11px] text-slate-800 dark:text-slate-200 w-18 text-right font-semibold cursor-not-allowed">
+                                        <td class="text-end">
+                                            <input type="text" readonly value="<?= ($r['correction'] >= 0 ? '+' : '') . number_format((float)$r['correction'], 4, '.', '') ?>" class="corr-val ent-input text-end fw-bold" style="width: 80px; height: 32px; font-size: 11px; background-color: var(--surface-subtle); color: <?= $r['correction'] >= 0 ? '#10B981' : '#EF4444' ?>; cursor: not-allowed;">
                                         </td>
-                                        <td class="py-2 px-2.5 text-right">
-                                            <input type="number" step="any" name="uncertainties[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['uncertainty']) ?>" class="ent-input w-18 py-1 px-1.5 text-[11px] text-right <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                                        <td class="text-end">
+                                            <input type="number" step="any" name="uncertainties[]" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)$r['uncertainty']) ?>" class="ent-input text-end" style="width: 75px; height: 32px; font-size: 11px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>">
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -498,36 +918,51 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <!-- Section 4: Catatan & Visual -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Pemeriksaan Visual / Kondisi Fisik</label>
-                        <input type="text" name="visual_inspection" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['visual_inspection'] ?? 'Fisik bersih, display jernih, berfungsi normal')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Pemeriksaan Visual / Kondisi Fisik</label>
+                        <input 
+                            type="text" 
+                            name="visual_inspection" 
+                            <?= $isCertified ? 'disabled' : '' ?> 
+                            value="<?= htmlspecialchars((string)($currentWs['visual_inspection'] ?? 'Fisik bersih, display jernih, berfungsi normal')) ?>" 
+                            class="ent-input"
+                            style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                        >
                     </div>
-                    <div>
-                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Catatan Tambahan Teknisi</label>
-                        <input type="text" name="technician_notes" <?= $isCertified ? 'disabled' : '' ?> value="<?= htmlspecialchars((string)($currentWs['technician_notes'] ?? 'Pengambilan data lancar, siap diterbitkan sertifikat.')) ?>" class="ent-input <?= $isCertified ? 'opacity-60 bg-slate-100 cursor-not-allowed' : '' ?>">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Catatan Tambahan Teknisi</label>
+                        <input 
+                            type="text" 
+                            name="technician_notes" 
+                            <?= $isCertified ? 'disabled' : '' ?> 
+                            value="<?= htmlspecialchars((string)($currentWs['technician_notes'] ?? 'Pengambilan data lancar, siap diterbitkan sertifikat.')) ?>" 
+                            class="ent-input"
+                            style="width: 100%; height: 38px; <?= $isCertified ? 'opacity: 0.6; cursor: not-allowed;' : '' ?>"
+                        >
                     </div>
                 </div>
 
                 <!-- Action Toolbar -->
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <span class="text-slate-500 dark:text-slate-400 text-xs">Status Alur:</span>
+                <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 pt-3" style="border-top: 1px solid var(--border-subtle);">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted" style="font-size: 0.75rem;">Status Alur Saat Ini:</span>
                         <?= renderStatusBadge($currentInst['status']) ?>
                     </div>
 
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="d-flex align-items-center gap-2 w-100 w-sm-auto justify-content-end">
                         <?php if ($isCertified): ?>
-                            <a href="print_certificate.php?instrument_id=<?= $currentInst['id'] ?>&action=preview" target="_blank" class="btn-brand-primary">
+                            <a href="print_certificate.php?cert=<?= urlencode((string)($currentInst['certificate_number'] ?? '')) ?>&instrument_id=<?= (int)$currentInst['id'] ?>" target="_blank" class="btn-brand-primary" style="height: 38px; padding: 0 16px; font-size: 12px;">
                                 <i class="ph-bold ph-printer"></i>
                                 <span>Cetak Sertifikat Resmi</span>
                             </a>
                         <?php elseif (hasRole(['SUPER_ADMIN', 'TECHNICIAN'])): ?>
-                            <button type="submit" class="btn-surface">
-                                Simpan Draf
+                            <button type="submit" class="btn-surface" style="height: 38px; padding: 0 16px; font-size: 12px;">
+                                <i class="ph-bold ph-floppy-disk"></i>
+                                <span>Simpan Draf</span>
                             </button>
 
-                            <button type="submit" name="submit_to_certificate" value="1" class="btn-brand-primary">
+                            <button type="submit" name="submit_to_certificate" value="1" class="btn-brand-primary" style="height: 38px; padding: 0 16px; font-size: 12px;">
                                 <i class="ph-bold ph-paper-plane-right"></i>
                                 <span>Serahkan ke Bagian Sertifikat &rarr;</span>
                             </button>
@@ -546,6 +981,56 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
 </div>
+
+<script>
+    // Client-side Queue Search & Status Filter
+    window.currentQueueTab = 'all';
+
+    function filterQueue(statusFilter = null) {
+        if (statusFilter !== null) {
+            window.currentQueueTab = statusFilter;
+            document.querySelectorAll('.ws-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === statusFilter);
+            });
+        }
+        
+        const activeTab = window.currentQueueTab || 'all';
+        const searchVal = (document.getElementById('queue-search')?.value || '').toLowerCase().trim();
+        const items = document.querySelectorAll('.ws-queue-item');
+
+        let visibleCount = 0;
+        items.forEach(item => {
+            const itemStatus = item.dataset.status || '';
+            const searchData = item.dataset.search || (item.innerText || '').toLowerCase();
+            
+            let matchesTab = true;
+            if (activeTab === 'pending') {
+                matchesTab = (itemStatus === 'ASSIGNED' || itemStatus === 'IN_PROGRESS');
+            } else if (activeTab === 'certified') {
+                matchesTab = (itemStatus === 'CERTIFIED' || itemStatus === 'DATA_SUBMITTED');
+            }
+
+            const matchesSearch = !searchVal || searchData.includes(searchVal);
+
+            if (matchesTab && matchesSearch) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        const countBadge = document.getElementById('queue-visible-count');
+        if (countBadge) {
+            countBadge.textContent = visibleCount;
+        }
+
+        const emptyNotice = document.getElementById('queue-empty-search');
+        if (emptyNotice) {
+            emptyNotice.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

@@ -1,9 +1,4 @@
 <?php
-/**
- * Modul Bagian Sertifikat (Certificate Administration)
- * PT Kalpindo Kalibrasi - Sistem Informasi Alur Kerja & Sertifikasi
- * Clean Modern Enterprise Operational Module
- */
 
 declare(strict_types=1);
 
@@ -49,6 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception('Data alat tidak ditemukan.');
             }
 
+            // Validasi apakah instrumen sudah memiliki sertifikat terbit
+            $stmtCheckExisting = $db->prepare("SELECT certificate_number FROM certificates WHERE instrument_id = ?");
+            $stmtCheckExisting->execute([$instrumentId]);
+            $existingCertNo = $stmtCheckExisting->fetchColumn();
+            if ($existingCertNo) {
+                throw new Exception("Instrumen ini sudah memiliki sertifikat terbit ({$existingCertNo}).");
+            }
+
+            // Validasi apakah lembar kerja teknisi sudah tersedia
+            $stmtCheckWs = $db->prepare("SELECT COUNT(*) FROM worksheets WHERE instrument_id = ?");
+            $stmtCheckWs->execute([$instrumentId]);
+            if ((int)$stmtCheckWs->fetchColumn() === 0) {
+                throw new Exception("Instrumen belum memiliki lembar kerja (worksheet). Teknisi harus menyelesaikan pengujian sebelum sertifikat dapat diterbitkan.");
+            }
+
             // Tentukan status akreditasi KAN vs Non-KAN
             $isKan = isset($_POST['is_kan']) ? (int)$_POST['is_kan'] : (int)($inst['is_kan'] ?? 1);
 
@@ -75,12 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $issueDate, $validUntil, $technicalManager
             ]);
 
-            $db->exec("UPDATE instruments SET status = 'CERTIFIED', is_kan = {$isKan} WHERE id = {$instrumentId}");
+            $stmtUpdInst = $db->prepare("UPDATE instruments SET status = 'CERTIFIED', is_kan = ? WHERE id = ?");
+            $stmtUpdInst->execute([$isKan, $instrumentId]);
             
             $orderId = (int)$inst['order_id'];
-            $uncompletedCount = (int)$db->query("SELECT COUNT(*) FROM instruments WHERE order_id = {$orderId} AND status != 'CERTIFIED'")->fetchColumn();
+            $stmtUncompleted = $db->prepare("SELECT COUNT(*) FROM instruments WHERE order_id = ? AND status != 'CERTIFIED'");
+            $stmtUncompleted->execute([$orderId]);
+            $uncompletedCount = (int)$stmtUncompleted->fetchColumn();
             if ($uncompletedCount === 0) {
-                $db->exec("UPDATE orders SET status = 'COMPLETED' WHERE id = {$orderId}");
+                $stmtUpdOrder = $db->prepare("UPDATE orders SET status = 'COMPLETED' WHERE id = ?");
+                $stmtUpdOrder->execute([$orderId]);
             }
 
             $db->commit();
@@ -156,6 +170,27 @@ $incomingQueue = $db->query("
     WHERE i.status = 'DATA_SUBMITTED'
     ORDER BY w.submitted_at ASC
 ")->fetchAll();
+
+// Otomatisasi pembukaan modal jika navigasi berasal dari Dashboard (?instrument_id=...)
+$autoTargetInst = null;
+$autoTargetInstId = isset($_GET['instrument_id']) ? (int)$_GET['instrument_id'] : 0;
+if ($autoTargetInstId > 0) {
+    foreach ($incomingQueue as $iq) {
+        if ((int)$iq['id'] === $autoTargetInstId) {
+            $isIqKan = ((int)($iq['is_kan'] ?? 1) === 1);
+            $pred = generateCertificateNumber($db, $iq['scope_code'], date('Y-m-d'), '00', $isIqKan);
+            $autoTargetInst = [
+                'id' => (int)$iq['id'],
+                'name' => $iq['name'],
+                'customer_name' => $iq['customer_name'],
+                'scope_code' => $iq['scope_code'],
+                'is_kan' => $isIqKan ? 1 : 0,
+                'preview' => $pred['certificate_number']
+            ];
+            break;
+        }
+    }
+}
 
 // 2. Filter & Sortir Arsip Sertifikat Kalibrasi Resmi Terbit
 $searchQuery = trim($_GET['search'] ?? '');
@@ -623,7 +658,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- MODAL 1: Generator Nomor Sertifikat Otomatis -->
-<div id="generate-cert-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+<div id="generate-cert-modal" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
     <div class="ent-modal rounded-xl w-full max-w-lg p-6 shadow-2xl text-xs">
         
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-5">
@@ -708,7 +743,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <!-- MODAL 2: Revisi Sertifikat -->
-<div id="revision-cert-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+<div id="revision-cert-modal" class="fixed inset-0 z-modal bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
     <div class="ent-modal rounded-xl w-full max-w-md p-6 shadow-2xl text-xs">
         
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
@@ -789,6 +824,19 @@ function openRevisionModal(certId, certNumber) {
     document.getElementById('rev-cert-num').textContent = certNumber;
     openModal('revision-cert-modal');
 }
+
+<?php if (!empty($autoTargetInst)): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    openGenerateModal(
+        <?= $autoTargetInst['id'] ?>,
+        <?= json_encode($autoTargetInst['name'], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>,
+        <?= json_encode($autoTargetInst['customer_name'], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>,
+        <?= json_encode($autoTargetInst['scope_code'], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>,
+        <?= $autoTargetInst['is_kan'] ?>,
+        <?= json_encode($autoTargetInst['preview'], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>
+    );
+});
+<?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

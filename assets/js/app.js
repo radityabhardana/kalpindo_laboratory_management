@@ -191,6 +191,7 @@ function openModal(id) {
     if (modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
+        modal.style.zIndex = '2000';
         document.body.style.overflow = 'hidden';
     }
 }
@@ -200,6 +201,7 @@ function closeModal(id) {
     if (modal) {
         modal.classList.add('hidden');
         modal.style.display = 'none';
+        modal.style.zIndex = '';
         document.body.style.overflow = '';
     }
 }
@@ -288,29 +290,88 @@ document.addEventListener('DOMContentLoaded', initTheme);
 
 /**
  * Contextual Action Menu (••• Dropdown) Controls
+ * Enhanced with Fixed Viewport Positioning to Prevent Clipping in Overflow Tables
  */
 function toggleActionMenu(id, event) {
     if (event) {
         event.stopPropagation();
     }
-    // Close other open menus
-    document.querySelectorAll('.action-menu-dropdown.show').forEach(menu => {
-        if (menu.id !== id) {
-            menu.classList.remove('show');
-        }
-    });
-
     const targetMenu = document.getElementById(id);
-    if (targetMenu) {
-        targetMenu.classList.toggle('show');
+    if (!targetMenu) return;
+
+    const isAlreadyOpen = targetMenu.classList.contains('show');
+
+    // Close all open menus first
+    closeAllActionMenus();
+
+    if (isAlreadyOpen) {
+        return;
     }
+
+    // Identify trigger button
+    const triggerBtn = (event && event.currentTarget) ? event.currentTarget : targetMenu.previousElementSibling;
+
+    // Show menu
+    targetMenu.classList.add('show');
+
+    // Calculate smart fixed coordinates so it never gets clipped by table overflow
+    if (triggerBtn) {
+        const btnRect = triggerBtn.getBoundingClientRect();
+        targetMenu.style.position = 'fixed';
+        targetMenu.style.zIndex = '9999';
+
+        // Measure menu dimensions
+        const menuWidth = targetMenu.offsetWidth || 190;
+        const menuHeight = targetMenu.offsetHeight || 90;
+
+        // Align right of menu to right of trigger button
+        let leftPos = btnRect.right - menuWidth;
+        if (leftPos < 12) leftPos = 12;
+        if (leftPos + menuWidth > window.innerWidth - 12) {
+            leftPos = window.innerWidth - menuWidth - 12;
+        }
+
+        targetMenu.style.left = `${leftPos}px`;
+        targetMenu.style.right = 'auto';
+
+        // Check if there is enough space below
+        const spaceBelow = window.innerHeight - btnRect.bottom;
+        const spaceAbove = btnRect.top;
+
+        if (spaceBelow < (menuHeight + 16) && spaceAbove > spaceBelow) {
+            // Open upwards (dropup)
+            targetMenu.style.top = 'auto';
+            targetMenu.style.bottom = `${window.innerHeight - btnRect.top + 4}px`;
+            targetMenu.style.transformOrigin = 'bottom right';
+        } else {
+            // Open downwards
+            targetMenu.style.top = `${btnRect.bottom + 4}px`;
+            targetMenu.style.bottom = 'auto';
+            targetMenu.style.transformOrigin = 'top right';
+        }
+    }
+}
+
+function closeAllActionMenus() {
+    document.querySelectorAll('.action-menu-dropdown.show').forEach(menu => {
+        menu.classList.remove('show');
+        menu.style.position = '';
+        menu.style.top = '';
+        menu.style.bottom = '';
+        menu.style.left = '';
+        menu.style.right = '';
+        menu.style.zIndex = '';
+        menu.style.transformOrigin = '';
+    });
 }
 
 // Close action menus when clicking outside
 document.addEventListener('click', (e) => {
-    if (!e.target.closest('.action-menu-container')) {
-        document.querySelectorAll('.action-menu-dropdown.show').forEach(menu => {
-            menu.classList.remove('show');
-        });
+    if (!e.target.closest('.action-menu-container') && !e.target.closest('.action-menu-dropdown')) {
+        closeAllActionMenus();
     }
 });
+
+// Close when scrolling or resizing
+window.addEventListener('scroll', closeAllActionMenus, { passive: true });
+window.addEventListener('resize', closeAllActionMenus, { passive: true });

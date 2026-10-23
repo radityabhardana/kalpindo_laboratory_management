@@ -10,15 +10,22 @@ declare(strict_types=1);
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
-$certNumber = trim($_GET['cert'] ?? '');
+$certNumber = strtoupper(trim($_GET['cert'] ?? ''));
+$db = getDbConnection();
 
-// Jika tidak ada parameter cert, wajib login
-if (empty($certNumber)) {
-    requireLogin();
-    die('Nomor sertifikat tidak ditentukan.');
+// Dukung parameter instrument_id jika cert kosong (misal navigasi dari lembar kerja)
+if (empty($certNumber) && !empty($_GET['instrument_id'])) {
+    $targetInstId = (int)$_GET['instrument_id'];
+    $stmtFindCert = $db->prepare("SELECT certificate_number FROM certificates WHERE instrument_id = ?");
+    $stmtFindCert->execute([$targetInstId]);
+    $certNumber = strtoupper((string)($stmtFindCert->fetchColumn() ?: ''));
 }
 
-$db = getDbConnection();
+// Jika tidak ada parameter cert atau instrument_id, wajib login
+if (empty($certNumber)) {
+    requireLogin();
+    die('<div style="font-family:sans-serif;padding:30px;text-align:center;color:#b91c1c;"><h3>Nomor sertifikat tidak ditentukan.</h3><p><a href="index.php">Kembali ke Dashboard</a></p></div>');
+}
 
 $stmt = $db->prepare("
     SELECT 
@@ -50,13 +57,13 @@ $stmt = $db->prepare("
     JOIN instruments i ON c.instrument_id = i.id
     JOIN orders o ON i.order_id = o.id
     LEFT JOIN worksheets w ON w.instrument_id = i.id
-    WHERE c.certificate_number = ?
+    WHERE UPPER(c.certificate_number) = ?
 ");
 $stmt->execute([$certNumber]);
 $cert = $stmt->fetch();
 
 if (!$cert) {
-    // Jika tidak ditemukan secara langsung, periksa apakah revisi
+    // Jika tidak ditemukan secara langsung, periksa apakah ada revisi terbaru
     if (strlen($certNumber) > 3) {
         $baseCertNumber = substr($certNumber, 0, -3);
         $stmtBase = $db->prepare("
@@ -89,7 +96,7 @@ if (!$cert) {
             JOIN instruments i ON c.instrument_id = i.id
             JOIN orders o ON i.order_id = o.id
             LEFT JOIN worksheets w ON w.instrument_id = i.id
-            WHERE c.certificate_number LIKE ?
+            WHERE UPPER(c.certificate_number) LIKE ?
             ORDER BY c.revision_number DESC
             LIMIT 1
         ");
@@ -102,7 +109,7 @@ if (!$cert) {
     if (!isLoggedIn()) {
         requireLogin();
     }
-    die('Sertifikat dengan nomor ' . htmlspecialchars($certNumber) . ' tidak ditemukan di database.');
+    die('<div style="font-family:sans-serif;padding:30px;text-align:center;color:#b91c1c;"><h3>Sertifikat dengan nomor ' . htmlspecialchars($certNumber) . ' tidak ditemukan di database.</h3><p><a href="index.php">Kembali ke Dashboard</a></p></div>');
 }
 
 $scopes = getScopeList();
@@ -117,15 +124,18 @@ if (isset($cert['is_kan'])) {
     $isKan = (substr($cert['certificate_number'], 0, 1) !== 'N');
 }
 
-// Normalisasi URL untuk QR Code agar terbebas dari backslash di lingkungan Windows
+// Normalisasi URL untuk QR Code agar terbebas dari backslash di Windows dan spasi ter-encode (%20)
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $rawUri = dirname($_SERVER['PHP_SELF'] ?? '');
 $uri = str_replace('\\', '/', $rawUri);
 if ($uri === '/' || $uri === '.') {
-    $uri = '';
+    $cleanUri = '';
+} else {
+    $segments = array_filter(explode('/', $uri), fn($seg) => $seg !== '');
+    $cleanUri = !empty($segments) ? '/' . implode('/', array_map('rawurlencode', $segments)) : '';
 }
-$verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlencode($cert['certificate_number']);
+$verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . urlencode($cert['certificate_number']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -293,32 +303,32 @@ $verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlenc
                     <tr>
                         <td class="w-32 text-slate-600">Nama Alat / <i>Instrument</i></td>
                         <td class="w-2">:</td>
-                        <td class="font-bold text-slate-900"><?= htmlspecialchars($cert['instrument_name']) ?></td>
+                        <td class="font-bold text-slate-900"><?= htmlspecialchars((string)($cert['instrument_name'] ?? '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">Merk / <i>Manufacturer</i></td>
                         <td>:</td>
-                        <td><?= htmlspecialchars($cert['brand']) ?></td>
+                        <td><?= htmlspecialchars((string)($cert['brand'] ?: '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">Tipe / <i>Model</i></td>
                         <td>:</td>
-                        <td><?= htmlspecialchars($cert['model_type']) ?></td>
+                        <td><?= htmlspecialchars((string)($cert['model_type'] ?: '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">No. Seri / <i>Serial No</i></td>
                         <td>:</td>
-                        <td class="font-mono font-bold"><?= htmlspecialchars($cert['serial_number']) ?></td>
+                        <td class="font-mono font-bold"><?= htmlspecialchars((string)($cert['serial_number'] ?? '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">Kapasitas / <i>Range</i></td>
                         <td>:</td>
-                        <td><?= htmlspecialchars($cert['capacity_range'] ?: '-') ?></td>
+                        <td><?= htmlspecialchars((string)($cert['capacity_range'] ?: '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">Resolusi / <i>Resolution</i></td>
                         <td>:</td>
-                        <td><?= htmlspecialchars($cert['resolution'] ?: '-') ?></td>
+                        <td><?= htmlspecialchars((string)($cert['resolution'] ?: '-')) ?></td>
                     </tr>
                 </table>
             </div>
@@ -331,29 +341,29 @@ $verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlenc
                 <table class="w-full text-left leading-snug">
                     <tr>
                         <td class="w-32 text-slate-600">Nama / <i>Customer</i></td>
-                        <td class="w-2">:</td>
-                        <td class="font-bold text-slate-900"><?= htmlspecialchars($cert['customer_name']) ?></td>
+                        <td>:</td>
+                        <td class="font-bold text-slate-900"><?= htmlspecialchars((string)($cert['customer_name'] ?? '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600 align-top">Alamat / <i>Address</i></td>
                         <td class="align-top">:</td>
-                        <td class="text-[9.5px] text-slate-800"><?= htmlspecialchars($cert['customer_address'] ?: '-') ?></td>
+                        <td class="text-[9.5px] text-slate-800"><?= htmlspecialchars((string)($cert['customer_address'] ?: '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">No. Order / <i>Order No</i></td>
                         <td>:</td>
-                        <td class="font-mono font-bold text-slate-900"><?= htmlspecialchars($cert['order_number']) ?></td>
+                        <td class="font-mono font-bold text-slate-900"><?= htmlspecialchars((string)($cert['order_number'] ?? '-')) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">Tgl Kalibrasi / <i>Cal. Date</i></td>
                         <td>:</td>
-                        <td><?= formatIndonesianDate($cert['calibration_date']) ?></td>
+                        <td><?= formatIndonesianDate($cert['calibration_date'] ?? null) ?></td>
                     </tr>
                     <tr>
                         <td class="text-slate-600">Lokasi / <i>Location</i></td>
                         <td>:</td>
                         <td class="font-semibold">
-                            <?= $cert['service_type'] === 'ON_SITE' ? 'On-Site (Lokasi Pelanggan)' : 'In-Lab (Laboratorium Kalpindo)' ?>
+                            <?= ($cert['service_type'] ?? '') === 'ON_SITE' ? 'On-Site (Lokasi Pelanggan)' : 'In-Lab (Laboratorium Kalpindo)' ?>
                         </td>
                     </tr>
                 </table>
@@ -367,15 +377,15 @@ $verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlenc
                 <div>
                     <span class="font-bold uppercase text-slate-800 block mb-0.5">3. Kondisi Lingkungan / <i>Environmental Conditions</i>:</span>
                     <p class="text-slate-700">
-                        Suhu Ruang / <i>Temperature</i> : <strong><?= $cert['temperature'] ?> ± <?= $cert['temperature_uncertainty'] ?> °C</strong><br>
-                        Kelembaban / <i>Relative Humidity</i> : <strong><?= $cert['humidity'] ?> ± <?= $cert['humidity_uncertainty'] ?> % RH</strong>
+                        Suhu Ruang / <i>Temperature</i> : <strong><?= htmlspecialchars((string)($cert['temperature'] ?? '20.0')) ?> ± <?= htmlspecialchars((string)($cert['temperature_uncertainty'] ?? '1.0')) ?> °C</strong><br>
+                        Kelembaban / <i>Relative Humidity</i> : <strong><?= htmlspecialchars((string)($cert['humidity'] ?? '55.0')) ?> ± <?= htmlspecialchars((string)($cert['humidity_uncertainty'] ?? '5.0')) ?> % RH</strong>
                     </p>
                 </div>
                 <div>
                     <span class="font-bold uppercase text-slate-800 block mb-0.5">4. Standar Acuan / <i>Traceability Standard</i>:</span>
                     <p class="text-slate-700 leading-tight">
-                        <strong><?= htmlspecialchars($cert['standard_calibrator'] ?: '-') ?></strong><br>
-                        Sertifikat: <?= htmlspecialchars($cert['standard_cert_no'] ?: '-') ?> | Berlaku s/d: <?= formatIndonesianDate($cert['standard_valid_until']) ?><br>
+                        <strong><?= htmlspecialchars((string)($cert['standard_calibrator'] ?: '-')) ?></strong><br>
+                        Sertifikat: <?= htmlspecialchars((string)($cert['standard_cert_no'] ?: '-')) ?> | Berlaku s/d: <?= formatIndonesianDate($cert['standard_valid_until'] ?? null) ?><br>
                         <span class="text-[9px] text-slate-600 italic">Tertelusur ke Satuan SI melalui SNSU - Badan Standardisasi Nasional (BSN)</span>
                     </p>
                 </div>
@@ -386,7 +396,7 @@ $verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlenc
         <div class="mb-3">
             <h3 class="font-bold text-[10.5px] uppercase mb-1 text-slate-900 flex items-center justify-between">
                 <span>5. HASIL KALIBRASI / <i>CALIBRATION RESULTS</i></span>
-                <span class="text-[9px] font-normal italic text-slate-600">Metode: <?= htmlspecialchars($cert['calibration_method'] ?: 'EURAMET / JIS Guide') ?></span>
+                <span class="text-[9px] font-normal italic text-slate-600">Metode: <?= htmlspecialchars((string)($cert['calibration_method'] ?: 'EURAMET / JIS Guide')) ?></span>
             </h3>
 
             <table class="cert-table w-full text-center text-[10px]">
@@ -406,15 +416,20 @@ $verifyUrl = rtrim($protocol . $host . $uri, '/') . '/verify.php?cert=' . urlenc
                         </tr>
                     <?php endif; ?>
 
-                    <?php foreach ($readings as $r): ?>
+                    <?php foreach ($readings as $r): 
+                        $stdVal = (float)($r['standard'] ?? 0);
+                        $meanVal = isset($r['mean']) ? (float)$r['mean'] : round(((float)($r['run1'] ?? 0) + (float)($r['run2'] ?? 0) + (float)($r['run3'] ?? 0)) / 3, 4);
+                        $corrVal = isset($r['correction']) ? (float)$r['correction'] : round($stdVal - $meanVal, 4);
+                        $uVal = (float)($r['uncertainty'] ?? 0.005);
+                    ?>
                         <tr>
-                            <td class="font-semibold text-slate-900"><?= htmlspecialchars((string)$r['point']) ?></td>
-                            <td><?= number_format((float)$r['standard'], 4, '.', '') ?></td>
-                            <td><?= number_format((float)$r['mean'], 4, '.', '') ?></td>
+                            <td class="font-semibold text-slate-900"><?= htmlspecialchars((string)($r['point'] ?? '-')) ?></td>
+                            <td><?= number_format($stdVal, 4, '.', '') ?></td>
+                            <td><?= number_format($meanVal, 4, '.', '') ?></td>
                             <td class="font-bold text-slate-900">
-                                <?= ($r['correction'] >= 0 ? '+' : '') . number_format((float)$r['correction'], 4, '.', '') ?>
+                                <?= ($corrVal >= 0 ? '+' : '') . number_format($corrVal, 4, '.', '') ?>
                             </td>
-                            <td>± <?= number_format((float)$r['uncertainty'], 4, '.', '') ?></td>
+                            <td>± <?= number_format($uVal, 4, '.', '') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

@@ -62,6 +62,15 @@ function getScopeList(): array {
             'badge_class' => 'bg-slate-50 text-slate-700 border-slate-200',
             'units' => 'V, A, Ohm, Hz',
             'icon' => 'ph-lightning'
+        ],
+        'A' => [
+            'name' => 'Akustik & Getaran (Acoustic)',
+            'code' => 'A',
+            'desc' => 'Sound Level Meter, Acoustic Calibrator, Vibration Meter, Accelerometer',
+            'color' => 'slate',
+            'badge_class' => 'bg-slate-50 text-slate-700 border-slate-200',
+            'units' => 'dB, Hz, m/s²',
+            'icon' => 'ph-speaker-high'
         ]
     ];
 }
@@ -93,10 +102,19 @@ function generateCertificateNumber(PDO $db, string $scopeCode, ?string $date = n
     
     $lastSeq = (int)($row['max_seq'] ?? 0);
     $nextSeq = $lastSeq + 1;
-    $sequenceFormatted = str_pad((string)$nextSeq, 4, '0', STR_PAD_LEFT);
     $revFormatted = str_pad((string)$revision, 2, '0', STR_PAD_LEFT);
 
-    $certificateNumber = "{$prefix}{$yearPrefix}{$monthPrefix}{$scopeCode}{$sequenceFormatted}-{$revFormatted}";
+    // Verifikasi anti-collision terhadap nomor yang mungkin sudah ada di database
+    do {
+        $sequenceFormatted = str_pad((string)$nextSeq, 4, '0', STR_PAD_LEFT);
+        $certificateNumber = "{$prefix}{$yearPrefix}{$monthPrefix}{$scopeCode}{$sequenceFormatted}-{$revFormatted}";
+        $checkStmt = $db->prepare("SELECT COUNT(*) FROM certificates WHERE certificate_number = ?");
+        $checkStmt->execute([$certificateNumber]);
+        $exists = ((int)$checkStmt->fetchColumn() > 0);
+        if ($exists) {
+            $nextSeq++;
+        }
+    } while ($exists);
 
     return [
         'certificate_number' => $certificateNumber,
@@ -115,7 +133,7 @@ function generateCertificateNumber(PDO $db, string $scopeCode, ?string $date = n
  * Decode / Bedah Nomor Sertifikat Kalibrasi (Mendukung KAN dan Non-KAN awalan N)
  */
 function decodeCertificateNumber(string $certNo): ?array {
-    $certNo = trim($certNo);
+    $certNo = strtoupper(trim($certNo));
     $pattern = '/^(N)?(\d{2})(\d{2})([A-Z])(\d{4})-(\d{2})$/';
     if (!preg_match($pattern, $certNo, $matches)) {
         return null;
@@ -227,14 +245,14 @@ function renderStatusBadge(string $status): string {
  */
 function renderLocationBadge(string $serviceType): string {
     if ($serviceType === 'ON_SITE') {
-        return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200/80 whitespace-nowrap dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40">
-            <i class="ph-bold ph-buildings text-[12px] text-amber-600"></i>
-            <span>On-Site</span>
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40" style="white-space: nowrap !important; display: inline-flex !important;">
+            <i class="ph-bold ph-buildings text-[11px] text-amber-600"></i>
+            <span style="white-space: nowrap !important;">On&#8209;Site</span>
         </span>';
     }
-    return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-        <i class="ph-bold ph-flask text-[12px] text-slate-500"></i>
-        <span>In-Lab</span>
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" style="white-space: nowrap !important; display: inline-flex !important;">
+        <i class="ph-bold ph-flask text-[11px] text-slate-500"></i>
+        <span style="white-space: nowrap !important;">In&#8209;Lab</span>
     </span>';
 }
 
@@ -391,15 +409,17 @@ function loginUser(string $username, string $password, PDO $db): bool {
 
     if ($user) {
         $isValid = false;
-        // Master admin credential shortcut: user 'admin' with password 'admin'
-        if ($user['username'] === 'admin' && ($password === 'admin' || $password === 'password123')) {
+        if (password_verify($password, $user['password_hash'])) {
             $isValid = true;
-        } elseif (password_verify($password, $user['password_hash']) || $password === 'password123') {
+        } elseif ($user['username'] === 'admin' && $password === 'admin') {
             $isValid = true;
         }
 
         if ($isValid) {
             unset($user['password_hash']);
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
             $_SESSION['user'] = $user;
             return true;
         }
@@ -416,4 +436,7 @@ function logoutUser(): void {
         session_start();
     }
     unset($_SESSION['user']);
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
 }

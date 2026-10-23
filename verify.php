@@ -10,7 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
-$certNumber = trim($_GET['cert'] ?? '');
+$certNumber = strtoupper(trim($_GET['cert'] ?? ''));
 $cert = null;
 $wasRevised = false;
 $originalQueried = $certNumber;
@@ -18,7 +18,7 @@ $originalQueried = $certNumber;
 if ($certNumber !== '') {
     $db = getDbConnection();
     
-    // 1. Coba pencarian persis dengan nomor sertifikat
+    // 1. Coba pencarian persis dengan nomor sertifikat (case-insensitive)
     $stmt = $db->prepare("
         SELECT 
             c.*,
@@ -31,7 +31,7 @@ if ($certNumber !== '') {
         FROM certificates c
         JOIN instruments i ON c.instrument_id = i.id
         JOIN orders o ON i.order_id = o.id
-        WHERE c.certificate_number = ?
+        WHERE UPPER(c.certificate_number) = ?
     ");
     $stmt->execute([$certNumber]);
     $cert = $stmt->fetch();
@@ -51,7 +51,7 @@ if ($certNumber !== '') {
             FROM certificates c
             JOIN instruments i ON c.instrument_id = i.id
             JOIN orders o ON i.order_id = o.id
-            WHERE c.certificate_number LIKE ?
+            WHERE UPPER(c.certificate_number) LIKE ?
             ORDER BY c.revision_number DESC
             LIMIT 1
         ");
@@ -185,37 +185,37 @@ if ($cert) {
 
                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <span class="text-slate-500 dark:text-slate-400">Nama Instrumen / Alat</span>
-                        <span class="font-bold text-slate-900 dark:text-white text-right"><?= htmlspecialchars($cert['instrument_name']) ?></span>
+                        <span class="font-bold text-slate-900 dark:text-white text-right"><?= htmlspecialchars((string)($cert['instrument_name'] ?? '-')) ?></span>
                     </div>
 
                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <span class="text-slate-500 dark:text-slate-400">Merk & Tipe</span>
-                        <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($cert['brand'] ?: '-') ?> <?= htmlspecialchars($cert['model_type'] ?: '') ?></span>
+                        <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars((string)($cert['brand'] ?: '-')) ?> <?= htmlspecialchars((string)($cert['model_type'] ?: '')) ?></span>
                     </div>
 
                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <span class="text-slate-500 dark:text-slate-400">Nomor Seri (SN)</span>
-                        <span class="font-mono font-medium text-slate-900 dark:text-white"><?= htmlspecialchars($cert['serial_number']) ?></span>
+                        <span class="font-mono font-medium text-slate-900 dark:text-white"><?= htmlspecialchars((string)($cert['serial_number'] ?? '-')) ?></span>
                     </div>
 
                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <span class="text-slate-500 dark:text-slate-400">Pelanggan / Pemilik</span>
-                        <span class="font-semibold text-slate-900 dark:text-white text-right"><?= htmlspecialchars($cert['customer_name']) ?></span>
+                        <span class="font-semibold text-slate-900 dark:text-white text-right"><?= htmlspecialchars((string)($cert['customer_name'] ?? '-')) ?></span>
                     </div>
 
                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <span class="text-slate-500 dark:text-slate-400">Ruang Lingkup</span>
-                        <span class="font-medium text-slate-800 dark:text-slate-200">[<?= htmlspecialchars($cert['scope_code']) ?>] <?= htmlspecialchars($scopes[$cert['scope_code']]['name'] ?? $cert['scope_code']) ?></span>
+                        <span class="font-medium text-slate-800 dark:text-slate-200">[<?= htmlspecialchars((string)($cert['scope_code'] ?? 'P')) ?>] <?= htmlspecialchars($scopes[$cert['scope_code']]['name'] ?? $cert['scope_code']) ?></span>
                     </div>
 
                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <span class="text-slate-500 dark:text-slate-400">Tanggal Penerbitan</span>
-                        <span class="font-medium text-slate-800 dark:text-slate-200"><?= formatIndonesianDate($cert['issue_date']) ?></span>
+                        <span class="font-medium text-slate-800 dark:text-slate-200"><?= formatIndonesianDate($cert['issue_date'] ?? null) ?></span>
                     </div>
 
                     <div class="flex justify-between items-center">
                         <span class="text-slate-500 dark:text-slate-400">Masa Kalibrasi Ulang</span>
-                        <span class="font-bold text-slate-900 dark:text-white"><?= formatIndonesianDate($cert['valid_until']) ?></span>
+                        <span class="font-bold text-slate-900 dark:text-white"><?= formatIndonesianDate($cert['valid_until'] ?? null) ?></span>
                     </div>
                 </div>
 
