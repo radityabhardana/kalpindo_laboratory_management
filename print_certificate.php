@@ -366,6 +366,12 @@ $verifyUrl = rtrim($protocol . $host . $cleanUri, '/') . '/verify.php?cert=' . u
                     </span>
                 <?php endif; ?>
             </div>
+
+            <?php if ($cert['revision_number'] !== '00' && !empty($cert['revision_notes'])): ?>
+                <div class="mt-1 text-[9px] text-slate-800 bg-amber-50/90 border border-amber-300 rounded px-2.5 py-1 inline-block font-sans max-w-lg">
+                    <span class="font-bold text-amber-900">Catatan Amandemen / <i>Revision Note</i>:</span> <?= htmlspecialchars($cert['revision_notes']) ?>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- 3. IDENTITAS ALAT & PELANGGAN (2-COLUMN GRID) -->

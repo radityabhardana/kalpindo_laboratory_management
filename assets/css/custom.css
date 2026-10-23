@@ -366,14 +366,14 @@ a {
 }
 
 .ent-table tbody tr.row-highlight {
-    background-color: var(--brand-primary-light);
-    border-left: 3px solid var(--brand-primary);
+    background-color: #ECFDF5;
+    border-left: 3px solid #10B981;
 }
 
 html.dark .ent-table tbody tr.row-highlight,
 [data-bs-theme="dark"] .ent-table tbody tr.row-highlight {
-    background-color: rgba(200, 30, 38, 0.16);
-    border-left: 3px solid var(--brand-primary);
+    background-color: rgba(16, 185, 129, 0.14);
+    border-left: 3px solid #10B981;
 }
 
 .cell-primary {

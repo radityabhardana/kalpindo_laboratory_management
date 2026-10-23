@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             ");
             $stmtRev->execute([$newCertNumber, $nextRevStr, $revNotes, $oldCertId]);
 
-            setFlash('success', "Nomor Sertifikat berhasil direvisi menjadi <strong>{$newCertNumber}</strong>.");
+            setFlash('success', "Sertifikat berhasil direvisi menjadi <strong>{$newCertNumber}</strong> (Rev-{$nextRevStr}). Alasan revisi tercatat: <em>\"" . htmlspecialchars($revNotes) . "\"</em>.");
             header("Location: certificates.php?issued=" . urlencode($newCertNumber) . "#archive-section");
             exit;
 
@@ -653,7 +653,7 @@ require_once __DIR__ . '/includes/header.php';
                     <th class="w-[220px]">Pelanggan & SPK</th>
                     <th class="w-[180px]">Masa Berlaku</th>
                     <th class="w-[160px]">Penandatangan</th>
-                    <th class="w-[100px]">Revisi</th>
+                    <th class="w-[190px]">Revisi & Catatan</th>
                     <th class="text-right w-[220px]">Aksi</th>
                 </tr>
             </thead>
@@ -713,6 +713,7 @@ require_once __DIR__ . '/includes/header.php';
                             'valid_until' => (string)$cert['valid_until'],
                             'technical_manager' => (string)$cert['technical_manager'],
                             'revision_number' => (string)$cert['revision_number'],
+                            'revision_notes' => (string)($cert['revision_notes'] ?? ''),
                             'predicted_cert' => ''
                         ];
                     ?>
@@ -758,16 +759,25 @@ require_once __DIR__ . '/includes/header.php';
                             <div class="text-[10px] text-slate-400">Manajer Teknis Lab</div>
                         </td>
 
-                        <!-- Col 6: Revisi -->
-                        <td class="whitespace-nowrap">
+                        <!-- Col 6: Revisi & Catatan -->
+                        <td class="min-w-[130px] max-w-[200px]">
                             <?php if ($cert['revision_number'] === '00'): ?>
                                 <span class="px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                                     Rev-00
                                 </span>
                             <?php else: ?>
-                                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                                    Rev-<?= htmlspecialchars($cert['revision_number']) ?>
-                                </span>
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                        <i class="ph-bold ph-pencil-simple text-[10px]"></i>
+                                        Rev-<?= htmlspecialchars($cert['revision_number']) ?>
+                                    </span>
+                                    <?php if (!empty($cert['revision_notes'])): ?>
+                                        <div class="text-[11px] text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 p-1.5 rounded border border-amber-200/80 dark:border-amber-900/60 leading-tight" title="<?= htmlspecialchars($cert['revision_notes']) ?>">
+                                            <span class="font-bold text-[10px] text-amber-700 dark:text-amber-400 block">Alasan:</span>
+                                            <?= htmlspecialchars($cert['revision_notes']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </td>
 
@@ -1005,6 +1015,22 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
+            <!-- Amandemen / Riwayat Catatan Revisi Banner (Muncul jika ada revisi) -->
+            <div id="review-revision-alert" class="hidden p-3 rounded-lg border border-amber-300 dark:border-amber-900/60 bg-amber-50/90 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200">
+                <div class="flex items-start gap-2.5">
+                    <i class="ph-bold ph-pencil-simple text-lg text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-xs uppercase tracking-wide text-amber-900 dark:text-amber-200">Dokumen Hasil Amandemen Resmi</span>
+                            <span id="review-rev-badge" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200"></span>
+                        </div>
+                        <div class="text-[11px] mt-1 text-amber-800 dark:text-amber-300 leading-relaxed">
+                            <strong>Alasan / Catatan Revisi:</strong> <span id="review-revision-notes-text">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Bagian 1: Data Registrasi SPK & Pelanggan -->
             <div class="ent-card overflow-hidden">
                 <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -1203,6 +1229,18 @@ function openReviewModal(data) {
     } else {
         statusPillEl.innerHTML = '<span class="badge-status info"><span class="badge-dot"></span><span>' + data.instrument_status + '</span></span>';
         certBoxEl.textContent = '';
+    }
+
+    // Banner Catatan Revisi Resmi
+    const revAlert = document.getElementById('review-revision-alert');
+    const revBadge = document.getElementById('review-rev-badge');
+    const revNotesText = document.getElementById('review-revision-notes-text');
+    if (data.revision_number && data.revision_number !== '00') {
+        revAlert.classList.remove('hidden');
+        revBadge.textContent = 'Rev-' + data.revision_number;
+        revNotesText.textContent = data.revision_notes ? data.revision_notes : 'Tidak ada rincian catatan amandemen.';
+    } else {
+        revAlert.classList.add('hidden');
     }
 
     // Bagian 1: Data SPK
