@@ -289,7 +289,29 @@ function initializeDatabase(PDO $pdo): void {
         );
     ");
 
-    // 5. Seed Users for Multi-Role RBAC (Matching README and Live Database)
+    // 5. Order 4 - Height Gauge (Dimensi) -> Status Draf (Proses pengisian sementara oleh teknisi)
+    $pdo->exec("
+        INSERT OR IGNORE INTO instruments (id, order_id, name, scope_code, brand, model_type, serial_number, capacity_range, resolution, technician_name, calibration_date, status)
+        VALUES (
+            5, 4, 'Vernier Height Gauge 300mm', 'D', 'Mitutoyo', '514-102', 'HG-882194',
+            '0 - 300 mm', '0.02 mm', 'Raditya Bagus Hardana', '2026-05-15', 'DRAFT'
+        );
+    ");
+
+    $pdo->exec("
+        INSERT OR IGNORE INTO worksheets (id, instrument_id, temperature, temperature_uncertainty, humidity, humidity_uncertainty, standard_calibrator, standard_cert_no, standard_valid_until, calibration_method, readings_json, visual_inspection, technician_notes)
+        VALUES (
+            5, 5, 20.1, 0.5, 53.0, 3.0,
+            'Block Gauge Set Grade 0 SN: BG-9912',
+            'CERT-KAN-D-2025-088', '2027-01-10',
+            'Metode Kalibrasi Height Gauge MK-KAL-03 (JIS B 7517)',
+            '[]',
+            'Slider bergerak halus, skala vernier jelas terbaca',
+            'Draft sementara: teknisi masih menunggu stabilisasi temperatur benda uji di ruang lab dimensi.'
+        );
+    ");
+
+    // 6. Seed Users for Multi-Role RBAC (Matching README and Live Database)
     $usersData = [
         [
             'admin',
@@ -365,3 +387,15 @@ function initializeDatabase(PDO $pdo): void {
         $stmtUser->execute($u);
     }
 }
+
+// Eksekusi langsung jika dipanggil via CLI: php config/setup_db.php
+if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
+    require_once __DIR__ . '/database.php';
+    $sqliteFile = __DIR__ . '/../data/kalpindo.sqlite';
+    if (file_exists($sqliteFile)) {
+        unlink($sqliteFile);
+    }
+    $pdo = getDbConnection();
+    echo "Sukses: Database Kalpindo berhasil di-reset dan di-seeder ulang ke data demo awal bawaan.\n";
+}
+
