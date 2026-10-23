@@ -422,11 +422,6 @@ if (hasRole('SUPER_ADMIN')) {
                     <i class="ph-bold ph-sun theme-icon-sun text-sm text-warning"></i>
                 </button>
 
-                <!-- Direct Logout Icon Button -->
-                <a href="logout.php" title="Keluar / Logout Akun" class="btn-icon" style="color: var(--brand-primary);" aria-label="Logout">
-                    <i class="ph-bold ph-sign-out text-base"></i>
-                </a>
-
             </div>
 
         </header>
